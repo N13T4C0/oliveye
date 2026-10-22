@@ -18,6 +18,7 @@ dependencies = [
     "pyarrow>=17.0",      # Parquet / GeoParquet for fast local caching
     "matplotlib>=3.9",    # plots for notebooks and README figures
     "jupyterlab>=4.2",    # notebook environment
+    "duckdb>=2.0",        # query remote (Geo)Parquet in place; 2.x returns geometries as WKB
 ]
 
 [dependency-groups]
