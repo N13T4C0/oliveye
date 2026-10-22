@@ -1,0 +1,36 @@
+# --- Data (never committed; see data/README.md) ---
+data/**
+!data/**/
+!data/**/.gitkeep
+!data/README.md
+
+# --- Secrets ---
+.env
+*.pem
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+.venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+*.egg-info/
+build/
+dist/
+
+# --- Notebooks ---
+.ipynb_checkpoints/
+
+# --- ML tracking ---
+mlruns/
+mlartifacts/
+
+# --- Node / web (Phase 5) ---
+node_modules/
+.next/
+
+# --- Editors / OS ---
+.vscode/
+.idea/
+.DS_Store

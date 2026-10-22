@@ -1,0 +1,28 @@
+# Local infrastructure for OlivEye.
+# Phase 0/1: only the spatial database. API and web services will be added in Phases 4-5.
+services:
+  db:
+    # Official PostGIS image: PostgreSQL 17 + PostGIS 3.5 preinstalled.
+    image: postgis/postgis:17-3.5
+    container_name: oliveye-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-oliveye}
+      POSTGRES_USER: ${POSTGRES_USER:-oliveye}
+      # Required: set it in .env (copy from .env.example). Compose fails fast if missing.
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      # Named volume: data survives `docker compose down`.
+      - pgdata:/var/lib/postgresql/data
+      # SQL scripts here run once, the first time the volume is created.
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:

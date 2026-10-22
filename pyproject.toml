@@ -1,0 +1,63 @@
+[project]
+name = "oliveye"
+version = "0.0.1"
+description = "Olive oil production estimation for Andalusia (Jaén, Granada) from Sentinel-2, climate and historical data."
+readme = "README.md"
+requires-python = ">=3.12,<3.14"
+authors = [{ name = "José Antonio Nieto" }]
+license = { text = "MIT" }
+
+# Phase 1 dependencies: exploration of SIGPAC parcels and Sentinel-2 time series via openEO.
+# Later phases add their own groups (pyspark, scikit-learn, xgboost, mlflow, fastapi...).
+dependencies = [
+    "openeo>=0.40",       # client for the Copernicus Data Space Ecosystem openEO API
+    "geopandas>=1.0",     # vector geodata (SIGPAC parcels) as DataFrames with geometry
+    "rasterio>=1.4",      # read/write GeoTIFF rasters
+    "xarray>=2024.10",    # labelled n-dimensional arrays (time x band x y x x data cubes)
+    "netcdf4>=1.7",       # NetCDF backend for xarray (openEO can return NetCDF)
+    "pyarrow>=17.0",      # Parquet / GeoParquet for fast local caching
+    "matplotlib>=3.9",    # plots for notebooks and README figures
+    "jupyterlab>=4.2",    # notebook environment
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.7",
+    "mypy>=1.13",
+    "pytest>=8.3",
+    "pandas-stubs>=2.2",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/oliveye"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-include = ["*.ipynb"]
+
+[tool.ruff.lint]
+# E/F: pycodestyle + pyflakes, I: import sorting, UP: modern syntax, B: bugbear, ANN: type hints.
+select = ["E", "F", "I", "UP", "B", "ANN"]
+ignore = ["ANN401"]  # allow typing.Any where unavoidable (e.g. openEO process graphs)
+
+[tool.ruff.lint.per-file-ignores]
+"notebooks/*" = ["ANN"]   # notebooks orchestrate; typed code lives in src/
+"tests/*" = ["ANN"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+files = ["src"]
+
+[[tool.mypy.overrides]]
+# These libraries ship without complete type information.
+module = ["geopandas.*", "rasterio.*", "openeo.*", "shapely.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
