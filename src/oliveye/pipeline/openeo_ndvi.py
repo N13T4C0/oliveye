@@ -252,13 +252,20 @@ def load_ndvi_csv(csv_path: Path, geometries: gpd.GeoDataFrame) -> pd.DataFrame:
     openEO identifies parcels by `feature_index` (their row order in the request), so we join it
     back to the same `geometries` frame that was sent. Dates where every pixel was masked come
     back empty (NaN) and are dropped.
+
+    The CDSE backend keeps the input bands next to the target band, so the CSV may contain
+    `B04`, `B08` and `NDVI`; we pick the `NDVI` column when present.
     """
     raw = pd.read_csv(csv_path)
     value_columns = [c for c in raw.columns if c not in ("date", "feature_index")]
-    if len(value_columns) != 1:
-        raise ValueError(f"Expected one NDVI column, got {value_columns}")
+    if "NDVI" in value_columns:
+        ndvi_column = "NDVI"
+    elif len(value_columns) == 1:
+        ndvi_column = value_columns[0]
+    else:
+        raise ValueError(f"Cannot find the NDVI column among {value_columns}")
 
-    tidy = raw.rename(columns={value_columns[0]: "ndvi"})
+    tidy = raw.rename(columns={ndvi_column: "ndvi"})
     tidy["date"] = pd.to_datetime(tidy["date"]).dt.tz_localize(None).dt.normalize()
     attributes = geometries.drop(columns="geometry").reset_index(drop=True)
     tidy = tidy.merge(attributes, left_on="feature_index", right_index=True, how="left")

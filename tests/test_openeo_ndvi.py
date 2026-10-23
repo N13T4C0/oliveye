@@ -141,3 +141,17 @@ def test_batch_job_runs_once_then_uses_cache(tmp_path: Path, parcels: gpd.GeoDat
     assert len(tidy) == 1  # the fully masked observation is dropped
     assert tidy.loc[0, "parcel_id"] == "ov1"
     assert tidy.loc[0, "date"] == pd.Timestamp("2024-05-01")
+
+
+def test_load_csv_with_input_bands_kept(tmp_path: Path, parcels: gpd.GeoDataFrame) -> None:
+    """Real CDSE output keeps B04/B08 next to the NDVI band."""
+    path = tmp_path / "cdse.csv"
+    path.write_text(
+        "date,feature_index,B04,B08,NDVI\n"
+        "2024-05-01T00:00:00.000Z,0,0.05,0.30,0.71\n"
+        "2024-05-01T00:00:00.000Z,1,,,\n"
+    )
+    tidy = load_ndvi_csv(path, prepare_geometries(parcels.iloc[:2]))
+
+    assert len(tidy) == 1
+    assert tidy.loc[0, "ndvi"] == pytest.approx(0.71)
