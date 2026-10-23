@@ -1,0 +1,143 @@
+"""Offline tests for oliveye.pipeline.openeo_ndvi (no openEO connection, no credits spent)."""
+
+import csv
+import warnings
+from pathlib import Path
+from typing import Any
+
+import geopandas as gpd
+import pandas as pd
+import pytest
+from shapely.geometry import box
+
+from oliveye.pipeline.openeo_ndvi import (
+    build_ndvi_timeseries,
+    cache_key,
+    load_ndvi_csv,
+    prepare_geometries,
+    run_cached_batch_job,
+    select_parcels,
+)
+
+# A point inside Martos (Jaén) in EPSG:25830, so reprojections give realistic lon/lat.
+X0, Y0 = 410_000.0, 4_170_000.0
+
+
+@pytest.fixture
+def parcels() -> gpd.GeoDataFrame:
+    """Four 4-ha squares of olive, one 1-ha arable square, one thin olive strip."""
+    geoms = [box(X0 + i * 500, Y0, X0 + i * 500 + 200, Y0 + 200) for i in range(4)]
+    geoms.append(box(X0, Y0 + 500, X0 + 100, Y0 + 600))  # 1 ha arable
+    geoms.append(box(X0, Y0 + 1000, X0 + 2000, Y0 + 1020))  # 4 ha, but 2 km x 20 m
+    gdf = gpd.GeoDataFrame(
+        {
+            "parcel_id": ["ov1", "ov2", "ov3", "ov4", "ta1", "strip"],
+            "land_use_code": ["OV", "OV", "OV", "OV", "TA", "OV"],
+        },
+        geometry=geoms,
+        crs="EPSG:25830",
+    )
+    gdf["area_ha"] = gdf.area / 1e4
+    return gdf
+
+
+def test_select_is_reproducible_and_skips_thin_parcels(parcels: gpd.GeoDataFrame) -> None:
+    first = select_parcels(parcels, "OV", 3, seed=1)
+    second = select_parcels(parcels, "OV", 3, seed=1)
+
+    assert list(first["parcel_id"]) == list(second["parcel_id"])
+    assert "strip" not in set(first["parcel_id"])
+
+
+def test_select_falls_back_to_largest_with_warning(parcels: gpd.GeoDataFrame) -> None:
+    with pytest.warns(UserWarning, match="largest compact"):
+        chosen = select_parcels(parcels, "TA", 1, min_area_ha=3.0)
+    assert list(chosen["parcel_id"]) == ["ta1"]
+
+
+def test_select_respects_distance(parcels: gpd.GeoDataFrame) -> None:
+    anchor = parcels[parcels["parcel_id"] == "ov1"]
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        chosen = select_parcels(parcels, "OV", 2, near=anchor, max_distance_m=400)
+    assert set(chosen["parcel_id"]) == {"ov1", "ov2"}  # ov3/ov4 are > 400 m away
+
+
+def test_prepare_geometries_shrinks_and_reprojects(parcels: gpd.GeoDataFrame) -> None:
+    prepared = prepare_geometries(parcels.iloc[:4], inner_buffer_m=10)
+
+    assert prepared.crs.to_epsg() == 4326
+    assert prepared.to_crs(25830).area.iloc[0] == pytest.approx(180 * 180)
+    assert list(prepared.index) == [0, 1, 2, 3]
+
+
+def test_process_graph_masks_clouds_and_aggregates(parcels: gpd.GeoDataFrame) -> None:
+    geoms = prepare_geometries(parcels.iloc[:2])
+    graph = build_ndvi_timeseries(geoms, "2024-01-01", "2026-01-01").flat_graph()
+
+    processes = {node["process_id"] for node in graph.values()}
+    assert {"load_collection", "mask", "ndvi", "aggregate_spatial"} <= processes
+    load = graph["loadcollection1"]["arguments"]
+    assert load["bands"] == ["B04", "B08", "SCL"]
+    assert load["temporal_extent"] == ["2024-01-01", "2026-01-01"]
+    assert len(graph["aggregatespatial1"]["arguments"]["geometries"]["features"]) == 2
+
+
+def test_cache_key_changes_with_dates(parcels: gpd.GeoDataFrame) -> None:
+    geoms = prepare_geometries(parcels.iloc[:2])
+    a = build_ndvi_timeseries(geoms, "2024-01-01", "2026-01-01")
+    b = build_ndvi_timeseries(geoms, "2024-01-01", "2026-01-01")
+    c = build_ndvi_timeseries(geoms, "2024-01-01", "2025-01-01")
+
+    assert cache_key(a) == cache_key(b)
+    assert cache_key(a) != cache_key(c)
+
+
+class _FakeJob:
+    job_id = "j-123"
+
+    def start_and_wait(self) -> None: ...
+
+    def get_results(self) -> "_FakeJob":
+        return self
+
+    def download_files(self, target: str) -> None:
+        Path(target, "timeseries.csv").write_text(
+            "date,feature_index,NDVI\n2024-05-01T00:00:00Z,0,0.42\n2024-05-01T00:00:00Z,1,\n"
+        )
+
+    def describe(self) -> dict[str, Any]:
+        return {"costs": 12.5, "status": "finished"}
+
+
+class _FakeProcess:
+    """Stands in for an openEO VectorCube; counts how many jobs are created."""
+
+    def __init__(self) -> None:
+        self.jobs_created = 0
+
+    def flat_graph(self) -> dict[str, Any]:
+        return {"node": {"process_id": "fake", "arguments": {}}}
+
+    def create_job(self, title: str, out_format: str) -> _FakeJob:
+        self.jobs_created += 1
+        return _FakeJob()
+
+
+def test_batch_job_runs_once_then_uses_cache(tmp_path: Path, parcels: gpd.GeoDataFrame) -> None:
+    process = _FakeProcess()
+
+    first = run_cached_batch_job(process, tmp_path, "test")
+    second = run_cached_batch_job(process, tmp_path, "test")
+
+    assert first == second
+    assert process.jobs_created == 1
+    with (tmp_path / "credits_log.csv").open() as fh:
+        rows = list(csv.DictReader(fh))
+    assert len(rows) == 1 and rows[0]["costs"] == "12.5"
+
+    tidy = load_ndvi_csv(first, prepare_geometries(parcels.iloc[:2]))
+    assert list(tidy.columns) == ["date", "parcel_id", "land_use_code", "ndvi"]
+    assert len(tidy) == 1  # the fully masked observation is dropped
+    assert tidy.loc[0, "parcel_id"] == "ov1"
+    assert tidy.loc[0, "date"] == pd.Timestamp("2024-05-01")
