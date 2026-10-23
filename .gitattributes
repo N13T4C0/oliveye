@@ -1,0 +1,12 @@
+# Normalise line endings: LF in the repository for every text file, whatever the OS.
+* text=auto eol=lf
+
+# Windows-only scripts keep CRLF.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Binary data that must never be converted.
+*.parquet binary
+*.png binary
+*.tif binary
+*.zip binary

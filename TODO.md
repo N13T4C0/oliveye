@@ -22,9 +22,15 @@ Updated at the end of each phase.
 
 ## Phase 1 — Exploration
 - [x] `01_openeo_ndvi_sample_parcels.ipynb` + `oliveye.pipeline.openeo_ndvi` written and dry-run tested
-- [ ] Run notebook 01 against CDSE, record credits used and write conclusions
+- [x] Run notebook 01 against CDSE (2026-10-23): 1 batch job, 7 parcels x 2 years = **5 credits**
+  - Olive NDVI is seasonal (~0.48 winter / ~0.27 late summer): canopy + understory mix
+  - TA parcels in Martos are a weak cereal control (2 small parcels, different behaviour)
+  - Residual clouds pass the SCL mask (e.g. Dec 2025 NDVI ≈ 0.03)
+- [ ] Add a proper cereal control: TA parcels from a campiña municipality
+- [ ] Phase 2: monthly median composites on the server + outlier filter for residual clouds
+- [ ] Measure openEO cost on a whole municipality before budgeting provinces
 - [ ] `02_sigpac_olive_parcels.ipynb`: load SIGPAC, filter olive uses, areas per municipality/province, map
 - [ ] `03_production_history.ipynb`: production and aforo per province and campaign since 2015
 - [ ] Decide the aggregation unit for Phase 2 (parcel sample vs municipality vs province)
 - [ ] Write `docs/decisions/` ADR for the openEO strategy (sync vs batch, cache key)
-- [ ] Check `data/cache/openeo/credits_log.csv` after the first job (baseline balance: 10,000 on 2026-10-22)
+- [x] Credits log working (`data/cache/openeo/credits_log.csv`); baseline 10,000 on 2026-10-22

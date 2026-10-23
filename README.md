@@ -34,7 +34,7 @@ Historical production (Junta de Andalucía, AICA) ──────────
 | Phase | Goal | Main deliverables | Status |
 |---|---|---|---|
 | **0. Setup** | Project ready to work | Repo structure, `CLAUDE.md`, Docker + PostGIS, `pyproject.toml` | ✅ Done |
-| **1. Exploration** | Understand the data | Notebooks: openEO NDVI time series for sample parcels, SIGPAC olive parcels, first look at production data | ⏳ Next |
+| **1. Exploration** | Understand the data | Notebooks: openEO NDVI time series for sample parcels, SIGPAC olive parcels, first look at production data | 🔄 In progress |
 | **2. Data pipeline** | Reproducible ETL | SIGPAC → PostGIS, NDVI/NDMI per parcel/province via openEO batch jobs (cached), climate and production ingestion, PySpark aggregation | ⬜ |
 | **3. Models** | Honest prediction | Feature table per province & campaign; baseline, Ridge, XGBoost; leave-one-campaign-out; MLflow tracking; comparison with *aforo* | ⬜ |
 | **4. API** | Serve results | FastAPI endpoints (parcels, time series, predictions), tests, Docker image | ⬜ |
@@ -42,8 +42,16 @@ Historical production (Junta de Andalucía, AICA) ──────────
 
 ## Current status
 
-**Phase 0 completed (October 2026).** The repository skeleton, local PostGIS database and Python
-environment are ready. No pipeline or model code yet. See [`TODO.md`](TODO.md) for next steps.
+**Phase 1 in progress (October 2026).**
+
+- SIGPAC parcels are fetched by municipality straight from a remote GeoParquet with DuckDB
+  (`scripts/fetch_sigpac_subset.py`), without downloading the 1.8 GB Andalusia file.
+- [Notebook 01](notebooks/01_openeo_ndvi_sample_parcels.ipynb) extracts cloud-masked NDVI time
+  series for sample parcels in Martos (Jaén) with a single cached openEO batch job (**5 credits**).
+- First finding: olive-grove NDVI is clearly seasonal (~0.48 in winter, ~0.27 in late summer)
+  because each 10 m pixel mixes tree canopy with the ground cover between trees.
+
+See [`TODO.md`](TODO.md) for next steps.
 
 ## Quickstart
 
