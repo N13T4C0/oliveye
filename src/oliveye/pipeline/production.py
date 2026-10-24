@@ -141,3 +141,39 @@ def parse_aforo_pdfs(paths: list[Path]) -> pd.DataFrame:
     """Parse several PDFs into one table sorted by campaign and province."""
     frames = [parse_aforo_pdf(path) for path in paths]
     return pd.concat(frames).sort_values(["campaign", "province"]).reset_index(drop=True)
+
+
+def previous_campaign(campaign: str) -> str:
+    """'2024/25' -> '2023/24'."""
+    start = int(normalise_campaign(campaign)[:4]) - 1
+    return f"{start}/{(start + 1) % 100:02d}"
+
+
+def final_production_series(*aforo_tables: pd.DataFrame) -> pd.DataFrame:
+    """Final production per province and campaign, derived from the aforo variations (ADR 0002).
+
+    Each input has `campaign`, `province`, `oil_aforo_t` and `oil_var_prev_pct` (the parsed PDF
+    table, or the curated press-release table). The aforo of campaign t tells the final
+    production of t-1. When several sources describe the same campaign, the first table wins.
+
+    Returns:
+        campaign, province, oil_final_t_derived, source_campaign (the aforo it came from).
+    """
+    frames = []
+    for table in aforo_tables:
+        usable = table.dropna(subset=["oil_aforo_t", "oil_var_prev_pct"])
+        aforo = usable["oil_aforo_t"].astype(float)
+        variation = usable["oil_var_prev_pct"].astype(float)
+        frames.append(
+            pd.DataFrame(
+                {
+                    "campaign": usable["campaign"].astype(str).map(previous_campaign),
+                    "province": usable["province"],
+                    "oil_final_t_derived": (aforo / (1 + variation / 100)).round(-2),
+                    "source_campaign": usable["campaign"].astype(str),
+                }
+            )
+        )
+    series = pd.concat(frames, ignore_index=True)
+    series = series.drop_duplicates(["campaign", "province"], keep="first")
+    return series.sort_values(["province", "campaign"]).reset_index(drop=True)

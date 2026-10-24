@@ -61,3 +61,38 @@ def test_parse_table_does_not_depend_on_column_order() -> None:
     df = parse_province_table(table(swapped), "2024/25")
     # With swapped headers the same cell values are read as the other variation.
     assert df.set_index("province").loc["Jaén", "oil_var_prev_pct"] == pytest.approx(22.6)
+
+
+def test_previous_campaign() -> None:
+    from oliveye.pipeline.production import previous_campaign
+
+    assert previous_campaign("2024/25") == "2023/24"
+    assert previous_campaign("2000/01") == "1999/00"
+
+
+def test_final_series_reindexes_and_prefers_first_source() -> None:
+    import pandas as pd
+
+    from oliveye.pipeline.production import final_production_series
+
+    pdf = pd.DataFrame(
+        {
+            "campaign": ["2024/25"],
+            "province": ["Jaén"],
+            "oil_aforo_t": [445_000.0],
+            "oil_var_prev_pct": [116.1],
+        }
+    )
+    press = pd.DataFrame(
+        {
+            "campaign": ["2024/25", "2016/17", "2020/21"],
+            "province": ["Jaén", "Jaén", "Jaén"],
+            "oil_aforo_t": [1.0, 542_000.0, 670_000.0],
+            "oil_var_prev_pct": [0.0, 2.5, None],  # 2020/21 has no variation: unusable
+        }
+    )
+    series = final_production_series(pdf, press)
+
+    assert list(series["campaign"]) == ["2015/16", "2023/24"]
+    assert series.set_index("campaign").loc["2023/24", "oil_final_t_derived"] == 205_900
+    assert series.set_index("campaign").loc["2015/16", "oil_final_t_derived"] == 528_800
