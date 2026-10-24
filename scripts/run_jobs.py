@@ -13,7 +13,7 @@ import json
 import sys
 from pathlib import Path
 
-from oliveye.jobs import load_job, pending_jobs, result_dir_for, run_job
+from oliveye.jobs import load_job, pending_jobs, result_dir_for, run_job, worker_of
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -25,10 +25,13 @@ def main() -> None:
     parser.add_argument("--sigpac-dir", type=Path, default=REPO_ROOT / "data" / "raw" / "sigpac")
     parser.add_argument("--max-jobs", type=int, default=0, help="run at most N jobs (0 = all)")
     parser.add_argument("--count", action="store_true", help="only print the pending count")
+    parser.add_argument("--worker", type=int, default=0, help="index of this worker")
+    parser.add_argument("--workers", type=int, default=1, help="number of parallel workers")
     args = parser.parse_args()
 
     openeo_cache_dir = args.results_dir / "_cache" / "openeo"
     pending = pending_jobs(args.jobs_dir, args.results_dir)
+    pending = [p for p in pending if worker_of(p, args.workers) == args.worker]
     if args.count:
         print(len(pending))
         return

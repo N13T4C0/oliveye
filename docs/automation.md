@@ -12,8 +12,10 @@ jobs/<id>.json  ──push to main──►  .github/workflows/jobs.yml  ──�
 - A job runs **once**: it is pending until `<id>/status.json` exists on the `results` branch.
 - Only the types in `oliveye.jobs.HANDLERS` can run. A job chooses a type and parameters, never a
   shell command. Downloads are limited to official hosts (`ALLOWED_DOWNLOAD_HOSTS`).
-- The openEO cache and `credits_log.csv` live in `results/_cache/openeo/`, so a repeated request
-  is a cache hit (0 credits) even across CI runs.
+- The openEO cache and credits logs (`_cache/openeo/credits/<cache key>.csv`, one per request so
+  parallel workers never conflict) live on the results branch, so a repeated request is a cache
+  hit (0 credits) even across CI runs.
+- Two workers run in parallel; each job always goes to the same worker (CRC32 of its id).
 - Data never lands on `main`. Small outputs (CSV, JSON, PDFs) go to the `results` branch; large
   reproducible inputs (SIGPAC subsets) live in the Actions cache.
 

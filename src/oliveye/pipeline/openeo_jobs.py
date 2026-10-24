@@ -52,16 +52,30 @@ TERMINAL_STATES = ("finished", "error", "canceled")
 DEFAULT_TIMEOUT_S = 150 * 60  # below the 180-minute GitHub Actions limit
 
 
-def unfinished_job_id(log_path: Path, key: str) -> str | None:
+def credits_log_path(cache_dir: Path, key: str) -> Path:
+    """Credits log of one request (cache key)."""
+    return cache_dir / "credits" / f"{key}.csv"
+
+
+def credits_table(cache_dir: Path) -> list[dict[str, str]]:
+    """Every logged row: the per-request logs plus the legacy single `credits_log.csv`."""
+    paths = sorted((cache_dir / "credits").glob("*.csv"))
+    legacy = cache_dir / "credits_log.csv"
+    rows: list[dict[str, str]] = []
+    for path in [legacy, *paths] if legacy.exists() else paths:
+        with path.open(encoding="utf-8") as fh:
+            rows.extend(csv.DictReader(fh))
+    return sorted(rows, key=lambda row: row["logged_at"])
+
+
+def unfinished_job_id(cache_dir: Path, key: str) -> str | None:
     """Job id of an earlier batch job for `key` whose last logged state is not terminal.
 
     Used to resume instead of paying for a second job when an earlier run died (runner killed,
-    timeout, failed download) after the job was created.
+    timeout, failed download) after the job was created. Reads every log (per-request files and
+    the legacy single log), so no earlier job is missed.
     """
-    if not log_path.exists():
-        return None
-    with log_path.open(encoding="utf-8") as fh:
-        rows = [row for row in csv.DictReader(fh) if row["cache_key"] == key]
+    rows = [row for row in credits_table(cache_dir) if row["cache_key"] == key]
     if not rows:
         return None
     last = rows[-1]
@@ -110,11 +124,13 @@ def run_cached_batch_job(
         return csv_path
 
     cache_dir.mkdir(parents=True, exist_ok=True)
-    log_path = cache_dir / "credits_log.csv"
+    # One log file per request: parallel CI workers never edit the same file, so publishing their
+    # results to git can always be rebased without conflicts.
+    log_path = credits_log_path(cache_dir, key)
     graph_path = cache_dir / f"{key}.process.json"
     graph_path.write_text(json.dumps(process.flat_graph(), separators=(",", ":")))
 
-    previous = unfinished_job_id(log_path, key)
+    previous = unfinished_job_id(cache_dir, key)
     if previous:
         job = process.connection.job(previous)
         print(f"Resuming batch job {previous} (cache key {key}) instead of creating a new one")

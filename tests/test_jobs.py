@@ -218,3 +218,24 @@ def test_openeo_dry_run_uses_grid_cells(tmp_path: Path, monkeypatch: pytest.Monk
     assert summary["cells"] == 16 and summary["coverage_pct"] == 100.0
     assert summary["payload_bytes"] < 10_000
     assert gpd.read_file(outputs[1]).crs.to_epsg() == 4326
+
+
+def test_identical_requests_go_to_the_same_worker(tmp_path: Path) -> None:
+    params = {"province": "23", "municipality": "60", "start": "2025-07-01", "end": "2025-08-01"}
+    a = write_job(
+        tmp_path,
+        "real-a",
+        {"type": "openeo_monthly_indices", "params": {**params, "dry_run": False}},
+    )
+    b = write_job(
+        tmp_path,
+        "real2-b",
+        {"type": "openeo_monthly_indices", "params": {**params, "dry_run": False}},
+    )
+    dry = write_job(tmp_path, "dry-c", {"type": "openeo_monthly_indices", "params": params})
+    assert jobs.worker_of(a, 2) == jobs.worker_of(b, 2) == jobs.worker_of(dry, 2)
+    broken = tmp_path / "broken.json"
+    broken.write_text("[1,2]")
+    assert jobs.worker_of(broken, 2) == 0
+    with pytest.raises(ValueError):
+        jobs.worker_of(a, 0)

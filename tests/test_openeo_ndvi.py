@@ -10,6 +10,7 @@ import pandas as pd
 import pytest
 from shapely.geometry import box
 
+from oliveye.pipeline.openeo_jobs import credits_table
 from oliveye.pipeline.openeo_ndvi import (
     build_ndvi_timeseries,
     cache_key,
@@ -154,8 +155,7 @@ def test_batch_job_runs_once_then_uses_cache(tmp_path: Path, parcels: gpd.GeoDat
 
     assert first == second
     assert process.jobs_created == 1
-    with (tmp_path / "credits_log.csv").open() as fh:
-        rows = list(csv.DictReader(fh))
+    rows = credits_table(tmp_path)
     assert [r["status"] for r in rows] == ["created", "finished"]  # one job, two log rows
     assert rows[1]["costs"] == "12.5"
 
@@ -195,8 +195,7 @@ def test_failed_job_still_logs_its_credits(tmp_path: Path) -> None:
     with pytest.raises(RuntimeError, match="backend error"):
         run_cached_batch_job(process, tmp_path, "test")
 
-    with (tmp_path / "credits_log.csv").open() as fh:
-        rows = list(csv.DictReader(fh))
+    rows = credits_table(tmp_path)
     assert [(r["status"], r["costs"]) for r in rows] == [("created", ""), ("error", "3.0")]
 
 
@@ -232,6 +231,29 @@ def test_unfinished_job_is_resumed_not_paid_twice(tmp_path: Path) -> None:
     assert later.connection.resumed == ["j-123"]
     assert later.connection._job.starts == 0  # a finished job is never restarted
     assert path.exists()
-    with (tmp_path / "credits_log.csv").open() as fh:
-        statuses = [r["status"] for r in csv.DictReader(fh)]
+    statuses = [r["status"] for r in credits_table(tmp_path)]
     assert statuses == ["created", "running", "resumed", "finished"]
+
+
+def test_resume_also_reads_the_legacy_log(tmp_path: Path) -> None:
+    from oliveye.pipeline.openeo_jobs import CREDITS_LOG_FIELDS, cache_key
+
+    key = cache_key(_FakeProcess())
+    with (tmp_path / "credits_log.csv").open("w", newline="") as fh:
+        writer = csv.DictWriter(fh, fieldnames=CREDITS_LOG_FIELDS)
+        writer.writeheader()
+        writer.writerow(
+            {
+                "logged_at": "2026-10-24T15:00:00+00:00",
+                "job_id": "j-old",
+                "title": "t",
+                "cache_key": key,
+                "costs": "",
+                "status": "created",
+            }
+        )
+    process = _FakeProcess()
+    run_cached_batch_job(process, tmp_path, "test")
+
+    assert process.jobs_created == 0
+    assert process.connection.resumed == ["j-old"]

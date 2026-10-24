@@ -23,6 +23,7 @@ import re
 import sys
 import traceback
 import urllib.request
+import zlib
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -402,6 +403,25 @@ def result_dir_for(results_dir: Path, job_id: str) -> Path:
         return results_dir / job_id
     safe = "".join(c if c.isalnum() or c in "_-" else "_" for c in job_id)
     return results_dir / f"invalid-{safe}"
+
+
+def worker_of(path: Path, workers: int) -> int:
+    """Worker that owns a job file when the queue is split between parallel workers.
+
+    The split hashes the *request* (type + parameters without `dry_run`), not the file name, so
+    two job files asking for the same openEO request always land on the same worker and run one
+    after the other: the second one is then a free cache hit instead of a second paid job.
+    Unreadable files go to worker 0, which records them as invalid.
+    """
+    if workers < 1:
+        raise ValueError("workers must be >= 1")
+    try:
+        spec = json.loads(path.read_text(encoding="utf-8"))
+        params = {k: v for k, v in dict(spec.get("params", {})).items() if k != "dry_run"}
+        request = json.dumps({"type": spec.get("type"), "params": params}, sort_keys=True)
+    except Exception:  # noqa: BLE001 - any broken file is handled by worker 0
+        return 0
+    return zlib.crc32(request.encode()) % workers
 
 
 def pending_jobs(jobs_dir: Path, results_dir: Path) -> list[Path]:

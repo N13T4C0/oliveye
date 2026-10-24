@@ -1,5 +1,5 @@
-# Runs the job queue: every push to main that adds or changes a file in jobs/ executes the
-# pending jobs and publishes their results to the `results` branch. See docs/automation.md.
+# Job queue: every push to main that adds or changes a file in jobs/ runs the pending jobs and
+# publishes their results to the `results` branch. See docs/automation.md.
 name: jobs
 
 on:
@@ -9,19 +9,25 @@ on:
   workflow_dispatch:
     inputs:
       generation:
-        description: "How many times this run has re-dispatched itself (stops at 3)"
+        description: "How many times the queue has re-dispatched itself (stops at 6)"
         default: "0"
 
 permissions:
   contents: write # push to the results branch
-  actions: write # re-dispatch this workflow when the time budget runs out
-
-concurrency:
-  group: jobs # one run at a time, so results never conflict
-  cancel-in-progress: false
+  actions: write # the `continue` job re-dispatches this workflow
 
 jobs:
   run:
+    # Two workers split the queue by request (see oliveye.jobs.worker_of), so two openEO batch
+    # jobs run at once and identical requests never run in parallel. Each worker is serialised
+    # across workflow runs by its own concurrency group.
+    strategy:
+      fail-fast: false
+      matrix:
+        worker: [0, 1]
+    concurrency:
+      group: jobs-worker-${{ matrix.worker }}
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     timeout-minutes: 350 # hosted runners allow 360
     steps:
@@ -46,82 +52,78 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: data/raw/sigpac
-          key: sigpac-${{ github.run_id }}
+          key: sigpac-${{ matrix.worker }}-${{ github.run_id }}
           restore-keys: sigpac-
 
-      # One job at a time, publishing after each: a cancelled or timed-out run never loses
-      # finished (possibly paid) results. When the time budget runs out, the workflow
-      # dispatches itself again (at most 3 times in a row) to continue with the remaining jobs.
-      - name: Run pending jobs and publish after each
-        timeout-minutes: 330 # leaves time for the final publish step below
+      # One job at a time, publishing after each, so a cancelled or timed-out run never loses
+      # finished (possibly paid) results. A failed job is recorded in its status.json and does
+      # not stop the queue; only "no progress" or a failed publish makes the step fail.
+      - name: Run this worker's jobs and publish after each
+        timeout-minutes: 330 # leaves time for the safety-net step
         env:
           OPENEO_REFRESH_TOKEN: ${{ secrets.OPENEO_REFRESH_TOKEN }}
           OPENEO_CLIENT_ID: ${{ secrets.OPENEO_CLIENT_ID }}
           OPENEO_CLIENT_SECRET: ${{ secrets.OPENEO_CLIENT_SECRET }}
-          GH_TOKEN: ${{ github.token }}
-          GENERATION: ${{ inputs.generation || '0' }}
         run: |
-          git -C results-branch config user.name "github-actions[bot]"
-          git -C results-branch config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          publish() {
-            git -C results-branch add -A
-            if git -C results-branch diff --cached --quiet; then return 0; fi
-            git -C results-branch commit -q -m "results: $1 (run ${{ github.run_id }})"
-            # A lost push would lose paid results and re-run the job: retry with backoff.
-            for attempt in 1 2 3 4; do
-              git -C results-branch push -q origin results && return 0
-              sleep $((attempt * 10))
-              git -C results-branch pull -q --rebase origin results || true
-            done
-            echo "::error::Could not push results after 4 attempts"
-            exit 1
-          }
+          W="--worker ${{ matrix.worker }} --workers 2"
           pending() {
             local n
-            n=$(uv run python scripts/run_jobs.py --results-dir results-branch --count) || exit 1
+            n=$(uv run python scripts/run_jobs.py --results-dir results-branch $W --count) || exit 1
             case "$n" in ''|*[!0-9]*) echo "::error::bad pending count '$n'" >&2; exit 1 ;; esac
             echo "$n"
           }
 
-          failed=0
           start_deadline=$((SECONDS + 180 * 60)) # no new job after 3 h (an openEO job may take 2.5 h)
           left=$(pending)
           while [ "$left" -gt 0 ]; do
             if [ "$SECONDS" -ge "$start_deadline" ]; then
-              if [ "$GENERATION" -lt 3 ]; then
-                echo "Time budget used with $left job(s) left: dispatching generation $((GENERATION + 1))"
-                gh workflow run jobs.yml --ref main -f generation=$((GENERATION + 1))
-              else
-                echo "::warning::$left job(s) left after 3 re-dispatches; push to jobs/ to continue"
-              fi
+              echo "Time budget used with $left job(s) left for this worker"
               break
             fi
-            uv run python scripts/run_jobs.py --results-dir results-branch --max-jobs 1 || failed=1
-            publish "job finished"
+            uv run python scripts/run_jobs.py --results-dir results-branch $W --max-jobs 1 \
+              || echo "::warning::a job failed; see its status.json on the results branch"
+            .github/scripts/publish_results.sh \
+              "results: job finished (run ${{ github.run_id }}, worker ${{ matrix.worker }})"
             now=$(pending)
             if [ "$now" -ge "$left" ]; then
-              # The job left no status.json: stop instead of retrying it forever.
               echo "::error::No progress on the job queue ($now pending); stopping"
-              failed=1
-              break
+              exit 1
             fi
             left=$now
           done
-          exit $failed
 
       # Safety net: if the step above is cancelled or times out mid-job, still publish what
-      # exists (e.g. the 'created' row in credits_log.csv, so the next run resumes that job
+      # exists (e.g. the 'created' credits row, so the next run resumes that openEO job
       # instead of paying for a new one).
       - name: Publish results (safety net)
         if: always()
-        working-directory: results-branch
         run: |
-          git add -A
-          if git diff --cached --quiet; then
-            echo "Nothing left to publish"
-            exit 0
+          .github/scripts/publish_results.sh \
+            "results: safety net (run ${{ github.run_id }}, worker ${{ matrix.worker }})"
+
+  continue:
+    # Re-dispatch once per run (not once per worker) when jobs are left after a clean run.
+    # A failed run (no progress, publish error) never re-dispatches, so nothing can loop.
+    needs: run
+    if: needs.run.result == 'success'
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GENERATION: ${{ inputs.generation || '0' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch the latest results
+        run: |
+          git fetch --depth 1 origin results
+          git worktree add results-branch origin/results
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync --frozen
+      - name: Re-dispatch if jobs are left
+        run: |
+          left=$(uv run python scripts/run_jobs.py --results-dir results-branch --count)
+          echo "$left job(s) left"
+          if [ "$left" -gt 0 ] && [ "$GENERATION" -lt 6 ]; then
+            gh workflow run jobs.yml --ref main -f generation=$((GENERATION + 1))
+          elif [ "$left" -gt 0 ]; then
+            echo "::warning::$left job(s) left after 6 re-dispatches; push to jobs/ to continue"
           fi
-          git -c user.name="github-actions[bot]" \
-              -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
-              commit -q -m "results: safety net (run ${{ github.run_id }})"
-          git push origin results || { git pull --rebase origin results && git push origin results; }
