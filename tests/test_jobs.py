@@ -135,3 +135,52 @@ def test_ci_without_credentials_fails_fast(monkeypatch: pytest.MonkeyPatch) -> N
     monkeypatch.setattr("oliveye.pipeline.openeo_auth.connect", lambda url: _Offline())
     with pytest.raises(RuntimeError, match="No openEO credentials in CI"):
         connect_cdse({"CI": "true"})
+
+
+@pytest.mark.parametrize("dry_run", [None, 0, "", "false", True])
+def test_only_explicit_false_spends_credits(
+    ctx: JobContext, fake_sigpac: Path, dry_run: object
+) -> None:
+    params = {
+        "province": "23",
+        "municipality": "60",
+        "start": "2025-07-01",
+        "end": "2025-08-01",
+        "dry_run": dry_run,
+    }
+    outputs = jobs.openeo_monthly_indices(params, ctx)  # would need openEO auth if not a dry run
+    assert [p.name for p in outputs] == ["request_summary.json"]
+
+
+def test_dates_must_be_first_of_month() -> None:
+    with pytest.raises(ValueError, match="first day of a month"):
+        months_between("2024-01-01", "2025-02-28")
+
+
+@pytest.mark.parametrize("name", ["..", "_cache", ".hidden", "a b"])
+def test_job_ids_cannot_escape_results(tmp_path: Path, name: str) -> None:
+    path = write_job(tmp_path, name, {"type": "sigpac_rank"})
+    with pytest.raises(ValueError, match="job ids"):
+        load_job(path)
+    assert jobs.result_dir_for(tmp_path / "r", name).parent == tmp_path / "r"
+
+
+def test_codes_are_validated(ctx: JobContext) -> None:
+    with pytest.raises(ValueError, match="1-3 digits"):
+        jobs.sigpac_municipality_summary({"province": "23", "municipality": "../x"}, ctx)
+
+
+def test_download_rejects_plain_http_and_bad_redirects() -> None:
+    assert not jobs._host_allowed("http://www.juntadeandalucia.es/a.pdf")
+    handler = jobs._AllowListRedirects()
+    with pytest.raises(ValueError, match="Redirect"):
+        handler.redirect_request(None, None, 302, "Found", {}, "https://evil.example/x.pdf")
+
+
+def test_logs_redact_secrets(monkeypatch: pytest.MonkeyPatch) -> None:
+    import io
+
+    monkeypatch.setenv("OPENEO_REFRESH_TOKEN", "super-secret-token")
+    buffer = io.StringIO()
+    jobs._Tee(buffer).write("error with super-secret-token inside")
+    assert buffer.getvalue() == "error with *** inside"

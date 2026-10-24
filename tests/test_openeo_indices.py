@@ -110,6 +110,11 @@ def test_hampel_flags_a_cloudy_spike_only() -> None:
     assert flags.tolist() == [False, False, False, True, False, False, False]
 
 
+def test_hampel_still_works_next_to_a_data_gap() -> None:
+    values = pd.Series([0.45, np.nan, 0.08, 0.44, 0.45, 0.43, 0.44])
+    assert hampel_outliers(values).tolist()[2] is True
+
+
 def test_hampel_ignores_smooth_seasonal_change() -> None:
     values = pd.Series(np.linspace(0.48, 0.27, 12))  # winter -> late summer decline
     assert not hampel_outliers(values).any()

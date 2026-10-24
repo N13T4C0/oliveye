@@ -63,4 +63,5 @@ jobs:
             exit 0
           fi
           git commit -m "results: run ${{ github.run_id }} for ${{ github.sha }}"
-          git push origin results
+          # A lost push would lose paid results and re-run the job: retry once after rebasing.
+          git push origin results || { git pull --rebase origin results && git push origin results; }

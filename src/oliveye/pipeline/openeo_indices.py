@@ -220,7 +220,8 @@ def hampel_outliers(
     """
     rolling = series.rolling(window, center=True, min_periods=3)
     median = rolling.median()
-    mad = rolling.apply(lambda w: float(np.median(np.abs(w - np.median(w)))), raw=True)
+    # nanmedian: months where every pixel was masked are NaN and must not blind the filter.
+    mad = rolling.apply(lambda w: float(np.nanmedian(np.abs(w - np.nanmedian(w)))), raw=True)
     deviation = (series - median).abs()
     threshold = np.maximum(n_sigmas * 1.4826 * mad, min_deviation)
     return (deviation > threshold).fillna(False).astype(bool)

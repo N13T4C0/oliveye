@@ -18,14 +18,17 @@ from __future__ import annotations
 
 import contextlib
 import json
+import os
+import re
 import sys
 import traceback
 import urllib.request
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from http.client import HTTPMessage
 from pathlib import Path
-from typing import Any, TextIO
+from typing import IO, Any, TextIO
 from urllib.parse import urlparse
 
 import geopandas as gpd
@@ -46,6 +49,10 @@ MAX_DOWNLOAD_BYTES = 50 * 1024 * 1024
 MAX_OPENEO_MONTHS = 13  # one campaign (Oct -> Sep) plus a margin, per job
 
 ISO = "%Y-%m-%dT%H:%M:%SZ"
+
+JOB_ID_PATTERN = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*")
+CODE_PATTERN = re.compile(r"\d{1,3}")  # INE province / Catastro municipality codes
+SECRET_ENV_VARS = ("OPENEO_REFRESH_TOKEN", "OPENEO_CLIENT_SECRET")  # noqa: S105 - names only
 
 
 @dataclass(frozen=True)
@@ -69,6 +76,9 @@ def _require(params: dict[str, Any], *names: str) -> None:
     missing = [name for name in names if name not in params]
     if missing:
         raise ValueError(f"Missing job parameters: {missing}")
+    for name in ("province", "municipality"):
+        if name in names and not CODE_PATTERN.fullmatch(str(params[name])):
+            raise ValueError(f"'{name}' must be 1-3 digits, got {params[name]!r}")
 
 
 def sigpac_rank(params: dict[str, Any], ctx: JobContext) -> list[Path]:
@@ -110,8 +120,32 @@ def sigpac_municipality_summary(params: dict[str, Any], ctx: JobContext) -> list
 
 
 def _host_allowed(url: str) -> bool:
-    host = urlparse(url).hostname or ""
-    return any(host == h or host.endswith("." + h) for h in ALLOWED_DOWNLOAD_HOSTS)
+    """HTTPS only, and the host must be (a subdomain of) an allow-listed one."""
+    parsed = urlparse(url)
+    host = parsed.hostname or ""
+    return parsed.scheme == "https" and any(
+        host == h or host.endswith("." + h) for h in ALLOWED_DOWNLOAD_HOSTS
+    )
+
+
+class _AllowListRedirects(urllib.request.HTTPRedirectHandler):
+    """Re-check every redirect hop, so a redirect cannot leave the allow-list."""
+
+    def redirect_request(
+        self,
+        req: urllib.request.Request,
+        fp: IO[bytes],
+        code: int,
+        msg: str,
+        headers: HTTPMessage,
+        newurl: str,
+    ) -> urllib.request.Request | None:
+        if not _host_allowed(newurl):
+            raise ValueError(f"Redirect to a host that is not allowed: {newurl}")
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
+_OPENER = urllib.request.build_opener(_AllowListRedirects)
 
 
 def download(params: dict[str, Any], ctx: JobContext) -> list[Path]:
@@ -129,7 +163,7 @@ def download(params: dict[str, Any], ctx: JobContext) -> list[Path]:
             raise ValueError(f"Host not allowed for download: {url}")
         safe_name = Path(name).name  # no directories: a job cannot write outside its folder
         request = urllib.request.Request(url, headers={"User-Agent": "oliveye-jobs/0.1"})
-        with urllib.request.urlopen(request, timeout=120) as response:  # noqa: S310 - allow-listed
+        with _OPENER.open(request, timeout=120) as response:  # noqa: S310 - allow-listed
             content = response.read(MAX_DOWNLOAD_BYTES + 1)
         if len(content) > MAX_DOWNLOAD_BYTES:
             raise ValueError(f"{url} is larger than {MAX_DOWNLOAD_BYTES} bytes")
@@ -141,7 +175,10 @@ def download(params: dict[str, Any], ctx: JobContext) -> list[Path]:
 
 
 def months_between(start: str, end: str) -> int:
-    """Number of whole months in [start, end), both given as first days of a month."""
+    """Number of whole months in [start, end); both must be the first day of a month."""
+    for value in (start, end):
+        if pd.Timestamp(value).day != 1:
+            raise ValueError(f"Dates must be the first day of a month, got {value!r}")
     return (pd.Period(end, "M") - pd.Period(start, "M")).n
 
 
@@ -163,7 +200,8 @@ def openeo_monthly_indices(params: dict[str, Any], ctx: JobContext) -> list[Path
     print(json.dumps(summary, indent=1))
     summary_path = ctx.output_dir / "request_summary.json"
 
-    if params.get("dry_run", True):
+    # Only an explicit JSON `false` spends credits: null, 0, "" or a missing key are dry runs.
+    if params.get("dry_run", True) is not False:
         process = oi.build_monthly_indices(areas, start, end)
         summary["cache_key"] = cache_key(process)
         summary_path.write_text(json.dumps(summary, indent=1))
@@ -234,6 +272,8 @@ def load_job(path: Path) -> Job:
     params = spec.get("params", {})
     if not isinstance(params, dict):
         raise ValueError(f"{path.name}: 'params' must be an object")
+    if not is_valid_job_id(path.stem):
+        raise ValueError(f"{path.name}: job ids may only contain letters, digits, '.', '_', '-'")
     return Job(job_id=path.stem, type=job_type, params=params)
 
 
@@ -242,8 +282,12 @@ class _Tee:
 
     def __init__(self, *streams: TextIO) -> None:
         self.streams = streams
+        # log.txt is published as-is, outside GitHub's secret masking: redact secrets ourselves.
+        self.secrets = [v for name in SECRET_ENV_VARS if len(v := os.environ.get(name, "")) >= 8]
 
     def write(self, text: str) -> int:
+        for secret in self.secrets:
+            text = text.replace(secret, "***")
         for stream in self.streams:
             stream.write(text)
         return len(text)
@@ -289,10 +333,22 @@ def run_job(
     return status
 
 
+def is_valid_job_id(job_id: str) -> bool:
+    return bool(JOB_ID_PATTERN.fullmatch(job_id)) and ".." not in job_id
+
+
+def result_dir_for(results_dir: Path, job_id: str) -> Path:
+    """Results folder of a job; ids that could escape `results_dir` get a sanitised name."""
+    if is_valid_job_id(job_id):
+        return results_dir / job_id
+    safe = "".join(c if c.isalnum() or c in "_-" else "_" for c in job_id)
+    return results_dir / f"invalid-{safe}"
+
+
 def pending_jobs(jobs_dir: Path, results_dir: Path) -> list[Path]:
     """Job files without a `status.json` in the results yet, oldest name first."""
     return [
         path
         for path in sorted(jobs_dir.glob("*.json"))
-        if not (results_dir / path.stem / "status.json").exists()
+        if not (result_dir_for(results_dir, path.stem) / "status.json").exists()
     ]

@@ -13,7 +13,7 @@ import json
 import sys
 from pathlib import Path
 
-from oliveye.jobs import load_job, pending_jobs, run_job
+from oliveye.jobs import load_job, pending_jobs, result_dir_for, run_job
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -36,7 +36,7 @@ def main() -> None:
         except ValueError as error:
             # Record the failure so the same broken file is not retried on every push.
             print(f"Invalid job: {error}")
-            out = args.results_dir / path.stem
+            out = result_dir_for(args.results_dir, path.stem)
             out.mkdir(parents=True, exist_ok=True)
             invalid = {"job_id": path.stem, "status": "invalid", "error": str(error)}
             (out / "status.json").write_text(json.dumps(invalid, indent=1), encoding="utf-8")

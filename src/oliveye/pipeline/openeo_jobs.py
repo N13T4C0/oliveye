@@ -61,27 +61,39 @@ def run_cached_batch_job(process: Any, cache_dir: Path, title: str) -> Path:
     (cache_dir / f"{key}.process.json").write_text(json.dumps(process.flat_graph(), indent=1))
 
     job = process.create_job(title=title, out_format="CSV")
-    print(f"Started batch job {job.job_id}; this usually takes a few minutes...")
-    job.start_and_wait()
+    log_path = cache_dir / "credits_log.csv"
 
-    with tempfile.TemporaryDirectory(dir=cache_dir) as tmp:
-        job.get_results().download_files(tmp)
-        produced = sorted(Path(tmp).rglob("*.csv"))
-        if not produced:
-            raise RuntimeError(f"Job {job.job_id} finished but returned no CSV file.")
-        shutil.move(produced[0], csv_path)
+    def log(status: str, costs: str = "") -> None:
+        log_credits(
+            log_path,
+            {
+                "logged_at": datetime.now(UTC).isoformat(timespec="seconds"),
+                "job_id": str(job.job_id),
+                "title": title,
+                "cache_key": key,
+                "costs": costs,
+                "status": status,
+            },
+        )
 
-    metadata: dict[str, Any] = job.describe()
-    log_credits(
-        cache_dir / "credits_log.csv",
-        {
-            "logged_at": datetime.now(UTC).isoformat(timespec="seconds"),
-            "job_id": str(job.job_id),
-            "title": title,
-            "cache_key": key,
-            "costs": str(metadata.get("costs", "")),
-            "status": str(metadata.get("status", "")),
-        },
-    )
+    # Logged before starting: if anything below fails, the job (and its credits) stays traceable.
+    log("created")
+    print(f"Started batch job {job.job_id} (cache key {key}); this usually takes a few minutes...")
+    metadata: dict[str, Any] = {}
+    try:
+        job.start_and_wait()
+        with tempfile.TemporaryDirectory(dir=cache_dir) as tmp:
+            job.get_results().download_files(tmp)
+            produced = sorted(Path(tmp).rglob("*.csv"))
+            if not produced:
+                raise RuntimeError(f"Job {job.job_id} finished but returned no CSV file.")
+            shutil.move(produced[0], csv_path)
+    finally:
+        try:
+            metadata = job.describe()
+        except Exception:  # noqa: BLE001 - never hide the original error behind a logging one
+            metadata = {}
+        log(str(metadata.get("status", "unknown")), str(metadata.get("costs", "")))
+
     print(f"Saved {csv_path.name}; credits charged: {metadata.get('costs', 'n/a')}")
     return csv_path

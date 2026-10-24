@@ -134,7 +134,8 @@ def test_batch_job_runs_once_then_uses_cache(tmp_path: Path, parcels: gpd.GeoDat
     assert process.jobs_created == 1
     with (tmp_path / "credits_log.csv").open() as fh:
         rows = list(csv.DictReader(fh))
-    assert len(rows) == 1 and rows[0]["costs"] == "12.5"
+    assert [r["status"] for r in rows] == ["created", "finished"]  # one job, two log rows
+    assert rows[1]["costs"] == "12.5"
 
     tidy = load_ndvi_csv(first, prepare_geometries(parcels.iloc[:2]))
     assert list(tidy.columns) == ["date", "parcel_id", "land_use_code", "ndvi"]
@@ -155,3 +156,23 @@ def test_load_csv_with_input_bands_kept(tmp_path: Path, parcels: gpd.GeoDataFram
 
     assert len(tidy) == 1
     assert tidy.loc[0, "ndvi"] == pytest.approx(0.71)
+
+
+class _FailingJob(_FakeJob):
+    def start_and_wait(self) -> None:
+        raise RuntimeError("backend error")
+
+    def describe(self) -> dict[str, Any]:
+        return {"costs": 3.0, "status": "error"}
+
+
+def test_failed_job_still_logs_its_credits(tmp_path: Path) -> None:
+    process = _FakeProcess()
+    process.create_job = lambda title, out_format: _FailingJob()  # type: ignore[method-assign]
+
+    with pytest.raises(RuntimeError, match="backend error"):
+        run_cached_batch_job(process, tmp_path, "test")
+
+    with (tmp_path / "credits_log.csv").open() as fh:
+        rows = list(csv.DictReader(fh))
+    assert [(r["status"], r["costs"]) for r in rows] == [("created", ""), ("error", "3.0")]
