@@ -46,7 +46,10 @@ ALLOWED_DOWNLOAD_HOSTS: tuple[str, ...] = (
     "source.coop",
 )
 MAX_DOWNLOAD_BYTES = 50 * 1024 * 1024
-MAX_OPENEO_MONTHS = 13  # one campaign (Oct -> Sep) plus a margin, per job
+# Measured on 2026-10-24 (Martos, 3,130 cells): 1 month = 4 credits, 12 months = 6 credits.
+# The cost is mostly a fixed overhead per batch job, so the whole Sentinel-2 L2A history of one
+# municipality (~10 years) fits in one job. The cap still stops a typo from requesting decades.
+MAX_OPENEO_MONTHS = 120
 
 ISO = "%Y-%m-%dT%H:%M:%SZ"
 

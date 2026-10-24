@@ -307,6 +307,10 @@ def hampel_outliers(
     smooth stretches where the MAD is almost zero.
 
     Example: monthly NDVI ... 0.45, 0.46, 0.08, 0.44 ... -> the 0.08 (a cloudy month) is flagged.
+
+    The first and last valid values are never flagged: a spike needs neighbours on both sides,
+    and the start of a series is often a genuine seasonal transition (e.g. October, before the
+    autumn rains green up the ground cover).
     """
     rolling = series.rolling(window, center=True, min_periods=3)
     median = rolling.median()
@@ -314,7 +318,11 @@ def hampel_outliers(
     mad = rolling.apply(lambda w: float(np.nanmedian(np.abs(w - np.nanmedian(w)))), raw=True)
     deviation = (series - median).abs()
     threshold = np.maximum(n_sigmas * 1.4826 * mad, min_deviation)
-    return (deviation > threshold).fillna(False).astype(bool)
+    flags = (deviation > threshold).fillna(False).astype(bool)
+    valid = np.flatnonzero(series.notna().to_numpy())
+    if valid.size:
+        flags.iloc[[valid[0], valid[-1]]] = False
+    return flags
 
 
 def clean_monthly_indices(

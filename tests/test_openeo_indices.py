@@ -117,6 +117,12 @@ def test_hampel_still_works_next_to_a_data_gap() -> None:
     assert hampel_outliers(values).tolist()[2] is True
 
 
+def test_hampel_never_flags_the_series_edges() -> None:
+    # Real Martos 2024/25: October (0.355) precedes the autumn green-up; it is not a cloud.
+    values = pd.Series([0.355, 0.462, 0.459, 0.444, 0.449, 0.415, 0.404])
+    assert not hampel_outliers(values).any()
+
+
 def test_hampel_ignores_smooth_seasonal_change() -> None:
     values = pd.Series(np.linspace(0.48, 0.27, 12))  # winter -> late summer decline
     assert not hampel_outliers(values).any()

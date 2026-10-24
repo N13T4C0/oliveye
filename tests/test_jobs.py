@@ -84,7 +84,7 @@ def test_openeo_job_is_a_dry_run_by_default(ctx: JobContext, fake_sigpac: Path) 
 
 
 def test_openeo_job_caps_the_period(ctx: JobContext, fake_sigpac: Path) -> None:
-    params = {"province": "23", "municipality": "60", "start": "2015-01-01", "end": "2026-01-01"}
+    params = {"province": "23", "municipality": "60", "start": "2010-01-01", "end": "2026-01-01"}
     with pytest.raises(ValueError, match="Period must be"):
         jobs.openeo_monthly_indices(params, ctx)
 

@@ -44,7 +44,7 @@ git show origin/results:2026-10-24-sigpac-rank-23/log.txt
 ## Rules for spending openEO credits
 
 1. Always queue a **dry run** first and read `request_summary.json` (area, bbox, vertices).
-2. Real runs (`"dry_run": false`) are capped at 13 months and one municipality per job.
+2. Real runs (`"dry_run": false`) are capped at 120 months and one municipality per job (cost is mostly a fixed overhead per job: 4 credits for 1 month, 6 for 12 months in Martos).
 3. After each real run, read the credits in `_cache/openeo/credits_log.csv` before queueing more.
 4. Never queue a real run whose dry run was not reviewed.
 

@@ -7,9 +7,14 @@ on:
     branches: [main]
     paths: ["jobs/*.json"]
   workflow_dispatch:
+    inputs:
+      generation:
+        description: "How many times this run has re-dispatched itself (stops at 3)"
+        default: "0"
 
 permissions:
   contents: write # push to the results branch
+  actions: write # re-dispatch this workflow when the time budget runs out
 
 concurrency:
   group: jobs # one run at a time, so results never conflict
@@ -18,7 +23,7 @@ concurrency:
 jobs:
   run:
     runs-on: ubuntu-latest
-    timeout-minutes: 180
+    timeout-minutes: 350 # hosted runners allow 360
     steps:
       - uses: actions/checkout@v4
 
@@ -44,24 +49,79 @@ jobs:
           key: sigpac-${{ github.run_id }}
           restore-keys: sigpac-
 
-      - name: Run pending jobs
+      # One job at a time, publishing after each: a cancelled or timed-out run never loses
+      # finished (possibly paid) results. When the time budget runs out, the workflow
+      # dispatches itself again (at most 3 times in a row) to continue with the remaining jobs.
+      - name: Run pending jobs and publish after each
+        timeout-minutes: 330 # leaves time for the final publish step below
         env:
           OPENEO_REFRESH_TOKEN: ${{ secrets.OPENEO_REFRESH_TOKEN }}
           OPENEO_CLIENT_ID: ${{ secrets.OPENEO_CLIENT_ID }}
           OPENEO_CLIENT_SECRET: ${{ secrets.OPENEO_CLIENT_SECRET }}
-        run: uv run python scripts/run_jobs.py --results-dir results-branch
+          GH_TOKEN: ${{ github.token }}
+          GENERATION: ${{ inputs.generation || '0' }}
+        run: |
+          git -C results-branch config user.name "github-actions[bot]"
+          git -C results-branch config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          publish() {
+            git -C results-branch add -A
+            if git -C results-branch diff --cached --quiet; then return 0; fi
+            git -C results-branch commit -q -m "results: $1 (run ${{ github.run_id }})"
+            # A lost push would lose paid results and re-run the job: retry with backoff.
+            for attempt in 1 2 3 4; do
+              git -C results-branch push -q origin results && return 0
+              sleep $((attempt * 10))
+              git -C results-branch pull -q --rebase origin results || true
+            done
+            echo "::error::Could not push results after 4 attempts"
+            exit 1
+          }
+          pending() {
+            local n
+            n=$(uv run python scripts/run_jobs.py --results-dir results-branch --count) || exit 1
+            case "$n" in ''|*[!0-9]*) echo "::error::bad pending count '$n'" >&2; exit 1 ;; esac
+            echo "$n"
+          }
 
-      - name: Publish results
+          failed=0
+          start_deadline=$((SECONDS + 180 * 60)) # no new job after 3 h (an openEO job may take 2.5 h)
+          left=$(pending)
+          while [ "$left" -gt 0 ]; do
+            if [ "$SECONDS" -ge "$start_deadline" ]; then
+              if [ "$GENERATION" -lt 3 ]; then
+                echo "Time budget used with $left job(s) left: dispatching generation $((GENERATION + 1))"
+                gh workflow run jobs.yml --ref main -f generation=$((GENERATION + 1))
+              else
+                echo "::warning::$left job(s) left after 3 re-dispatches; push to jobs/ to continue"
+              fi
+              break
+            fi
+            uv run python scripts/run_jobs.py --results-dir results-branch --max-jobs 1 || failed=1
+            publish "job finished"
+            now=$(pending)
+            if [ "$now" -ge "$left" ]; then
+              # The job left no status.json: stop instead of retrying it forever.
+              echo "::error::No progress on the job queue ($now pending); stopping"
+              failed=1
+              break
+            fi
+            left=$now
+          done
+          exit $failed
+
+      # Safety net: if the step above is cancelled or times out mid-job, still publish what
+      # exists (e.g. the 'created' row in credits_log.csv, so the next run resumes that job
+      # instead of paying for a new one).
+      - name: Publish results (safety net)
         if: always()
         working-directory: results-branch
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
           if git diff --cached --quiet; then
-            echo "Nothing to publish"
+            echo "Nothing left to publish"
             exit 0
           fi
-          git commit -m "results: run ${{ github.run_id }} for ${{ github.sha }}"
-          # A lost push would lose paid results and re-run the job: retry once after rebasing.
+          git -c user.name="github-actions[bot]" \
+              -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+              commit -q -m "results: safety net (run ${{ github.run_id }})"
           git push origin results || { git pull --rebase origin results && git push origin results; }

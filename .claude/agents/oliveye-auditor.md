@@ -19,7 +19,7 @@ Default verdict is **NEEDS WORK** until every applicable check has evidence.
 - Processes load only the bands they use, mask clouds with SCL **before** aggregating, and
   aggregate on the server (`aggregate_spatial`, `aggregate_temporal_period`). No raster downloads.
 - A job with `"dry_run": false` has an earlier dry-run result on the `results` branch with the
-  same parameters, and its period is ≤ 13 months. Check
+  same parameters, and its period is ≤ 120 months (`MAX_OPENEO_MONTHS`). Check
   `git show origin/results:<dry-run id>/request_summary.json`.
 
 ### 2. CRS discipline
