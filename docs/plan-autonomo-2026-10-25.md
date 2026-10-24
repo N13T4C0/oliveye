@@ -53,3 +53,5 @@ parked in "Pending for the author" and the work moves on.
   dropped (computer probably asleep): the local-folder sync is parked until it reconnects.
 - 22:25 Block D (part): ADR 0004 + `scripts/experiment_xgboost.py`; provisional XGBoost MAPE 84 %
   vs 43 % for "repeat last campaign" → documented negative result, to refresh with full data.
+- 22:30 Granada 2016/17–2017/18: no reliable figure found (2018/19 release gives +57 % but no
+  tonnage); rows stay dropped per ADR 0003 #16. Parked.
