@@ -81,3 +81,60 @@ def dms_to_decimal(text: str) -> float:
     degrees, minutes, seconds = (numbers + [0.0, 0.0])[:3]
     value = degrees + minutes / 60 + seconds / 3600
     return -value if text.strip()[-1:].upper() in ("W", "S", "O") else value
+
+
+# --------------------------------------------------------------------------------------------
+# Open-Meteo historical weather (ERA5 reanalysis), the keyless fallback when RIA is unreachable
+# --------------------------------------------------------------------------------------------
+
+OPEN_METEO_ARCHIVE_URL = "https://archive-api.open-meteo.com/v1/archive"
+OPEN_METEO_DAILY = (
+    "temperature_2m_max",
+    "temperature_2m_min",
+    "precipitation_sum",
+    "et0_fao_evapotranspiration",
+)
+OPEN_METEO_COLUMNS = {
+    "temperature_2m_max": "tmax_c",
+    "temperature_2m_min": "tmin_c",
+    "precipitation_sum": "precip_mm",
+    "et0_fao_evapotranspiration": "et0_mm",
+}
+
+
+def open_meteo_url(latitudes: list[float], longitudes: list[float], start: str, end: str) -> str:
+    """Archive API URL for several points at once (daily values, Europe/Madrid days)."""
+    from urllib.parse import urlencode
+
+    query = urlencode(
+        {
+            "latitude": ",".join(f"{v:.4f}" for v in latitudes),
+            "longitude": ",".join(f"{v:.4f}" for v in longitudes),
+            "start_date": start,
+            "end_date": end,
+            "daily": ",".join(OPEN_METEO_DAILY),
+            "timezone": "Europe/Madrid",
+        }
+    )
+    return f"{OPEN_METEO_ARCHIVE_URL}?{query}"
+
+
+def parse_open_meteo(payload: str, point_ids: list[str]) -> pd.DataFrame:
+    """Tidy daily table (point_id, date, tmax_c, tmin_c, precip_mm, et0_mm).
+
+    The API returns one object for a single point and a list for several points, in the order
+    of the requested coordinates.
+    """
+    data = json.loads(payload)
+    locations = data if isinstance(data, list) else [data]
+    if len(locations) != len(point_ids):
+        raise ValueError(f"Expected {len(point_ids)} locations, got {len(locations)}")
+    frames = []
+    for point_id, location in zip(point_ids, locations, strict=True):
+        daily = pd.DataFrame(location["daily"]).rename(
+            columns={"time": "date", **OPEN_METEO_COLUMNS}
+        )
+        daily["date"] = pd.to_datetime(daily["date"])
+        daily.insert(0, "point_id", point_id)
+        frames.append(daily)
+    return pd.concat(frames, ignore_index=True)

@@ -47,6 +47,7 @@ ALLOWED_DOWNLOAD_HOSTS: tuple[str, ...] = (
     "source.coop",
     "catastro.meh.es",
     "catastro.hacienda.gob.es",
+    "open-meteo.com",
 )
 MAX_DOWNLOAD_BYTES = 50 * 1024 * 1024
 # Measured on 2026-10-24 (Martos, 3,130 cells): 1 month = 4 credits, 12 months = 6 credits.
@@ -263,6 +264,32 @@ def ria_daily(params: dict[str, Any], ctx: JobContext) -> list[Path]:
     return [out]
 
 
+def open_meteo_daily(params: dict[str, Any], ctx: JobContext) -> list[Path]:
+    """Daily ERA5 weather from Open-Meteo for named points.
+
+    `points`: list of {"id": ..., "lat": ..., "lon": ...}; `start`, `end` (ISO dates).
+    Points are requested in chunks of 10 to keep each response small.
+    """
+    from oliveye.pipeline import climate
+
+    _require(params, "points", "start", "end")
+    points: list[dict[str, Any]] = params["points"]
+    start, end = str(pd.Timestamp(params["start"]).date()), str(pd.Timestamp(params["end"]).date())
+    frames = []
+    for i in range(0, len(points), 10):
+        chunk = points[i : i + 10]
+        url = climate.open_meteo_url(
+            [float(p["lat"]) for p in chunk], [float(p["lon"]) for p in chunk], start, end
+        )
+        payload = _fetch_text(url)
+        frames.append(climate.parse_open_meteo(payload, [str(p["id"]) for p in chunk]))
+        print(f"points {i + 1}-{i + len(chunk)}: {len(frames[-1])} rows")
+    table = pd.concat(frames, ignore_index=True)
+    out = ctx.output_dir / f"open_meteo_daily_{start}_{end}.csv"
+    table.to_csv(out, index=False)
+    return [out]
+
+
 def _host_allowed(url: str) -> bool:
     """HTTPS only, and the host must be (a subdomain of) an allow-listed one."""
     parsed = urlparse(url)
@@ -450,6 +477,7 @@ HANDLERS: dict[str, Handler] = {
     "catastro_ine_mapping": catastro_ine_mapping,
     "ria_stations": ria_stations,
     "ria_daily": ria_daily,
+    "open_meteo_daily": open_meteo_daily,
     "sigpac_rank": sigpac_rank,
     "sigpac_municipality_summary": sigpac_municipality_summary,
     "sigpac_schema": sigpac_schema,

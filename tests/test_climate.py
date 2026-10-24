@@ -5,7 +5,14 @@ import json
 import pandas as pd
 import pytest
 
-from oliveye.pipeline.climate import daily_url, dms_to_decimal, parse_daily, parse_stations
+from oliveye.pipeline.climate import (
+    daily_url,
+    dms_to_decimal,
+    open_meteo_url,
+    parse_daily,
+    parse_open_meteo,
+    parse_stations,
+)
 
 
 def test_parse_stations() -> None:
@@ -58,3 +65,23 @@ def test_daily_url() -> None:
 )
 def test_dms_to_decimal(text: str, expected: float) -> None:
     assert dms_to_decimal(text) == pytest.approx(expected, abs=1e-5)
+
+
+def test_open_meteo_url_and_parse_multi_point() -> None:
+    url = open_meteo_url([37.72, 38.01], [-3.97, -3.37], "2022-05-01", "2022-05-02")
+    assert "latitude=37.7200%2C38.0100" in url and "daily=temperature_2m_max" in url
+
+    one = {
+        "daily": {
+            "time": ["2022-05-01", "2022-05-02"],
+            "temperature_2m_max": [36.1, 34.0],
+            "temperature_2m_min": [15.0, 14.2],
+            "precipitation_sum": [0.0, 0.0],
+            "et0_fao_evapotranspiration": [6.1, 5.8],
+        }
+    }
+    table = parse_open_meteo(json.dumps([one, one]), ["23-60", "23-92"])
+    assert list(table["point_id"].unique()) == ["23-60", "23-92"]
+    assert table.loc[0, "tmax_c"] == pytest.approx(36.1)
+    with pytest.raises(ValueError, match="Expected 3 locations"):
+        parse_open_meteo(json.dumps([one, one]), ["a", "b", "c"])
