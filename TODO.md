@@ -16,8 +16,12 @@ Updated at the end of each phase.
 - [x] SIGPAC subset fetcher (`scripts/fetch_sigpac_subset.py`, DuckDB over remote GeoParquet)
 - [x] Download sample municipality: Martos (23/60) — 21,401 OV parcels (21,796 ha), 477 TA (104 ha)
 - [ ] Download SIGPAC for all of Jaén (23) and Granada (18) (Phase 2)
-- [ ] Investigate municipality code `900` in the Jaén ranking (24,113 ha OV) before summing provinces
-- [x] Aforo per province: yearly Junta PDFs "Estimacion_ACEITE_MESA_<campaign>" (5 found, download queued)
+- [x] Code `900` = Jaén capital (Catastro numbering: SIGPAC municipality codes are **Catastro codes, not INE**; 900 = provincial capital). Bounds around Jaén city; 24,113 ha OV. Not a duplicate.
+- [x] SIGPAC OV vs Junta yearbook: Jaén 584,828 / 588,818 ha (99.3 %), Granada 203,994 / 208,835 ha (97.7 %)
+- [ ] Map Catastro municipality codes to INE codes and names before joining other sources
+- [x] Aforo per province: yearly Junta PDFs "Estimacion_ACEITE_MESA_<campaign>"; parser `oliveye.pipeline.production` (2021/22–2026/27)
+  - Derived previous-campaign finals match AICA (Andalucía 2023/24: 578,100 vs 580,464 t)
+- [ ] Find aforo PDFs for 2015/16–2020/21
 - [ ] Actual production per province: find AICA provincial series (reports only give % per province)
 - [ ] Install uv and Docker; run `uv sync` (done on Windows) and `docker compose up -d`
 
@@ -36,7 +40,8 @@ Updated at the end of each phase.
 - [ ] Add a proper cereal control: TA parcels from a campiña municipality
 - [x] Monthly median NDVI + NDMI composites on the server, per municipality olive area
   (`oliveye.pipeline.openeo_indices`, `scripts/extract_monthly_indices.py`) + Hampel outlier flag
-- [ ] **Before 2026-11-01** (credits expire): dry run (queued as a job), then 1 real month of Martos and log the cost
+- [x] Dry run Martos 1 month: 1 geometry, 14,307 ha measured (of 21,618), bbox 553 km², 135k vertices
+- [ ] **Before 2026-11-01** (credits expire): 1 real month of Martos (needs the openEO secret) and log the cost
 - [ ] Extrapolate cost to a full campaign and to all municipalities of Jaén + Granada
 - [ ] `02_sigpac_olive_parcels.ipynb`: load SIGPAC, filter olive uses, areas per municipality/province, map
 - [ ] `03_production_history.ipynb`: production and aforo per province and campaign since 2015
