@@ -14,6 +14,8 @@ from oliveye.pipeline.openeo_indices import (
     hampel_outliers,
     load_indices_csv,
     olive_area_by_municipality,
+    olive_area_within_budget,
+    payload_bytes,
 )
 from oliveye.pipeline.openeo_jobs import cache_key
 
@@ -137,3 +139,49 @@ def test_clean_keeps_raw_and_masks_outliers() -> None:
     assert clean.loc[3, "ndvi"] == pytest.approx(0.08)  # raw value preserved
     assert np.isnan(clean.loc[3, "ndvi_clean"])
     assert not clean["ndmi_outlier"].any()
+
+
+def _mixed_parcels() -> gpd.GeoDataFrame:
+    """200 large (150 m) and 200 small (60 m) olive squares, all separate."""
+    geoms = []
+    for i in range(400):
+        side = 150 if i % 2 == 0 else 60
+        x, y = X0 + (i % 20) * 200, Y0 + (i // 20) * 200
+        geoms.append(box(x, y, x + side, y + side))
+    gdf = gpd.GeoDataFrame(
+        {
+            "parcel_id": [f"p{i}" for i in range(400)],
+            "land_use_code": "OV",
+            "province_code": "23",
+            "municipality_code": "60",
+        },
+        geometry=geoms,
+        crs="EPSG:25830",
+    )
+    gdf["area_ha"] = gdf.area / 1e4
+    return gdf
+
+
+def test_dropping_small_parts_keeps_large_ones(parcels: gpd.GeoDataFrame) -> None:
+    full = olive_area_by_municipality(parcels)
+    coarse = olive_area_by_municipality(parcels, min_part_ha=2.0)
+    # Municipality 60 keeps its two 3.24 ha squares; 61 (0.64 ha) has nothing left.
+    assert coarse.iloc[0]["sampled_ha"] == pytest.approx(full.iloc[0]["sampled_ha"])
+    assert list(coarse["municipality_code"]) == ["60"]
+
+
+def test_budget_drops_small_fragments_until_it_fits() -> None:
+    heavy = _mixed_parcels()
+    detailed = payload_bytes(olive_area_by_municipality(heavy))
+
+    areas, settings = olive_area_within_budget(heavy, max_bytes=int(detailed * 0.75))
+
+    # After the 10 m inner buffer the small squares are 0.16 ha: dropped at the (30, 0.25) step.
+    assert settings["min_part_ha"] == 0.25
+    assert settings["payload_bytes"] <= detailed * 0.75
+    assert 0 < settings["area_loss_pct"] < 25
+
+
+def test_budget_never_trades_away_the_olive_grove() -> None:
+    with pytest.raises(ValueError, match="without losing more than"):
+        olive_area_within_budget(_mixed_parcels(), max_bytes=100)

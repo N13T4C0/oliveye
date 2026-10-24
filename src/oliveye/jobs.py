@@ -195,8 +195,12 @@ def openeo_monthly_indices(params: dict[str, Any], ctx: JobContext) -> list[Path
         raise ValueError(f"Period must be 1..{MAX_OPENEO_MONTHS} months, got {n_months}")
 
     path = sigpac.fetch_and_cache_municipality(province, municipality, ctx.sigpac_dir)
-    areas = oi.olive_area_by_municipality(gpd.read_parquet(path))
-    summary: dict[str, Any] = {**oi.request_summary(areas), "months": n_months}
+    areas, simplification = oi.olive_area_within_budget(gpd.read_parquet(path))
+    summary: dict[str, Any] = {
+        **oi.request_summary(areas),
+        **simplification,
+        "months": n_months,
+    }
     print(json.dumps(summary, indent=1))
     summary_path = ctx.output_dir / "request_summary.json"
 

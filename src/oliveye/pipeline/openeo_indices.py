@@ -61,6 +61,7 @@ def olive_area_by_municipality(
     land_use_code: str = OLIVE_GROVE,
     inner_buffer_m: float = 10.0,
     simplify_tolerance_m: float = 5.0,
+    min_part_ha: float = 0.0,
 ) -> gpd.GeoDataFrame:
     """Dissolve the olive parcels of each municipality into a single geometry for openEO.
 
@@ -68,8 +69,9 @@ def olive_area_by_municipality(
 
     1. keep one land use (olive grove by default);
     2. shrink each parcel by one Sentinel-2 pixel (10 m) to drop mixed border pixels;
-    3. dissolve per municipality and simplify the outline (5 m is half a pixel, so the set of
-       pixels covered barely changes, but the GeoJSON sent to openEO gets much smaller).
+    3. dissolve per municipality, optionally drop polygon parts smaller than `min_part_ha`
+       (tiny fragments add many vertices but almost no pixels), and simplify the outline
+       (5 m is half a pixel, so the set of pixels covered barely changes).
 
     Returns:
         One row per municipality in EPSG:4326 with `n_parcels`, `olive_ha` (declared SIGPAC
@@ -90,12 +92,95 @@ def olive_area_by_municipality(
         n_parcels=("parcel_id", "count"), olive_ha=("area_ha", "sum")
     )
     dissolved = olive[[*AREA_ID_COLUMNS, "geometry"]].dissolve(by=AREA_ID_COLUMNS)
+    if min_part_ha > 0:
+        parts = dissolved.explode(index_parts=False)
+        parts = parts[parts.area >= min_part_ha * 1e4]
+        dissolved = parts.dissolve(by=AREA_ID_COLUMNS)
     dissolved["geometry"] = dissolved.simplify(simplify_tolerance_m, preserve_topology=True)
     dissolved["sampled_ha"] = dissolved.area / 1e4
 
     areas = dissolved.join(stats).reset_index()
     columns = [*AREA_ID_COLUMNS, "n_parcels", "olive_ha", "sampled_ha", "geometry"]
     return areas[columns].to_crs(OPENEO_CRS)
+
+
+# openEO on CDSE rejects requests of ~3 MB with "413 Request Entity Too Large" (seen on
+# 2026-10-24 with Martos). Keep the inline GeoJSON well below that.
+MAX_GEOMETRY_BYTES = 1_000_000
+
+# (simplify tolerance in m, minimum polygon part in ha), from most to least detailed.
+SIMPLIFICATION_STEPS: tuple[tuple[float, float], ...] = (
+    (5, 0.0),
+    (10, 0.0),
+    (20, 0.1),
+    (30, 0.25),
+    (50, 0.5),
+    (80, 1.0),
+)
+
+
+def geometry_payload(geometries: gpd.GeoDataFrame) -> dict[str, Any]:
+    """The GeoJSON FeatureCollection sent inline to openEO (EPSG:4326, rounded coordinates).
+
+    6 decimals of a degree is ~0.1 m: far below a 10 m pixel, and much shorter than full floats.
+    """
+    collection = json.loads(geometries.to_crs(OPENEO_CRS)[["geometry"]].to_json(drop_id=True))
+    rounded: dict[str, Any] = _round_coordinates(collection, ndigits=6)
+    return rounded
+
+
+def payload_bytes(geometries: gpd.GeoDataFrame) -> int:
+    """Size in bytes of `geometry_payload` as compact JSON."""
+    return len(json.dumps(geometry_payload(geometries), separators=(",", ":")))
+
+
+def olive_area_within_budget(
+    parcels: gpd.GeoDataFrame,
+    *,
+    max_bytes: int = MAX_GEOMETRY_BYTES,
+    max_area_loss: float = 0.25,
+    steps: tuple[tuple[float, float], ...] = SIMPLIFICATION_STEPS,
+) -> tuple[gpd.GeoDataFrame, dict[str, float]]:
+    """Olive area per municipality, simplified just enough to fit the openEO request limit.
+
+    Tries the steps in order and returns the first (most detailed) one that fits, with the
+    settings used and the share of measured area lost, so it can be reported with the results.
+    A step that loses more than `max_area_loss` of the measured area (or a municipality) is
+    never accepted: a smaller request that no longer represents the olive grove is useless.
+    """
+    reference: gpd.GeoDataFrame | None = None
+    for tolerance_m, min_part_ha in steps:
+        areas = olive_area_by_municipality(
+            parcels, simplify_tolerance_m=tolerance_m, min_part_ha=min_part_ha
+        )
+        if reference is None:
+            reference = areas
+        loss = 1 - areas["sampled_ha"].sum() / reference["sampled_ha"].sum()
+        if len(areas) < len(reference) or loss > max_area_loss:
+            break
+        size = payload_bytes(areas)
+        if size <= max_bytes:
+            return areas, {
+                "simplify_tolerance_m": tolerance_m,
+                "min_part_ha": min_part_ha,
+                "payload_bytes": size,
+                "area_loss_pct": round(100 * float(loss), 2),
+            }
+    raise ValueError(
+        f"Geometry does not fit in {max_bytes:,} bytes without losing more than "
+        f"{max_area_loss:.0%} of the olive area; split the area into smaller requests."
+    )
+
+
+def _round_coordinates(obj: Any, ndigits: int) -> Any:
+    """Recursively round every float in a GeoJSON-like structure."""
+    if isinstance(obj, float):
+        return round(obj, ndigits)
+    if isinstance(obj, list):
+        return [_round_coordinates(item, ndigits) for item in obj]
+    if isinstance(obj, dict):
+        return {k: _round_coordinates(v, ndigits) for k, v in obj.items()}
+    return obj
 
 
 def request_summary(areas: gpd.GeoDataFrame) -> dict[str, float | int]:
@@ -112,6 +197,7 @@ def request_summary(areas: gpd.GeoDataFrame) -> dict[str, float | int]:
         "sampled_ha": round(float(areas["sampled_ha"].sum()), 1),
         "bbox_km2": round(float((east - west) * (north - south) / 1e6), 1),
         "vertices": int(metric.geometry.count_coordinates().sum()),
+        "payload_bytes": payload_bytes(areas),
     }
 
 
@@ -126,17 +212,6 @@ def _ndvi_ndmi(bands: ProcessBuilder) -> ProcessBuilder:
     nir: ProcessBuilder = bands[1]
     swir: ProcessBuilder = bands[2]
     return array_create([(nir - red) / (nir + red), (nir - swir) / (nir + swir)])
-
-
-def _round_coordinates(obj: Any, ndigits: int) -> Any:
-    """Recursively round every float in a GeoJSON-like structure."""
-    if isinstance(obj, float):
-        return round(obj, ndigits)
-    if isinstance(obj, list):
-        return [_round_coordinates(item, ndigits) for item in obj]
-    if isinstance(obj, dict):
-        return {k: _round_coordinates(v, ndigits) for k, v in obj.items()}
-    return obj
 
 
 def build_monthly_indices(
@@ -181,9 +256,11 @@ def build_monthly_indices(
     )
     monthly = indices.aggregate_temporal_period(period="month", reducer="median")
 
-    # 6 decimals of a degree is ~0.1 m: far below a 10 m pixel, and ~40 % fewer bytes per request.
-    feature_collection = json.loads(geometries[["geometry"]].to_json(to_wgs84=False, drop_id=True))
-    feature_collection = _round_coordinates(feature_collection, ndigits=6)
+    feature_collection = geometry_payload(geometries)
+    size = len(json.dumps(feature_collection, separators=(",", ":")))
+    if size > MAX_GEOMETRY_BYTES:
+        # Fail locally instead of sending a request the backend will reject with HTTP 413.
+        raise ValueError(f"Geometry payload is {size:,} bytes (max {MAX_GEOMETRY_BYTES:,}).")
     return monthly.aggregate_spatial(geometries=feature_collection, reducer="mean")
 
 

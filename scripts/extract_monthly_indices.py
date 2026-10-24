@@ -28,7 +28,7 @@ from oliveye.pipeline.openeo_indices import (
     build_monthly_indices,
     clean_monthly_indices,
     load_indices_csv,
-    olive_area_by_municipality,
+    olive_area_within_budget,
     request_summary,
 )
 from oliveye.pipeline.openeo_jobs import cache_key, run_cached_batch_job
@@ -58,8 +58,8 @@ def main() -> None:
     args = parse_args()
 
     sigpac_path = fetch_and_cache_municipality(args.province, args.municipality, SIGPAC_DIR)
-    areas = olive_area_by_municipality(gpd.read_parquet(sigpac_path))
-    print(json.dumps(request_summary(areas), indent=1))
+    areas, simplification = olive_area_within_budget(gpd.read_parquet(sigpac_path))
+    print(json.dumps({**request_summary(areas), **simplification}, indent=1))
 
     if args.dry_run:
         process = build_monthly_indices(areas, args.start, args.end)
