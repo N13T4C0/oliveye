@@ -46,7 +46,8 @@ Updated at the end of each phase.
 
 ## Phase 3 groundwork
 - [x] `oliveye.models.features`: seasonal NDVI/NDMI per campaign, data cut at August (aforo time)
-- [ ] Climate: RIA stations + daily weather (jobs ready: `ria_stations`, `ria_daily`); heat days in May
+- [x] Climate: Open-Meteo ERA5 daily weather for the 86 municipalities (30 ERA5 cells, 2016–2026)
+- [ ] RIA stations: the web service returns an HTML page to GitHub runners (bot protection?) — retry later or from the author's PC
 - [ ] Feature table per province × campaign (indices + climate + lagged production for alternate bearing)
 - [ ] Baselines (last campaign, 5-year mean, aforo) and Ridge with leave-one-campaign-out
 - [ ] `/grill-me` session with the author on model design before training

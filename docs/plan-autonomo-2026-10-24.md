@@ -15,12 +15,12 @@ repo. Each check-in reads this file, advances the next open step and logs progre
 1. [x] Validate cost of Martos 2016/17–2025/26 in one job (`2026-10-24-openeo-real-23-60-2016-2026`).
 2. [x] Dry runs for municipalities covering 80 % of olive area (Jaén 48, Granada 38) → review
        cells, coverage, payload.
-3. [ ] Auditor → real runs for the same municipalities (largest first, stop at the budget).
-4. [ ] Aforo PDFs 2015/16–2020/21 (find URLs, `aforo_table` job).
+3. [~] Auditor → real runs for the same municipalities (largest first, stop at the budget).
+4. [~] Aforo PDFs 2015/16–2020/21 (find URLs, `aforo_table` job).
 5. [x] AICA actual production per province and campaign (find a primary source).
 6. [x] Catastro → INE municipality code mapping (names for the map, joins with climate).
 7. [x] Evaluate ponytail, omniroute, graphify, addyosmani agent-skills; install what helps.
-8. [ ] Wrap-up: TODO (repo + project), sync the author's folder, summary message.
+8. [x] Wrap-up: TODO (repo + project), sync the author's folder, summary message.
 
 ## Log
 - 18:05 Plan written; 5 check-ins scheduled (every ~35 min until ~21:00).
@@ -54,7 +54,7 @@ repo. Each check-in reads this file, advances the next open step and logs progre
   Exploratory look at Martos vs Jaén production: 2022/23 (180 kt, heat wave during flowering)
   has normal spring NDVI → satellite alone misses flowering failure; 2023/24 shows the lowest
   summer NDMI (−0.106). Climate (heat in May) and alternate bearing (lagged production) needed.
-9. [ ] NEW: climate source (RIA, Junta's agroclimatic network) → job type for daily data.
+9. [x] NEW: climate source (RIA, Junta's agroclimatic network) → job type for daily data.
 - 19:10 INCIDENT: both parallel workers failed with exit 126 (publish script without exec bit).
   Up to 4 paid openEO jobs finished without their results/credits being published.
 - 19:13 Fix (audited twice): call the script with bash + exec bit; recover orphaned jobs from the
@@ -82,3 +82,9 @@ repo. Each check-in reads this file, advances the next open step and logs progre
   Fix: snap points to the ERA5 grid (0.25°): 86 municipalities → 30 cells, one per request
   with pauses and back-off. Re-queued.
 - 20:38 Author's local folder synced to the latest commit (git bundle, fast-forward).
+- 20:48 Climate done: 30 ERA5 cells × 3,926 days (2016-01-01..2026-09-30). Martos cell: May 2022
+  was the hottest May of the series (mean tmax 28.0 °C, 5 days > 32 °C) — consistent with the
+  2022/23 harvest failure; May 2026 (9 days > 32 °C) vs a high 2026/27 aforo shows one variable
+  is not enough.
+- 20:50 Wrap-up: 12/85 municipalities done, 247 credits logged in total. The queue keeps running
+  unattended (two workers, re-dispatch up to 6×3 h, hard budget 3,100 credits).
