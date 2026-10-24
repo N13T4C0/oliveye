@@ -13,7 +13,7 @@ repo. Each check-in reads this file, advances the next open step and logs progre
 ## Steps
 
 1. [x] Validate cost of Martos 2016/17–2025/26 in one job (`2026-10-24-openeo-real-23-60-2016-2026`).
-2. [ ] Dry runs for municipalities covering 80 % of olive area (Jaén 48, Granada 38) → review
+2. [x] Dry runs for municipalities covering 80 % of olive area (Jaén 48, Granada 38) → review
        cells, coverage, payload.
 3. [ ] Auditor → real runs for the same municipalities (largest first, stop at the budget).
 4. [ ] Aforo PDFs 2015/16–2020/21 (find URLs, `aforo_table` job).
@@ -39,3 +39,11 @@ repo. Each check-in reads this file, advances the next open step and logs progre
 - 19:20 Two-worker queue audited (NEEDS WORK → fixed: split by request, legacy log on resume,
   clean rebase abort, single re-dispatcher) and pushed without job files.
 - 19:20 Dry runs progressing on the old single-worker run (14/86).
+- 19:45 Step 2 done: 86/86 dry runs ok, all payloads < 1 MB (max 814 KB), median coverage 71 %;
+  25 fragmented municipalities (mostly Granada) below 60 % coverage but ≥ 22 pure cells each.
+- 19:50 Credit budget guard added (OPENEO_CREDIT_BUDGET=3100 in the workflow).
+- 19:55 Step 3 started: auditor PASS → 85 real jobs pushed (estimated 560–810 credits),
+  two parallel workers.
+- 20:05 Step 6: SIGPAC uses Catastro codes (Jaén 6 differ from INE, Granada 40). Added
+  `catastro_ine_mapping` job (Catastro ConsultaMunicipio gives both codes + name); queued.
+  Workers now re-read jobs/ from main before each job (applies to future runs).
