@@ -101,7 +101,7 @@ def province_table(
     table = pd.DataFrame(rows)
 
     production = target[["province", "campaign", "oil_final_t"]].copy()
-    lag = production.assign(campaign=production["campaign"].map(_next_campaign)).rename(
+    lag = production.assign(campaign=production["campaign"].map(next_campaign)).rename(
         columns={"oil_final_t": "lag_t"}
     )
     table = table.merge(production, on=["province", "campaign"], how="inner")
@@ -128,7 +128,7 @@ def province_table(
     return table[columns].sort_values(["province", "campaign"]).reset_index(drop=True)
 
 
-def _next_campaign(campaign: str) -> str:
+def next_campaign(campaign: str) -> str:
     """'2021/22' -> '2022/23': the campaign for which this production is the lag."""
     start = int(campaign[:4]) + 1
     return f"{start}/{(start + 1) % 100:02d}"

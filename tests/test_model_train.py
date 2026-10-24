@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from oliveye.models.dataset import FEATURES
+from oliveye.models.dataset import FEATURES, next_campaign
 from oliveye.models.evaluate import interval_bounds, mape, summarise
 from oliveye.models.train import (
     ALPHAS,
@@ -123,8 +123,7 @@ def test_loco_also_drops_the_next_campaign_from_training() -> None:
     table = synthetic_table()
     for train_idx, test_idx in loco_splits(table):
         held_out = table.loc[test_idx, "campaign"].iloc[0]
-        nxt = f"{int(held_out[:4]) + 1}/{(int(held_out[:4]) + 2) % 100:02d}"
-        assert nxt not in set(table.loc[train_idx, "campaign"])
+        assert next_campaign(held_out) not in set(table.loc[train_idx, "campaign"])
 
 
 def test_held_out_production_never_reaches_its_prediction_through_the_lag() -> None:
@@ -233,3 +232,22 @@ def test_province_level_survives_strong_shrinkage() -> None:
     assert ridge["Jaén"] - ridge["Granada"] == pytest.approx(
         truth["Jaén"] - truth["Granada"], abs=0.2
     )
+
+
+def test_choose_alpha_survives_too_few_inner_folds() -> None:
+    from oliveye.models.train import choose_alpha, forward_splits
+
+    table = synthetic_table().query("campaign <= '2021/22'")  # 5 campaigns, 1 forward fold
+    alpha = choose_alpha(table, ["hot_days_may", "is_granada"], ALPHAS, splitter=forward_splits)
+    assert alpha == max(ALPHAS)
+
+
+def test_unseen_province_is_an_error_not_a_pooled_guess() -> None:
+    from oliveye.models.train import ProvinceAnomalyRidge
+
+    train = synthetic_table().query("is_granada == 0")
+    model = ProvinceAnomalyRidge(alpha=1.0).fit(
+        train[["hot_days_may", "is_granada"]], train["log_production"]
+    )
+    with pytest.raises(ValueError, match="province"):
+        model.predict(pd.DataFrame({"hot_days_may": [1.0], "is_granada": [1]}))

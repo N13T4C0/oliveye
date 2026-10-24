@@ -14,7 +14,7 @@ from collections.abc import Mapping
 import numpy as np
 import pandas as pd
 
-MAX_SIGN_FLIP_N = 20  # 2**20 sign patterns is still instant; beyond that use a sampled test
+MAX_SIGN_FLIP_N = 16  # 2**16 sign patterns enumerate in milliseconds; beyond, use sampling
 
 
 def mape(actual: pd.Series, predicted: pd.Series) -> float:
@@ -35,10 +35,13 @@ def interval_bounds(log_residuals: pd.Series, *, coverage: float = 0.8) -> tuple
 
 
 def conformal_half_width(log_residuals: pd.Series, *, coverage: float = 0.8) -> float:
-    """Split-conformal half-width in log space: the ⌈(n+1)·coverage⌉-th smallest |residual|.
+    """Conformal-style half-width in log space: the ⌈(n+1)·coverage⌉-th smallest |residual|.
 
-    A forecast F gets the symmetric multiplicative interval [F / e^q, F · e^q]. With n residuals
-    the rank is capped at n, so the interval is never narrower than the data supports.
+    A forecast F gets the symmetric multiplicative interval [F / e^q, F · e^q]. Caveats: the
+    leave-one-campaign-out residuals come from different fits and the two provinces of a campaign
+    are correlated, so they are not strictly exchangeable and coverage is approximate. When the
+    rank exceeds n (very few residuals) theory gives an unbounded interval; we cap it at the
+    largest residual, which is then narrower than it should be.
     """
     magnitudes = np.sort(np.abs(np.asarray(log_residuals, dtype=float)))
     n = len(magnitudes)
@@ -115,6 +118,8 @@ def summarise(
     Columns: rows, MAPE, median APE, mean |log error|, median absolute error (t), rows and
     campaigns closer than the aforo, and the exact sign-flip p-value of the per-campaign
     difference in |log error| against the aforo (small p: the difference is unlikely to be luck).
+    The p-values are descriptive: several models are compared with no multiplicity correction,
+    and with n campaigns the smallest possible p is 2 / 2**n (0.125 with 4 campaigns).
     """
     common, models = _merged(model_predictions, baselines, others or {})
     by_campaign = per_campaign_errors(model_predictions, baselines, others)

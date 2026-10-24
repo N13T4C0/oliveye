@@ -25,7 +25,7 @@ from sklearn.linear_model import Ridge
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
-from oliveye.models.dataset import FEATURES
+from oliveye.models.dataset import FEATURES, next_campaign
 
 ALPHAS: tuple[float, ...] = tuple(float(a) for a in np.logspace(-1, 3, 9))
 MODEL_COLUMNS: list[str] = [*FEATURES, "is_granada"]
@@ -33,12 +33,6 @@ LAG_ONLY_COLUMNS: list[str] = ["lag_log_production", "is_granada"]
 CORRECTOR_COLUMNS: list[str] = ["log_aforo", "is_granada"]
 
 Splitter = Callable[[pd.DataFrame], Iterator[tuple[pd.Index, pd.Index]]]
-
-
-def next_campaign(campaign: str) -> str:
-    """'2021/22' -> '2022/23'."""
-    start = int(campaign[:4]) + 1
-    return f"{start}/{(start + 1) % 100:02d}"
 
 
 def loco_splits(table: pd.DataFrame) -> Iterator[tuple[pd.Index, pd.Index]]:
@@ -108,7 +102,6 @@ class ProvinceAnomalyRidge(BaseEstimator, RegressorMixin):  # type: ignore[misc]
     def fit(self, X: pd.DataFrame, y: pd.Series) -> ProvinceAnomalyRidge:  # noqa: N803
         target = pd.Series(np.asarray(y, dtype=float), index=X.index)
         self.level_ = target.groupby(X["is_granada"]).mean()
-        self.global_level_ = float(target.mean())
         self.feature_names_ = list(self._features(X).columns)
         self.transform_ = Pipeline(
             [("centre", ProvinceCentering()), ("clip", RangeClipper()), ("scale", StandardScaler())]
@@ -120,7 +113,10 @@ class ProvinceAnomalyRidge(BaseEstimator, RegressorMixin):  # type: ignore[misc]
         return self
 
     def _level(self, X: pd.DataFrame) -> pd.Series:  # noqa: N803
-        return X["is_granada"].map(self.level_).fillna(self.global_level_).astype(float)
+        level = X["is_granada"].map(self.level_)
+        if level.isna().any():
+            raise ValueError("cannot predict a province that is absent from the training rows")
+        return level.astype(float)
 
     def _transform(self, X: pd.DataFrame, *, fit: bool = False) -> np.ndarray:  # noqa: N803
         if fit:
@@ -138,9 +134,11 @@ class ProvinceAnomalyRidge(BaseEstimator, RegressorMixin):  # type: ignore[misc]
 
     @property
     def coef_(self) -> dict[str, float]:
-        """Standardised anomaly coefficients, plus the Granada − Jaén level gap (unpenalised)."""
-        coefs = dict(zip(self.feature_names_, self.ridge_.coef_.tolist(), strict=True))
-        coefs["is_granada"] = float(self.level_.get(1, np.nan) - self.level_.get(0, np.nan))
+        """Standardised anomaly slopes, plus `level_gap_granada`: the unpenalised log-level gap
+        Granada − Jaén (a different unit, kept apart by its name)."""
+        slopes = self.ridge_.coef_.tolist() if self.feature_names_ else []
+        coefs = dict(zip(self.feature_names_, slopes, strict=True))
+        coefs["level_gap_granada"] = float(self.level_.get(1, np.nan) - self.level_.get(0, np.nan))
         return coefs
 
 
@@ -161,14 +159,14 @@ def choose_alpha(
     for alpha in alphas:
         fold_errors = []
         for inner_train, inner_test in splitter(train):
-            if len(inner_train) == 0:
-                continue
             model = make_pipeline(alpha).fit(
                 train.loc[inner_train, list(columns)], train.loc[inner_train, "log_production"]
             )
             pred = model.predict(train.loc[inner_test, list(columns)])
             truth = train.loc[inner_test, "log_production"].to_numpy()
             fold_errors.append(float(np.mean((pred - truth) ** 2)))
+        if len(fold_errors) < 2:  # no standard error without two folds: shrink fully
+            return float(max(alphas))
         means.append(float(np.mean(fold_errors)))
         ses.append(float(np.std(fold_errors, ddof=1) / np.sqrt(len(fold_errors))))
     best = int(np.argmin(means))
@@ -223,7 +221,11 @@ def cross_validate_lag_only(
 def cross_validate_aforo_corrector(
     table: pd.DataFrame, *, alphas: Sequence[float] = ALPHAS
 ) -> pd.DataFrame:
-    """Secondary experiment: learn to correct the aforo (rows without aforo are skipped)."""
+    """Secondary experiment: learn to correct the aforo (rows without aforo are skipped).
+
+    It has no lag feature, so dropping campaign t+1 is not needed here; it is kept so that every
+    model is validated with the same splits.
+    """
     with_aforo = table.dropna(subset=["oil_aforo_t"]).assign(
         log_aforo=lambda t: np.log(t["oil_aforo_t"])
     )
@@ -235,7 +237,10 @@ def province_mean_predictions(table: pd.DataFrame) -> pd.Series:
     predictions = pd.Series(index=table.index, dtype=float)
     for train_idx, test_idx in loco_splits(table):
         means = table.loc[train_idx].groupby("province")["log_production"].mean()
-        predictions.loc[test_idx] = np.exp(table.loc[test_idx, "province"].map(means))
+        level = table.loc[test_idx, "province"].map(means)
+        if level.isna().any():
+            raise ValueError("a held-out province has no training rows")
+        predictions.loc[test_idx] = np.exp(level)
     return predictions
 
 
