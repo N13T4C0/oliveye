@@ -1,0 +1,11 @@
+{
+ "cells": 611,
+ "olive_ha_total": 4932.1,
+ "olive_ha_in_cells": 3631.6,
+ "coverage_pct": 73.6,
+ "mean_olive_share": 0.951,
+ "bbox_km2": 276.4,
+ "payload_bytes": 117274,
+ "months": 120,
+ "cache_key": "d2f71e722b659ccf"
+}
