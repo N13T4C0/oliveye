@@ -1,0 +1,7 @@
+{
+  "type": "sigpac_municipality_summary",
+  "params": {
+    "province": "23",
+    "municipality": "900"
+  }
+}
