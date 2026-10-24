@@ -49,3 +49,9 @@ repo. Each check-in reads this file, advances the next open step and logs progre
   Workers now re-read jobs/ from main before each job (applies to future runs).
 - 18:42 Check-in 1 (fired 18:39). Log times above corrected: earlier entries were estimated
   and ran ahead of the real clock. Waiting for the first parallel openEO results.
+- 18:55 Phase 3 groundwork: `oliveye.models.features` (seasonal NDVI/NDMI per campaign, data cut
+  at August so it is comparable with the aforo; province = olive-area-weighted mean).
+  Exploratory look at Martos vs Jaén production: 2022/23 (180 kt, heat wave during flowering)
+  has normal spring NDVI → satellite alone misses flowering failure; 2023/24 shows the lowest
+  summer NDMI (−0.106). Climate (heat in May) and alternate bearing (lagged production) needed.
+9. [ ] NEW: climate source (RIA, Junta's agroclimatic network) → job type for daily data.
