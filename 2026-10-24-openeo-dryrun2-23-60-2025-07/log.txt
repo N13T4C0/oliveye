@@ -1,0 +1,11 @@
+== 2026-10-24-openeo-dryrun2-23-60-2025-07 (openeo_monthly_indices)
+Traceback (most recent call last):
+  File "/home/runner/work/oliveye/oliveye/src/oliveye/jobs.py", line 328, in run_job
+    outputs = HANDLERS[job.type](job.params, ctx)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/oliveye/oliveye/src/oliveye/jobs.py", line 198, in openeo_monthly_indices
+    areas, simplification = oi.olive_area_within_budget(gpd.read_parquet(path))
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/oliveye/oliveye/src/oliveye/pipeline/openeo_indices.py", line 169, in olive_area_within_budget
+    raise ValueError(
+ValueError: Geometry does not fit in 1,000,000 bytes without losing more than 25% of the olive area; split the area into smaller requests.

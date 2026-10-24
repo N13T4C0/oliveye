@@ -1,0 +1,15 @@
+{
+ "job_id": "2026-10-24-openeo-dryrun2-23-60-2025-07",
+ "type": "openeo_monthly_indices",
+ "params": {
+  "province": "23",
+  "municipality": "60",
+  "start": "2025-07-01",
+  "end": "2025-08-01",
+  "dry_run": true
+ },
+ "started_at": "2026-10-24T15:34:05Z",
+ "status": "error",
+ "error": "ValueError: Geometry does not fit in 1,000,000 bytes without losing more than 25% of the olive area; split the area into smaller requests.",
+ "finished_at": "2026-10-24T15:35:33Z"
+}
