@@ -1,0 +1,13 @@
+{
+ "job_id": "2026-10-24-sigpac-rank-18",
+ "type": "sigpac_rank",
+ "params": {
+  "province": "18"
+ },
+ "started_at": "2026-10-24T14:51:52Z",
+ "status": "ok",
+ "outputs": [
+  "olive_ranking_18.csv"
+ ],
+ "finished_at": "2026-10-24T14:52:03Z"
+}

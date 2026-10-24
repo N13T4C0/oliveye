@@ -1,0 +1,6 @@
+== 2026-10-24-download-aforo-pdfs (download)
+Downloaded https://www.juntadeandalucia.es/export/drupaljda/Estimacion_ACEITE_MESA_2021_2022.pdf -> aforo_2021_22.pdf (5,322,344 bytes)
+Downloaded https://cdn.juntadeandalucia.es/sites/default/files/2023-10/Estimacion_ACEITE_MESA_2022_23.pdf -> aforo_2022_23.pdf (2,602,862 bytes)
+Downloaded https://www.juntadeandalucia.es/sites/default/files/inline-files/2023/10/Estimacion_ACEITE_MESA_2023_24.pdf -> aforo_2023_24.pdf (10,050,619 bytes)
+Downloaded https://cdn.juntadeandalucia.es/sites/default/files/inline-files/2024/10/Estimacion_ACEITE_MESA_2024_25_LARGA_0.pdf -> aforo_2024_25.pdf (3,994,394 bytes)
+Downloaded https://www.juntadeandalucia.es/sites/default/files/inline-files/2026/09/Estimacion_ACEITE_MESA_2026_27.pdf -> aforo_2026_27.pdf (3,350,378 bytes)

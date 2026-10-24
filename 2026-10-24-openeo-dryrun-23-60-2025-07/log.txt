@@ -1,0 +1,11 @@
+== 2026-10-24-openeo-dryrun-23-60-2025-07 (openeo_monthly_indices)
+{
+ "geometries": 1,
+ "olive_parcels": 18200,
+ "olive_ha": 21618.5,
+ "sampled_ha": 14306.9,
+ "bbox_km2": 552.7,
+ "vertices": 135251,
+ "months": 1
+}
+Dry run: nothing sent to openEO (0 credits).

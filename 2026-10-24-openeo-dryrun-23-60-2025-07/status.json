@@ -1,0 +1,17 @@
+{
+ "job_id": "2026-10-24-openeo-dryrun-23-60-2025-07",
+ "type": "openeo_monthly_indices",
+ "params": {
+  "province": "23",
+  "municipality": "60",
+  "start": "2025-07-01",
+  "end": "2025-08-01",
+  "dry_run": true
+ },
+ "started_at": "2026-10-24T14:51:09Z",
+ "status": "ok",
+ "outputs": [
+  "request_summary.json"
+ ],
+ "finished_at": "2026-10-24T14:51:52Z"
+}

@@ -1,0 +1,15 @@
+{
+ "job_id": "2026-10-24-sigpac-summary-23-900",
+ "type": "sigpac_municipality_summary",
+ "params": {
+  "province": "23",
+  "municipality": "900"
+ },
+ "started_at": "2026-10-24T14:52:10Z",
+ "status": "ok",
+ "outputs": [
+  "land_use_summary.csv",
+  "bounds_epsg4326.json"
+ ],
+ "finished_at": "2026-10-24T14:52:24Z"
+}

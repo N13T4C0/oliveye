@@ -1,0 +1,5 @@
+== 2026-10-24-sigpac-summary-23-900 (sigpac_municipality_summary)
+land_use_code   land_use_name  parcels     hectares
+           OV          OLIVAR    10565 24112.744051
+           TA TIERRAS ARABLES     1503  4152.987098
+Bounds (EPSG:4326): {'west': np.float64(-3.8739043158757887), 'south': np.float64(37.63377293959405), 'east': np.float64(-3.610914758218968), 'north': np.float64(37.95339083291317)}
