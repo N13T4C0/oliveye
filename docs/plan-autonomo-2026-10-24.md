@@ -12,7 +12,7 @@ repo. Each check-in reads this file, advances the next open step and logs progre
 
 ## Steps
 
-1. [ ] Validate cost of Martos 2016/17–2025/26 in one job (`2026-10-24-openeo-real-23-60-2016-2026`).
+1. [x] Validate cost of Martos 2016/17–2025/26 in one job (`2026-10-24-openeo-real-23-60-2016-2026`).
 2. [ ] Dry runs for municipalities covering 80 % of olive area (Jaén 48, Granada 38) → review
        cells, coverage, payload.
 3. [ ] Auditor → real runs for the same municipalities (largest first, stop at the budget).
@@ -34,3 +34,8 @@ repo. Each check-in reads this file, advances the next open step and logs progre
 - 18:50 Target series built (`final_production_series`): Jaén 8 campaigns (2015/16, 2018/19,
   2020/21–2025/26), Granada 7. With satellite data from 2016/17, Jaén has 7 usable campaigns.
 - 18:50 Martos 120-month job still running on openEO (~55 min); dry runs queued behind it.
+- 19:05 Step 1 done: Martos 2016/17–2025/26 in one job = **23 credits, 16 min**. Credits are
+  fine (~85 × ≤23 ≈ 2,000), time is the bottleneck (~22 h serial) → two parallel workers.
+- 19:20 Two-worker queue audited (NEEDS WORK → fixed: split by request, legacy log on resume,
+  clean rebase abort, single re-dispatcher) and pushed without job files.
+- 19:20 Dry runs progressing on the old single-worker run (14/86).
