@@ -93,6 +93,16 @@ fixed few credits each; batch jobs are billed by resources used. Rules:
    in `data/cache/openeo/credits_log.csv`.
 8. Never put openEO requests inside loops without the cache check.
 
+## Automation (how the assistant works unattended)
+
+- Networked or credentialed work runs through the **job queue**: add `jobs/<YYYY-MM-DD-name>.json`,
+  push to `main`, read the outcome on the `results` branch. Full guide: `docs/automation.md`.
+- openEO jobs are **dry runs by default**. Review the dry run before any real run, and check
+  `_cache/openeo/credits_log.csv` on the results branch after it.
+- Subagents for this repo live in `.claude/agents/` (selected from agency-agents, MIT). Use
+  `code-reviewer` before committing non-trivial changes and `model-qa`/`statistician` before
+  publishing any metric.
+
 ## Common commands
 
 ```bash
