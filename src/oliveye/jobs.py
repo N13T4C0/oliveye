@@ -187,7 +187,25 @@ def openeo_monthly_indices(params: dict[str, Any], ctx: JobContext) -> list[Path
     return [summary_path, out]
 
 
+def aforo_table(params: dict[str, Any], ctx: JobContext) -> list[Path]:
+    """Download Junta aforo PDFs and extract the provincial table into one CSV.
+
+    `params["files"]` maps a file name containing the campaign (e.g. "aforo_2024_25.pdf") to
+    its URL, exactly as in the `download` job.
+    """
+    from oliveye.pipeline.production import parse_aforo_pdfs
+
+    pdfs = download(params, ctx)
+    table = parse_aforo_pdfs(pdfs)
+    out = ctx.output_dir / "aforo_by_province.csv"
+    table.to_csv(out, index=False)
+    focus = table[table["province"].isin(["Jaén", "Granada", "Andalucía"])]
+    print(focus.to_string(index=False))
+    return [*pdfs, out]
+
+
 HANDLERS: dict[str, Handler] = {
+    "aforo_table": aforo_table,
     "sigpac_rank": sigpac_rank,
     "sigpac_municipality_summary": sigpac_municipality_summary,
     "download": download,
