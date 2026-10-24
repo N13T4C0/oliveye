@@ -1,0 +1,12 @@
+== 2026-10-24-openeo-dryrun-23-88-2016-2026 (openeo_monthly_indices)
+{
+ "cells": 1106,
+ "olive_ha_total": 7663.0,
+ "olive_ha_in_cells": 6654.9,
+ "coverage_pct": 86.8,
+ "mean_olive_share": 0.963,
+ "bbox_km2": 150.0,
+ "payload_bytes": 212317,
+ "months": 120
+}
+Dry run: nothing sent to openEO (0 credits).
