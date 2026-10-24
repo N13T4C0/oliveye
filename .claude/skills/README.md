@@ -9,6 +9,12 @@ Project skills for OlivEye. Each keeps its original text and license.
 | `impeccable` | [pbakaus/impeccable](https://github.com/pbakaus/impeccable) (Apache-2.0) | Primary design skill: build, critique and **audit** the web UI against `DESIGN.md` | 5 |
 | `web-design-guidelines` | [vercel-labs/agent-skills](https://github.com/vercel-labs/agent-skills) (MIT) | Fast `file:line` UI compliance review (accessibility, forms, focus, motion) | 5 |
 | `seo-audit` | [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills) (MIT) | Technical SEO of the deployed portfolio site | 5 |
+| `ponytail` | [DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail) (MIT) | Smallest complete change; matches the "simple models, simple code" rule. `/ponytail lite` to soften | any |
+| `planning-and-task-breakdown` | [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) (MIT) | Turn a phase into ordered, verifiable tasks | any |
+| `documentation-and-adrs` | addyosmani/agent-skills (MIT) | ADRs in `docs/decisions/` | any |
+| `test-driven-development` | addyosmani/agent-skills (MIT) | Red-green-refactor for pipeline and model code | any |
+| `debugging-and-error-recovery` | addyosmani/agent-skills (MIT) | Root-cause failed jobs and tests | any |
+| `ci-cd-and-automation` | addyosmani/agent-skills (MIT) | The Actions job queue and CI | any |
 | `ai-seo` | [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills) (MIT) | Make the project citable by AI search (llms.txt, structured answers) | 5 |
 
 ## Considered and not installed
@@ -18,6 +24,13 @@ Project skills for OlivEye. Each keeps its original text and license.
   same requests and contradict the pinned `DESIGN.md`. Revisit if `impeccable` falls short.
 - **agent-browser** (vercel-labs): needs a native CLI install; Playwright/Chromium is already
   available for screenshots, and `impeccable` has its own live-browser checks. Revisit in Phase 5.
+
+- **graphify** (safishamsi): builds a knowledge graph of a codebase; ~44 MB and its value is for
+  large repos, OlivEye is small enough to read directly.
+- **OmniRoute**: an AI gateway that routes the assistant through other model providers; it does
+  not help the project and adds credential and terms-of-service risk.
+- Other addyosmani/agent-skills (20 more) overlap with existing agents/skills or target web apps
+  we do not have yet; revisit in Phase 4–5.
 
 ## Design reference
 
