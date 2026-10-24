@@ -6,13 +6,15 @@ set -u
 dir=${RESULTS_DIR:-results-branch}
 message=${1:-results}
 
+# Identity for commit AND for rebase (a rebase rewrites commits and needs a committer too).
+git -C "$dir" config user.name "github-actions[bot]"
+git -C "$dir" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
 git -C "$dir" add -A
 if git -C "$dir" diff --cached --quiet; then
   exit 0
 fi
-git -C "$dir" -c user.name="github-actions[bot]" \
-  -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
-  commit -q -m "$message"
+git -C "$dir" commit -q -m "$message"
 
 for attempt in 1 2 3 4 5; do
   if git -C "$dir" push -q origin results; then
