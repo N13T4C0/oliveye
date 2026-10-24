@@ -55,3 +55,11 @@ parked in "Pending for the author" and the work moves on.
   vs 43 % for "repeat last campaign" → documented negative result, to refresh with full data.
 - 22:30 Granada 2016/17–2017/18: no reliable figure found (2018/19 release gives +57 % but no
   tonnage); rows stay dropped per ADR 0003 #16. Parked.
+- 23:00 Check-in 2. The first statistician run had been killed by the 21:42 interruption; rerun.
+  Findings: (1) LEAKAGE — when campaign t is held out, t+1 stays in training and its lag feature
+  is t's real production → exclude t+1 from training (outer and inner folds); the current test
+  does not catch it; (2) NDMI confounded with province → within-province centering inside the
+  pipeline, clip test features to the training range, wider alpha grid with the 1-SE rule;
+  (3) like-for-like rows for MAPE, per-campaign metrics, exact sign-flip test vs aforo;
+  (4) conformal-style symmetric interval; (5) extra references (province mean, lag+province).
+  Implementing all with tests first; ADR 0003 amended with a dated note.
