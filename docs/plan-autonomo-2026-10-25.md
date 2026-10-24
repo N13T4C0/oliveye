@@ -92,3 +92,7 @@ parked in "Pending for the author" and the work moves on.
   handling: a worker stops taking new jobs after 3 h and ends in success, so `continue`
   re-dispatches (no action needed). Block H: skeleton of `docs/results/README-draft.md` with
   placeholders only (no numbers until the full run is reviewed).
+- 00:58 Check-in 5. Batch 48/85 (Jaén 10), 0 errors. Only worker 0 is publishing: worker 1 has
+  been on one openEO job since ~23:22 (likely queued at CDSE; the 150-min job timeout ends it by
+  ~01:52 at worst). Throughput ~5/h until the next generation re-dispatches both workers
+  (~02:20); full data now expected around 05:30–06:30.
