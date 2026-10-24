@@ -239,3 +239,24 @@ def test_identical_requests_go_to_the_same_worker(tmp_path: Path) -> None:
     assert jobs.worker_of(broken, 2) == 0
     with pytest.raises(ValueError):
         jobs.worker_of(a, 0)
+
+
+def test_credit_budget_blocks_paid_jobs(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from oliveye.pipeline.openeo_jobs import credits_log_path, log_credits
+
+    row = {
+        "logged_at": "2026-10-24T16:00:00+00:00",
+        "job_id": "j",
+        "title": "t",
+        "cache_key": "k",
+        "costs": "23",
+        "status": "finished",
+    }
+    log_credits(credits_log_path(tmp_path, "k"), row)
+    assert jobs.spent_credits(tmp_path) == 23
+
+    monkeypatch.setenv("OPENEO_CREDIT_BUDGET", "100")
+    jobs.check_credit_budget(tmp_path)  # under budget: fine
+    monkeypatch.setenv("OPENEO_CREDIT_BUDGET", "20")
+    with pytest.raises(RuntimeError, match="Credit budget reached"):
+        jobs.check_credit_budget(tmp_path)

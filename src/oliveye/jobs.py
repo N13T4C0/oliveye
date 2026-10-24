@@ -214,6 +214,37 @@ def months_between(start: str, end: str) -> int:
     return (pd.Period(end, "M") - pd.Period(start, "M")).n
 
 
+def spent_credits(cache_dir: Path) -> float:
+    """Total credits reported by finished/errored jobs in the credits logs."""
+    from oliveye.pipeline.openeo_jobs import credits_table
+
+    total = 0.0
+    for row in credits_table(cache_dir):
+        try:
+            total += float(row["costs"]) if row["costs"] else 0.0
+        except ValueError:
+            continue
+    return total
+
+
+def check_credit_budget(cache_dir: Path) -> None:
+    """Refuse to start a paid job once `OPENEO_CREDIT_BUDGET` credits have been spent.
+
+    A hard stop for unattended runs: the budget is set in the workflow, so a long queue can
+    never drain the monthly allowance by mistake. Unset or empty means no limit.
+    """
+    budget = os.environ.get("OPENEO_CREDIT_BUDGET", "")
+    if not budget:
+        return
+    spent = spent_credits(cache_dir)
+    if spent >= float(budget):
+        raise RuntimeError(
+            f"Credit budget reached: {spent:g} of {budget} credits spent. "
+            "Raise OPENEO_CREDIT_BUDGET in the workflow to continue."
+        )
+    print(f"Credits spent so far: {spent:g} of {budget}")
+
+
 def openeo_monthly_indices(params: dict[str, Any], ctx: JobContext) -> list[Path]:
     """Monthly NDVI/NDMI of one municipality's olive-dominant grid cells.
 
@@ -264,6 +295,7 @@ def openeo_monthly_indices(params: dict[str, Any], ctx: JobContext) -> list[Path
 
     from oliveye.pipeline.openeo_auth import auth_method, connect_cdse
 
+    check_credit_budget(ctx.openeo_cache_dir)
     print(f"Authenticating with openEO ({auth_method()})...")
     connection = connect_cdse()
     process = oi.build_monthly_indices(cells, start, end, connection=connection)

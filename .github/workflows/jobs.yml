@@ -64,6 +64,8 @@ jobs:
           OPENEO_REFRESH_TOKEN: ${{ secrets.OPENEO_REFRESH_TOKEN }}
           OPENEO_CLIENT_ID: ${{ secrets.OPENEO_CLIENT_ID }}
           OPENEO_CLIENT_SECRET: ${{ secrets.OPENEO_CLIENT_SECRET }}
+          # Hard stop for unattended runs (total of all logged jobs, see jobs.check_credit_budget).
+          OPENEO_CREDIT_BUDGET: "3100"
         run: |
           W="--worker ${{ matrix.worker }} --workers 2"
           pending() {
