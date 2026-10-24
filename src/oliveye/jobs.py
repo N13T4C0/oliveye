@@ -212,11 +212,12 @@ def catastro_ine_mapping(params: dict[str, Any], ctx: JobContext) -> list[Path]:
     return [out]
 
 
-def _fetch_text(url: str) -> str:
+def _fetch_text(url: str, accept: str = "application/json") -> str:
     """GET an allow-listed URL (redirects re-checked) and return it as text."""
     if not _host_allowed(url):
         raise ValueError(f"Host not allowed: {url}")
-    request = urllib.request.Request(url, headers={"User-Agent": "oliveye-jobs/0.1"})
+    headers = {"User-Agent": "oliveye-jobs/0.1", "Accept": accept}
+    request = urllib.request.Request(url, headers=headers)
     with _OPENER.open(request, timeout=180) as response:  # noqa: S310 - allow-listed
         return str(response.read(MAX_DOWNLOAD_BYTES).decode("utf-8"))
 
@@ -225,7 +226,11 @@ def ria_stations(params: dict[str, Any], ctx: JobContext) -> list[Path]:
     """List RIA agroclimatic stations (optionally filtered by province ids, e.g. [18, 23])."""
     from oliveye.pipeline import climate
 
-    stations = climate.parse_stations(_fetch_text(climate.stations_url()))
+    payload = _fetch_text(climate.stations_url())
+    try:
+        stations = climate.parse_stations(payload)
+    except ValueError as error:
+        raise ValueError(f"Unexpected RIA response (first 300 chars): {payload[:300]!r}") from error
     wanted = [int(p) for p in params.get("provinces", [])]
     if wanted:
         stations = stations[stations["province_id"].isin(wanted)]
