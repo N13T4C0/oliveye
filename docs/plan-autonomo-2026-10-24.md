@@ -66,3 +66,7 @@ repo. Each check-in reads this file, advances the next open step and logs progre
   municipalities (Jaén: 6 differ incl. capital 900→50; Granada: most shifted by one).
 - 19:16 Check-in 2. Recovery confirmed: Granada 104 job from the incident recovered from the
   backend (paid once, 18 credits), no new job. Total logged: 51 credits.
+- 19:28 INCIDENT 2: worker 0 failed "Could not push results after 5 attempts": the rebase had no
+  git identity (the local test passed only because this sandbox has a global identity).
+  Fixed in publish_results.sh, re-tested with an empty HOME, queue restarted. Anything lost
+  is recovered from the backend by title on the next run (0 extra credits).
