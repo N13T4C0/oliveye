@@ -35,13 +35,24 @@ CORRECTOR_COLUMNS: list[str] = ["log_aforo", "is_granada"]
 Splitter = Callable[[pd.DataFrame], Iterator[tuple[pd.Index, pd.Index]]]
 
 
+def _scorable(
+    table: pd.DataFrame, train: pd.Index, test: pd.Index
+) -> tuple[pd.Index, pd.Index] | None:
+    """Drop test rows whose province has no training rows (a province-level model cannot score
+    them honestly); None when nothing is left to score."""
+    seen = set(table.loc[train, "province"])
+    test = test[table.loc[test, "province"].isin(seen)]
+    return (train, test) if len(train) and len(test) else None
+
+
 def loco_splits(table: pd.DataFrame) -> Iterator[tuple[pd.Index, pd.Index]]:
     """(train index, test index) per campaign; training excludes the campaign and the next one."""
     for campaign in sorted(table["campaign"].unique()):
         excluded = {campaign, next_campaign(campaign)}
         test = table.index[table["campaign"] == campaign]
         train = table.index[~table["campaign"].isin(excluded)]
-        yield train, test
+        if split := _scorable(table, train, test):
+            yield split
 
 
 def forward_splits(
@@ -56,7 +67,9 @@ def forward_splits(
         train = table.index[table["campaign"] < campaign]
         if table.loc[train, "campaign"].nunique() < min_train_campaigns:
             continue
-        yield train, table.index[table["campaign"] == campaign]
+        test = table.index[table["campaign"] == campaign]
+        if split := _scorable(table, train, test):
+            yield split
 
 
 class ProvinceCentering(BaseEstimator, TransformerMixin):  # type: ignore[misc]

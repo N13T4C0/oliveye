@@ -251,3 +251,16 @@ def test_unseen_province_is_an_error_not_a_pooled_guess() -> None:
     )
     with pytest.raises(ValueError, match="province"):
         model.predict(pd.DataFrame({"hot_days_may": [1.0], "is_granada": [1]}))
+
+
+def test_splits_never_score_a_province_without_training_rows() -> None:
+    from oliveye.models.train import forward_splits
+
+    table = synthetic_table()
+    # Granada observed only in the first two campaigns (like a province with short history).
+    table = table[(table["is_granada"] == 0) | (table["campaign"] <= "2018/19")]
+    for splitter in (loco_splits, lambda t: forward_splits(t, min_train_campaigns=1)):
+        for train_idx, test_idx in splitter(table):
+            assert len(test_idx) > 0
+            assert set(table.loc[test_idx, "province"]) <= set(table.loc[train_idx, "province"])
+    assert len(cross_validate_ridge(table)) > 0  # runs end to end instead of raising

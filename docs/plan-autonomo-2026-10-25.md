@@ -80,3 +80,8 @@ parked in "Pending for the author" and the work moves on.
 - 23:50 Batch (fetched with `git fetch origin results:refs/remotes/origin/results`): 38/85
   municipalities, ~570 credits in the per-request logs, 0 errors; both workers running.
   Lesson recorded in docs/automation.md.
+- 00:00 The new "unseen province is an error" guard caught a real case: inner forward folds where
+  Granada (history from 2019/20) had no training rows; before, it was silently filled with a
+  pooled mean. Splits now never score a province without training rows (test first). Rerun with
+  38 municipalities (Granada 77.9 % of its olive area, Jaén 5.0 %; the batch does Granada first):
+  LOCO Ridge 44.6 %, province mean 45.4 %, aforo 11.9 % — unchanged in substance. Not published.
