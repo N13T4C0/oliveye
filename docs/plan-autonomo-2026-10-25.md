@@ -63,3 +63,12 @@ parked in "Pending for the author" and the work moves on.
   (3) like-for-like rows for MAPE, per-campaign metrics, exact sign-flip test vs aforo;
   (4) conformal-style symmetric interval; (5) extra references (province mean, lag+province).
   Implementing all with tests first; ADR 0003 amended with a dated note.
+- 23:15 Statistician amendments implemented with TDD (9 new tests written first, all RED, then
+  GREEN). While running them on provisional data a design flaw appeared: the province indicator
+  was shrunk by Ridge (both provinces pulled to a pooled mean, MAPE 80.8 %). Fixed with
+  `ProvinceAnomalyRidge` (province level unpenalised; 2 more tests). Provisional run (Jaén = 3.7 %
+  of its olive area): Ridge 44.9 %, province mean 45.4 %, last campaign 44.0 %, aforo 11.9 %
+  (9 campaigns, same 15 rows). Satellite/climate add nothing yet; not published. ADR 0003
+  amended. 113 tests pass.
+- 23:15 Batch: 28/85 real municipalities; no new result since 22:13 (likely a job waiting in the
+  CDSE queue; timeout + recovery cover it). Next check at the scheduled check-in.

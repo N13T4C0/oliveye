@@ -37,3 +37,18 @@ after looking at the results.
 - Results will be modest and noisy; the README reports them with intervals and the number of
   campaigns used, never a single headline number.
 - `oliveye-auditor` (leakage checks) and `model-qa` review the metrics before they are published.
+
+## Amendment — 2026-10-25 (statistician review, before results on the full data)
+
+Method corrections decided before seeing results on the 85-municipality data. None of them adds
+or searches features.
+
+| # | Change | Why (one line) |
+|---|---|---|
+| 5a | When campaign t is held out, campaign t+1 is also removed from training (outer and inner folds) | t+1's lag feature *is* t's real production: a leak the first test did not catch (now tested end to end) |
+| 6a | Every model scored on the same rows; also median APE, mean \|log error\|, per-campaign errors and an exact sign-flip test vs the aforo | Like-for-like comparison; the two provinces of a campaign are not independent evidence |
+| 6b | Extra references: province mean, and a lag + province model | Shows whether satellite and climate add anything over the simplest models |
+| 10a | Interval: split-conformal symmetric half-width on log residuals (rank ⌈(n+1)·0.8⌉) next to the empirical quantiles | Finite-sample coverage with ~16 residuals |
+| 12a | Alpha grid `logspace(-1, 3, 9)`, one-standard-error rule (largest alpha within 1 SE of the best) | Prefer more shrinkage when the data cannot tell alphas apart |
+| 13a | `ProvinceAnomalyRidge`: province level unpenalised; features centred on their province mean, clipped to the training range, standardised; Ridge fits within-province anomalies | NDMI/NDVI levels are confounded with province; shrinking the province indicator pulled both provinces towards a pooled mean (provisional MAPE 80.8 % → 44.9 %); infinite shrinkage now gives the province mean |
+| 13b | Forward-chaining check (train only on earlier campaigns) reported next to leave-one-campaign-out | Leave-one-campaign-out also trains on future years |

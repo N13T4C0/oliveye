@@ -4,7 +4,8 @@
     uv run python scripts/train_models.py --results-dir ../oliveye-results
 
 Writes to `--out` (default data/processed/model_run/, git-ignored): table.csv,
-predictions.csv, corrector.csv, summary.csv and run.json. Logs to MLflow when it is installed.
+predictions.csv, lag_only.csv, forward.csv, corrector.csv, summary.csv,
+per_campaign.csv and run.json. Logs to MLflow when it is installed.
 Nothing is published automatically: results are reviewed (model-qa + auditor) before any of
 them is copied to docs/results/.
 """
@@ -18,12 +19,19 @@ from pathlib import Path
 
 import numpy as np
 
-from oliveye.models.evaluate import interval_bounds, summarise
+from oliveye.models.evaluate import (
+    conformal_half_width,
+    interval_bounds,
+    per_campaign_errors,
+    summarise,
+)
 from oliveye.models.sources import build_table, load_inputs
 from oliveye.models.train import (
     baseline_predictions,
     cross_validate_aforo_corrector,
+    cross_validate_lag_only,
     cross_validate_ridge,
+    forward_splits,
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -42,25 +50,48 @@ def main() -> None:
     print(table.round(3).to_string(index=False))
 
     ridge = cross_validate_ridge(table)
+    lag_only = cross_validate_lag_only(table)
+    forward = cross_validate_ridge(table, splitter=forward_splits)
     corrector = cross_validate_aforo_corrector(table)
     baselines = baseline_predictions(table)
-    summary = summarise(ridge, baselines)
-    ridge.to_csv(args.out / "predictions.csv", index=False)
-    corrector.to_csv(args.out / "corrector.csv", index=False)
-    summary.to_csv(args.out / "summary.csv", index=False)
+    others = {"lag_only": lag_only}
+    summary = summarise(ridge, baselines, others)
+    per_campaign = per_campaign_errors(ridge, baselines, others)
+    # Forward-chaining check: scored on its own (fewer) campaigns, against the same baselines.
+    forward_summary = summarise(forward, baselines).query("model in ['ridge', 'aforo']")
+    for name, frame in {
+        "predictions": ridge,
+        "lag_only": lag_only,
+        "forward": forward,
+        "corrector": corrector,
+        "summary": summary,
+        "forward_summary": forward_summary,
+    }.items():
+        frame.to_csv(args.out / f"{name}.csv", index=False)
+    per_campaign.round(4).to_csv(args.out / "per_campaign.csv")
 
     residuals = np.log(ridge["oil_final_t"]) - ridge["pred_log"]
     low, high = interval_bounds(residuals, coverage=0.8)
+    half_width = conformal_half_width(residuals, coverage=0.8)
     run = {
         "created_at": datetime.now(UTC).isoformat(timespec="seconds"),
         "rows": len(table),
         "campaigns": int(table["campaign"].nunique()),
         "olive_area_covered": table.groupby("province")["olive_area_covered"].first().to_dict(),
-        "interval_80pct_factors": [round(low, 3), round(high, 3)],
-        "alphas_chosen": sorted(ridge["alpha"].unique().tolist()),
+        "interval_80pct_quantile_factors": [round(low, 3), round(high, 3)],
+        "interval_80pct_conformal_factor": round(float(np.exp(half_width)), 3),
+        "alphas_chosen": sorted(round(a, 3) for a in ridge["alpha"].unique()),
+        "coefficients_by_fold": ridge.drop_duplicates("campaign")
+        .filter(like="coef_")
+        .describe()
+        .round(3)
+        .to_dict(),
     }
     (args.out / "run.json").write_text(json.dumps(run, indent=1), encoding="utf-8")
     print(summary.to_string(index=False))
+    print("Forward-chaining (past only):")
+    print(forward_summary.to_string(index=False))
+    print(per_campaign.round(3).to_string())
     print(json.dumps(run, indent=1))
 
     try:
