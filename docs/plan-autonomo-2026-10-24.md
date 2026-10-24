@@ -18,7 +18,7 @@ repo. Each check-in reads this file, advances the next open step and logs progre
 3. [ ] Auditor → real runs for the same municipalities (largest first, stop at the budget).
 4. [ ] Aforo PDFs 2015/16–2020/21 (find URLs, `aforo_table` job).
 5. [x] AICA actual production per province and campaign (find a primary source).
-6. [ ] Catastro → INE municipality code mapping (names for the map, joins with climate).
+6. [x] Catastro → INE municipality code mapping (names for the map, joins with climate).
 7. [x] Evaluate ponytail, omniroute, graphify, addyosmani agent-skills; install what helps.
 8. [ ] Wrap-up: TODO (repo + project), sync the author's folder, summary message.
 
@@ -57,8 +57,10 @@ repo. Each check-in reads this file, advances the next open step and logs progre
 9. [ ] NEW: climate source (RIA, Junta's agroclimatic network) → job type for daily data.
 - 19:10 INCIDENT: both parallel workers failed with exit 126 (publish script without exec bit).
   Up to 4 paid openEO jobs finished without their results/credits being published.
-- 19:25 Fix (audited twice): call the script with bash + exec bit; recover orphaned jobs from the
+- 19:13 Fix (audited twice): call the script with bash + exec bit; recover orphaned jobs from the
   openEO backend by title before creating new ones (fails closed). Queue restarted. Expected
   recovered at 0 extra cost.
-- 19:00 Step 9 groundwork: `oliveye.pipeline.climate` + `ria_stations`/`ria_daily` jobs (RIA web
+- 19:02 Step 9 groundwork: `oliveye.pipeline.climate` + `ria_stations`/`ria_daily` jobs (RIA web
   service); stations job queued.
+- 19:15 Publishing works again (worker 1 published). Step 6 done: Catastro↔INE table for 271
+  municipalities (Jaén: 6 differ incl. capital 900→50; Granada: most shifted by one).
