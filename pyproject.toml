@@ -20,6 +20,7 @@ dependencies = [
     "jupyterlab>=4.2",    # notebook environment
     "duckdb>=2.0",        # query remote (Geo)Parquet in place; 2.x returns geometries as WKB
     "pdfplumber>=0.11.10",
+    "scikit-learn>=1.5",
 ]
 
 [dependency-groups]
@@ -58,7 +59,7 @@ files = ["src"]
 
 [[tool.mypy.overrides]]
 # These libraries ship without complete type information.
-module = ["geopandas.*", "rasterio.*", "openeo.*", "shapely.*"]
+module = ["geopandas.*", "rasterio.*", "openeo.*", "shapely.*", "sklearn.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
