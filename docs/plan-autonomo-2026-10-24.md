@@ -64,3 +64,5 @@ repo. Each check-in reads this file, advances the next open step and logs progre
   service); stations job queued.
 - 19:15 Publishing works again (worker 1 published). Step 6 done: Catastro↔INE table for 271
   municipalities (Jaén: 6 differ incl. capital 900→50; Granada: most shifted by one).
+- 19:16 Check-in 2. Recovery confirmed: Granada 104 job from the incident recovered from the
+  backend (paid once, 18 credits), no new job. Total logged: 51 credits.
