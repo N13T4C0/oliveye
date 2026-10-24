@@ -1,0 +1,66 @@
+# Runs the job queue: every push to main that adds or changes a file in jobs/ executes the
+# pending jobs and publishes their results to the `results` branch. See docs/automation.md.
+name: jobs
+
+on:
+  push:
+    branches: [main]
+    paths: ["jobs/*.json"]
+  workflow_dispatch:
+
+permissions:
+  contents: write # push to the results branch
+
+concurrency:
+  group: jobs # one run at a time, so results never conflict
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check out the results branch next to the code
+        run: |
+          if git ls-remote --exit-code --heads origin results >/dev/null; then
+            git fetch --depth 1 origin results
+            git worktree add results-branch origin/results
+            git -C results-branch switch -C results
+          else
+            git worktree add --orphan -b results results-branch
+          fi
+
+      - uses: astral-sh/setup-uv@v6
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      # SIGPAC subsets are large and reproducible: cache them between runs, never commit them.
+      - uses: actions/cache@v4
+        with:
+          path: data/raw/sigpac
+          key: sigpac-${{ github.run_id }}
+          restore-keys: sigpac-
+
+      - name: Run pending jobs
+        env:
+          OPENEO_REFRESH_TOKEN: ${{ secrets.OPENEO_REFRESH_TOKEN }}
+          OPENEO_CLIENT_ID: ${{ secrets.OPENEO_CLIENT_ID }}
+          OPENEO_CLIENT_SECRET: ${{ secrets.OPENEO_CLIENT_SECRET }}
+        run: uv run python scripts/run_jobs.py --results-dir results-branch
+
+      - name: Publish results
+        if: always()
+        working-directory: results-branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Nothing to publish"
+            exit 0
+          fi
+          git commit -m "results: run ${{ github.run_id }} for ${{ github.sha }}"
+          git push origin results

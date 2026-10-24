@@ -1,0 +1,24 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ["jobs/**", "**.md"]
+  pull_request:
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync --frozen
+      # Notebooks are excluded until notebook 01's lint errors are fixed (see TODO.md).
+      - name: Lint
+        run: uv run ruff check src scripts tests
+      - name: Format
+        run: uv run ruff format --check src scripts tests
+      - name: Types
+        run: uv run mypy src
+      - name: Tests
+        run: uv run pytest -q

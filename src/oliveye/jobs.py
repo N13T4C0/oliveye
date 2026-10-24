@@ -1,0 +1,280 @@
+"""Unattended job runner: the work that needs internet, credentials or credits.
+
+How it works (see `docs/automation.md`):
+
+1. A job is a small JSON file in `jobs/`, e.g. `jobs/2026-10-24-sigpac-rank-jaen.json`:
+   `{"type": "sigpac_rank", "params": {"province": "23"}}`. The file name (without `.json`)
+   is the job id.
+2. GitHub Actions runs `scripts/run_jobs.py` on every push that touches `jobs/`.
+3. Each pending job runs once; its outputs, log and `status.json` are written to
+   `<results>/<job id>/`, and the results are pushed to the `results` branch.
+
+Only the job types registered in `HANDLERS` can run: a job file chooses a type and its
+parameters, never a command. Jobs that spend openEO credits are dry runs unless they say
+`"dry_run": false`, and their period is capped.
+"""
+
+from __future__ import annotations
+
+import contextlib
+import json
+import sys
+import traceback
+import urllib.request
+from collections.abc import Callable, Iterator
+from dataclasses import dataclass
+from datetime import UTC, datetime
+from pathlib import Path
+from typing import Any, TextIO
+from urllib.parse import urlparse
+
+import geopandas as gpd
+import pandas as pd
+
+from oliveye.pipeline import sigpac
+
+# Hosts the `download` job may fetch from: official statistics and data providers only.
+ALLOWED_DOWNLOAD_HOSTS: tuple[str, ...] = (
+    "juntadeandalucia.es",
+    "mapa.gob.es",
+    "aica.gob.es",
+    "ine.es",
+    "aemet.es",
+    "source.coop",
+)
+MAX_DOWNLOAD_BYTES = 50 * 1024 * 1024
+MAX_OPENEO_MONTHS = 13  # one campaign (Oct -> Sep) plus a margin, per job
+
+ISO = "%Y-%m-%dT%H:%M:%SZ"
+
+
+@dataclass(frozen=True)
+class JobContext:
+    """Where a job reads and writes."""
+
+    output_dir: Path  # <results>/<job id>/: everything here is published to the results branch
+    openeo_cache_dir: Path  # persistent openEO cache + credits log (also on the results branch)
+    sigpac_dir: Path  # local SIGPAC subsets (cached between CI runs, never committed)
+
+
+Handler = Callable[[dict[str, Any], JobContext], list[Path]]
+
+
+# --------------------------------------------------------------------------------------------
+# Handlers
+# --------------------------------------------------------------------------------------------
+
+
+def _require(params: dict[str, Any], *names: str) -> None:
+    missing = [name for name in names if name not in params]
+    if missing:
+        raise ValueError(f"Missing job parameters: {missing}")
+
+
+def sigpac_rank(params: dict[str, Any], ctx: JobContext) -> list[Path]:
+    """Olive-grove hectares per municipality of a province (no geometries downloaded)."""
+    _require(params, "province")
+    ranking = sigpac.rank_municipalities_by_olive_area(
+        str(params["province"]), limit=int(params.get("limit", 1000))
+    )
+    table = pd.DataFrame([vars(row) for row in ranking])
+    out = ctx.output_dir / f"olive_ranking_{params['province']}.csv"
+    table.to_csv(out, index=False)
+    print(table.head(20).to_string(index=False))
+    print(f"{len(table)} municipalities, {table['olive_hectares'].sum():,.0f} ha of olive grove")
+    return [out]
+
+
+def sigpac_municipality_summary(params: dict[str, Any], ctx: JobContext) -> list[Path]:
+    """Land-use counts, areas and lon/lat bounds of one municipality (e.g. to locate code 900)."""
+    _require(params, "province", "municipality")
+    path = sigpac.fetch_and_cache_municipality(
+        str(params["province"]), str(params["municipality"]), ctx.sigpac_dir
+    )
+    parcels = gpd.read_parquet(path)
+    summary = (
+        parcels.groupby(["land_use_code", "land_use_name"])["area_ha"]
+        .agg(parcels="count", hectares="sum")
+        .reset_index()
+        .sort_values("hectares", ascending=False)
+    )
+    west, south, east, north = parcels.to_crs("EPSG:4326").total_bounds
+    bounds = {"west": west, "south": south, "east": east, "north": north}
+    out_csv = ctx.output_dir / "land_use_summary.csv"
+    out_json = ctx.output_dir / "bounds_epsg4326.json"
+    summary.to_csv(out_csv, index=False)
+    out_json.write_text(json.dumps({k: round(float(v), 5) for k, v in bounds.items()}, indent=1))
+    print(summary.head(15).to_string(index=False))
+    print(f"Bounds (EPSG:4326): {bounds}")
+    return [out_csv, out_json]
+
+
+def _host_allowed(url: str) -> bool:
+    host = urlparse(url).hostname or ""
+    return any(host == h or host.endswith("." + h) for h in ALLOWED_DOWNLOAD_HOSTS)
+
+
+def download(params: dict[str, Any], ctx: JobContext) -> list[Path]:
+    """Download public files (e.g. the yearly aforo PDFs) from allow-listed official hosts.
+
+    `params["files"]` maps an output file name to its URL.
+    """
+    _require(params, "files")
+    files: dict[str, str] = params["files"]
+    target = ctx.output_dir / "files"
+    target.mkdir(parents=True, exist_ok=True)
+    written: list[Path] = []
+    for name, url in files.items():
+        if not _host_allowed(url):
+            raise ValueError(f"Host not allowed for download: {url}")
+        safe_name = Path(name).name  # no directories: a job cannot write outside its folder
+        request = urllib.request.Request(url, headers={"User-Agent": "oliveye-jobs/0.1"})
+        with urllib.request.urlopen(request, timeout=120) as response:  # noqa: S310 - allow-listed
+            content = response.read(MAX_DOWNLOAD_BYTES + 1)
+        if len(content) > MAX_DOWNLOAD_BYTES:
+            raise ValueError(f"{url} is larger than {MAX_DOWNLOAD_BYTES} bytes")
+        out = target / safe_name
+        out.write_bytes(content)
+        print(f"Downloaded {url} -> {out.name} ({len(content):,} bytes)")
+        written.append(out)
+    return written
+
+
+def months_between(start: str, end: str) -> int:
+    """Number of whole months in [start, end), both given as first days of a month."""
+    return (pd.Period(end, "M") - pd.Period(start, "M")).n
+
+
+def openeo_monthly_indices(params: dict[str, Any], ctx: JobContext) -> list[Path]:
+    """Monthly NDVI/NDMI of one municipality's olive area. Dry run unless `dry_run` is false."""
+    from oliveye.pipeline import openeo_indices as oi
+    from oliveye.pipeline.openeo_jobs import cache_key, run_cached_batch_job
+
+    _require(params, "province", "municipality", "start", "end")
+    province, municipality = str(params["province"]), str(params["municipality"])
+    start, end = str(params["start"]), str(params["end"])
+    n_months = months_between(start, end)
+    if not 0 < n_months <= MAX_OPENEO_MONTHS:
+        raise ValueError(f"Period must be 1..{MAX_OPENEO_MONTHS} months, got {n_months}")
+
+    path = sigpac.fetch_and_cache_municipality(province, municipality, ctx.sigpac_dir)
+    areas = oi.olive_area_by_municipality(gpd.read_parquet(path))
+    summary: dict[str, Any] = {**oi.request_summary(areas), "months": n_months}
+    print(json.dumps(summary, indent=1))
+    summary_path = ctx.output_dir / "request_summary.json"
+
+    if params.get("dry_run", True):
+        process = oi.build_monthly_indices(areas, start, end)
+        summary["cache_key"] = cache_key(process)
+        summary_path.write_text(json.dumps(summary, indent=1))
+        print("Dry run: nothing sent to openEO (0 credits).")
+        return [summary_path]
+
+    from oliveye.pipeline.openeo_auth import auth_method, connect_cdse
+
+    print(f"Authenticating with openEO ({auth_method()})...")
+    connection = connect_cdse()
+    process = oi.build_monthly_indices(areas, start, end, connection=connection)
+    summary["cache_key"] = cache_key(process)
+    summary_path.write_text(json.dumps(summary, indent=1))
+    title = f"oliveye monthly indices {province}/{municipality} {start}..{end}"
+    csv_path = run_cached_batch_job(process, ctx.openeo_cache_dir, title)
+
+    tidy = oi.clean_monthly_indices(oi.load_indices_csv(csv_path, areas))
+    out = ctx.output_dir / f"indices_monthly_{province}_{municipality}_{start}_{end}.csv"
+    tidy.assign(month=tidy["month"].astype(str)).to_csv(out, index=False)
+    print(tidy[["month", "ndvi", "ndmi", "ndvi_outlier", "ndmi_outlier"]].round(3).to_string())
+    return [summary_path, out]
+
+
+HANDLERS: dict[str, Handler] = {
+    "sigpac_rank": sigpac_rank,
+    "sigpac_municipality_summary": sigpac_municipality_summary,
+    "download": download,
+    "openeo_monthly_indices": openeo_monthly_indices,
+}
+
+
+# --------------------------------------------------------------------------------------------
+# Runner
+# --------------------------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class Job:
+    job_id: str
+    type: str
+    params: dict[str, Any]
+
+
+def load_job(path: Path) -> Job:
+    """Parse and validate a job file. The job id is the file name without `.json`."""
+    spec = json.loads(path.read_text(encoding="utf-8"))
+    job_type = spec.get("type")
+    if job_type not in HANDLERS:
+        raise ValueError(f"{path.name}: unknown job type {job_type!r}; allowed: {list(HANDLERS)}")
+    params = spec.get("params", {})
+    if not isinstance(params, dict):
+        raise ValueError(f"{path.name}: 'params' must be an object")
+    return Job(job_id=path.stem, type=job_type, params=params)
+
+
+class _Tee:
+    """Write to several text streams at once (console + log file)."""
+
+    def __init__(self, *streams: TextIO) -> None:
+        self.streams = streams
+
+    def write(self, text: str) -> int:
+        for stream in self.streams:
+            stream.write(text)
+        return len(text)
+
+    def flush(self) -> None:
+        for stream in self.streams:
+            stream.flush()
+
+
+@contextlib.contextmanager
+def _capture_output(log_path: Path) -> Iterator[None]:
+    with log_path.open("w", encoding="utf-8") as log:
+        tee = _Tee(sys.stdout, log)
+        with contextlib.redirect_stdout(tee), contextlib.redirect_stderr(tee):
+            yield
+
+
+def run_job(
+    job: Job, results_dir: Path, *, openeo_cache_dir: Path, sigpac_dir: Path
+) -> dict[str, Any]:
+    """Run one job, always leaving a `status.json` behind (also when it fails)."""
+    output_dir = results_dir / job.job_id
+    output_dir.mkdir(parents=True, exist_ok=True)
+    ctx = JobContext(output_dir, openeo_cache_dir, sigpac_dir)
+    status: dict[str, Any] = {
+        "job_id": job.job_id,
+        "type": job.type,
+        "params": job.params,
+        "started_at": datetime.now(UTC).strftime(ISO),
+    }
+    with _capture_output(output_dir / "log.txt"):
+        print(f"== {job.job_id} ({job.type})")
+        try:
+            outputs = HANDLERS[job.type](job.params, ctx)
+            status.update(
+                status="ok", outputs=[p.relative_to(output_dir).as_posix() for p in outputs]
+            )
+        except Exception as error:  # noqa: BLE001 - a failed job must not stop the others
+            traceback.print_exc()
+            status.update(status="error", error=f"{type(error).__name__}: {error}")
+    status["finished_at"] = datetime.now(UTC).strftime(ISO)
+    (output_dir / "status.json").write_text(json.dumps(status, indent=1), encoding="utf-8")
+    return status
+
+
+def pending_jobs(jobs_dir: Path, results_dir: Path) -> list[Path]:
+    """Job files without a `status.json` in the results yet, oldest name first."""
+    return [
+        path
+        for path in sorted(jobs_dir.glob("*.json"))
+        if not (results_dir / path.stem / "status.json").exists()
+    ]

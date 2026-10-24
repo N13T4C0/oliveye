@@ -98,6 +98,23 @@ def olive_area_by_municipality(
     return areas[columns].to_crs(OPENEO_CRS)
 
 
+def request_summary(areas: gpd.GeoDataFrame) -> dict[str, float | int]:
+    """Size of an openEO request built from `areas`: it drives both cost and request limits.
+
+    Computed in EPSG:25830 so that areas are in km², whatever the CRS of `areas`.
+    """
+    metric = areas.to_crs(METRIC_CRS)
+    west, south, east, north = metric.total_bounds
+    return {
+        "geometries": len(areas),
+        "olive_parcels": int(areas["n_parcels"].sum()),
+        "olive_ha": round(float(areas["olive_ha"].sum()), 1),
+        "sampled_ha": round(float(areas["sampled_ha"].sum()), 1),
+        "bbox_km2": round(float((east - west) * (north - south) / 1e6), 1),
+        "vertices": int(metric.geometry.count_coordinates().sum()),
+    }
+
+
 # --------------------------------------------------------------------------------------------
 # 2. openEO process
 # --------------------------------------------------------------------------------------------

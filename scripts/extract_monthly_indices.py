@@ -29,16 +29,15 @@ from oliveye.pipeline.openeo_indices import (
     clean_monthly_indices,
     load_indices_csv,
     olive_area_by_municipality,
+    request_summary,
 )
 from oliveye.pipeline.openeo_jobs import cache_key, run_cached_batch_job
-from oliveye.pipeline.openeo_ndvi import METRIC_CRS
 from oliveye.pipeline.sigpac import fetch_and_cache_municipality
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SIGPAC_DIR = REPO_ROOT / "data" / "raw" / "sigpac"
 CACHE_DIR = REPO_ROOT / "data" / "cache" / "openeo"
 INTERIM_DIR = REPO_ROOT / "data" / "interim"
-OPENEO_URL = "openeo.dataspace.copernicus.eu"
 
 
 def parse_args() -> argparse.Namespace:
@@ -55,25 +54,12 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def describe_request(areas: gpd.GeoDataFrame) -> None:
-    """Print what will be sent to openEO: size drives both cost and request limits."""
-    metric = areas.to_crs(METRIC_CRS)
-    west, south, east, north = metric.total_bounds
-    vertices = int(metric.geometry.count_coordinates().sum())
-    row = areas.iloc[0]
-    print(f"Olive parcels:        {row['n_parcels']:,}")
-    print(f"Declared olive area:  {row['olive_ha']:,.0f} ha")
-    print(f"Measured (buffered):  {row['sampled_ha']:,.0f} ha")
-    print(f"Bounding box:         {(east - west) * (north - south) / 1e6:,.0f} km²")
-    print(f"Geometry vertices:    {vertices:,}")
-
-
 def main() -> None:
     args = parse_args()
 
     sigpac_path = fetch_and_cache_municipality(args.province, args.municipality, SIGPAC_DIR)
     areas = olive_area_by_municipality(gpd.read_parquet(sigpac_path))
-    describe_request(areas)
+    print(json.dumps(request_summary(areas), indent=1))
 
     if args.dry_run:
         process = build_monthly_indices(areas, args.start, args.end)
@@ -83,9 +69,9 @@ def main() -> None:
         print(f"Dry run: process graph saved to {graph_path} (0 credits)")
         return
 
-    import openeo  # imported here so --dry-run works offline
+    from oliveye.pipeline.openeo_auth import connect_cdse  # imported here: --dry-run is offline
 
-    connection = openeo.connect(OPENEO_URL).authenticate_oidc()
+    connection = connect_cdse()
     process = build_monthly_indices(areas, args.start, args.end, connection=connection)
     title = f"oliveye monthly indices {args.province}/{args.municipality} {args.start}..{args.end}"
     csv_path = run_cached_batch_job(process, CACHE_DIR, title)
