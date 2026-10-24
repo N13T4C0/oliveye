@@ -70,3 +70,5 @@ repo. Each check-in reads this file, advances the next open step and logs progre
   git identity (the local test passed only because this sandbox has a global identity).
   Fixed in publish_results.sh, re-tested with an empty HOME, queue restarted. Anything lost
   is recovered from the backend by title on the next run (0 extra credits).
+- 19:51 Check-in 3. Second orphan (Granada 102, 19 credits) recovered. 3/85 municipalities done.
+  RIA station job renamed to run before the openEO backlog (queue is alphabetical). TODO updated.
