@@ -46,7 +46,11 @@ Updated at the end of each phase.
 - [x] Monthly median NDVI + NDMI composites on the server, per municipality olive area
   (`oliveye.pipeline.openeo_indices`, `scripts/extract_monthly_indices.py`) + Hampel outlier flag
 - [x] Dry run Martos 1 month: 1 geometry, 14,307 ha measured (of 21,618), bbox 553 km², 135k vertices
-- [ ] **Before 2026-11-01** (credits expire): 1 real month of Martos (needs the openEO secret) and log the cost
+- [x] openEO secret set; first paid run 2026-10-24: Martos, July 2025, 3,130 olive cells (85.9 % of its olive area,
+  mean purity 95.7 %), **4 credits**, ~3 min. NDVI 0.271, NDMI −0.068 (summer water stress)
+  - First attempt failed with HTTP 413 (3 MB outline, 0 credits) → switched to 250 m olive-dominant grid (ADR 0001 addendum)
+- [ ] Full campaign 2024/25 for Martos (12 months) to measure how cost scales with months
+- [ ] **Before 2026-11-01**: spend the expiring credits on the largest olive municipalities
 - [ ] Extrapolate cost to a full campaign and to all municipalities of Jaén + Granada
 - [ ] `02_sigpac_olive_parcels.ipynb`: load SIGPAC, filter olive uses, areas per municipality/province, map
 - [ ] `03_production_history.ipynb`: production and aforo per province and campaign since 2015
