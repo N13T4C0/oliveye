@@ -1,0 +1,14 @@
+{
+ "job_id": "2026-10-24-0-ria-stations-18-23-v2",
+ "type": "ria_stations",
+ "params": {
+  "provinces": [
+   18,
+   23
+  ]
+ },
+ "started_at": "2026-10-24T18:16:51Z",
+ "status": "error",
+ "error": "ValueError: Unexpected RIA response (first 300 chars): '<html lang=\"es\"><head>\\r\\n<meta http-equiv=\"content-type\" content=\"text/html; charset=UTF-8\">\\r\\n<style type=\"text/css\" nonce=\"undefined\">#A9AdsMiddleBoxTop,#A9AdsOutOfStockWidgetTop,#A9AdsServicesWidgetTop,#AD-300x250,#AD-300x250-1,#AD-300x250-2,#AD-300x250-3,#AD-HOME-LEFT,#AD001,#AD1line,#AD2line,#AD3'",
+ "finished_at": "2026-10-24T18:17:03Z"
+}

@@ -1,0 +1,27 @@
+== 2026-10-24-0-ria-stations-18-23-v2 (ria_stations)
+Traceback (most recent call last):
+  File "/home/runner/work/oliveye/oliveye/src/oliveye/jobs.py", line 231, in ria_stations
+    stations = climate.parse_stations(payload)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/oliveye/oliveye/src/oliveye/pipeline/climate.py", line 45, in parse_stations
+    records: list[dict[str, Any]] = json.loads(payload)
+                                    ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/json/__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/json/decoder.py", line 337, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/json/decoder.py", line 355, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/runner/work/oliveye/oliveye/src/oliveye/jobs.py", line 531, in run_job
+    outputs = HANDLERS[job.type](job.params, ctx)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/oliveye/oliveye/src/oliveye/jobs.py", line 233, in ria_stations
+    raise ValueError(f"Unexpected RIA response (first 300 chars): {payload[:300]!r}") from error
+ValueError: Unexpected RIA response (first 300 chars): '<html lang="es"><head>\r\n<meta http-equiv="content-type" content="text/html; charset=UTF-8">\r\n<style type="text/css" nonce="undefined">#A9AdsMiddleBoxTop,#A9AdsOutOfStockWidgetTop,#A9AdsServicesWidgetTop,#AD-300x250,#AD-300x250-1,#AD-300x250-2,#AD-300x250-3,#AD-HOME-LEFT,#AD001,#AD1line,#AD2line,#AD3'
