@@ -33,7 +33,7 @@ repo. Each check-in reads this file, advances the next open step and logs progre
   production derived from aforo variations (validated vs AICA: −0.4 %, −0.2 %). Gaps: 2016/17–2017/18, 2019/20.
 - 18:20 Target series built (`final_production_series`): Jaén 8 campaigns (2015/16, 2018/19,
   2020/21–2025/26), Granada 7. With satellite data from 2016/17, Jaén has 7 usable campaigns.
-- 18:20 Martos 120-month job still running on openEO (~55 min); dry runs queued behind it.
+- 18:20 Martos 120-month job queued then running on openEO; dry runs queued behind it.
 - 18:22 Step 1 done: Martos 2016/17–2025/26 in one job = **23 credits, 16 min**. Credits are
   fine (~85 × ≤23 ≈ 2,000), time is the bottleneck (~22 h serial) → two parallel workers.
 - 18:27 Two-worker queue audited (NEEDS WORK → fixed: split by request, legacy log on resume,
