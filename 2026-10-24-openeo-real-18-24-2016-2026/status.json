@@ -1,0 +1,20 @@
+{
+ "job_id": "2026-10-24-openeo-real-18-24-2016-2026",
+ "type": "openeo_monthly_indices",
+ "params": {
+  "province": "18",
+  "municipality": "24",
+  "start": "2016-10-01",
+  "end": "2026-10-01",
+  "dry_run": false
+ },
+ "started_at": "2026-10-24T19:24:46Z",
+ "status": "ok",
+ "outputs": [
+  "request_summary.json",
+  "cells.geojson",
+  "indices_cells_18_24_2016-10-01_2026-10-01.csv",
+  "indices_monthly_18_24_2016-10-01_2026-10-01.csv"
+ ],
+ "finished_at": "2026-10-24T19:39:39Z"
+}
