@@ -75,3 +75,6 @@ repo. Each check-in reads this file, advances the next open step and logs progre
 - 20:17 RIA web service answers GitHub runners with an HTML page (likely bot protection);
   left pending. Fallback: Open-Meteo archive (ERA5, no key) → `open_meteo_daily` job queued for
   the olive-cell centre of the 86 municipalities, 2016-01-01..2026-09-30.
+- 20:25 Check-in 4. 7/85 municipalities done, all ok. Credits logged: 180 (33 before the batch +
+  147). Average ~21 credits per municipality → projected ~1,800 for the batch, above the
+  560–810 estimate but well under the 3,100 hard budget.
