@@ -27,10 +27,13 @@ Updated at the end of each phase.
   - TA parcels in Martos are a weak cereal control (2 small parcels, different behaviour)
   - Residual clouds pass the SCL mask (e.g. Dec 2025 NDVI ≈ 0.03)
 - [ ] Add a proper cereal control: TA parcels from a campiña municipality
-- [ ] Phase 2: monthly median composites on the server + outlier filter for residual clouds
-- [ ] Measure openEO cost on a whole municipality before budgeting provinces
+- [x] Monthly median NDVI + NDMI composites on the server, per municipality olive area
+  (`oliveye.pipeline.openeo_indices`, `scripts/extract_monthly_indices.py`) + Hampel outlier flag
+- [ ] **Before 2026-11-01** (credits expire): dry run, then run 1 month of Martos and log the cost
+- [ ] Extrapolate cost to a full campaign and to all municipalities of Jaén + Granada
 - [ ] `02_sigpac_olive_parcels.ipynb`: load SIGPAC, filter olive uses, areas per municipality/province, map
 - [ ] `03_production_history.ipynb`: production and aforo per province and campaign since 2015
-- [ ] Decide the aggregation unit for Phase 2 (parcel sample vs municipality vs province)
-- [ ] Write `docs/decisions/` ADR for the openEO strategy (sync vs batch, cache key)
+- [x] Decide the aggregation unit for Phase 2: olive area per municipality (ADR 0001)
+- [x] Write ADR for the openEO strategy (`docs/decisions/0001-openeo-extraction-strategy.md`)
+- [ ] Fix ruff errors in notebook 01 (`uv run ruff check .` fails on it)
 - [x] Credits log working (`data/cache/openeo/credits_log.csv`); baseline 10,000 on 2026-10-22

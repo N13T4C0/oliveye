@@ -51,6 +51,10 @@ Historical production (Junta de Andalucía, AICA) ──────────
 - First finding: olive-grove NDVI is clearly seasonal (~0.48 in winter, ~0.27 in late summer)
   because each 10 m pixel mixes tree canopy with the ground cover between trees.
 
+- Phase 2 extraction ready: monthly median NDVI and NDMI per municipality olive area, reduced
+  on the server (`scripts/extract_monthly_indices.py`). Strategy and alternatives in
+  [ADR 0001](docs/decisions/0001-openeo-extraction-strategy.md).
+
 See [`TODO.md`](TODO.md) for next steps.
 
 ## Quickstart
