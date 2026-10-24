@@ -25,7 +25,7 @@ jobs/<id>.json  ──push to main──►  .github/workflows/jobs.yml  ──�
 | `sigpac_municipality_summary` | `province`, `municipality` | 0 |
 | `download` | `files`: `{ "name.pdf": "https://…" }` | 0 |
 | `aforo_table` | same as `download`; names must contain the campaign (`aforo_2024_25.pdf`) | 0 |
-| `openeo_monthly_indices` | `province`, `municipality`, `start`, `end`, `dry_run` (default **true**) | 0 if dry run |
+| `openeo_monthly_indices` | `province`, `municipality`, `start`, `end`, `dry_run` (default **true**), `cell_m` (250), `min_olive_share` (0.8) | 0 if dry run |
 
 Example, `jobs/2026-10-24-sigpac-rank-23.json`:
 

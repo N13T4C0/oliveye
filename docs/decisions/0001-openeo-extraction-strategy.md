@@ -51,3 +51,22 @@ passing the SCL mask (e.g. NDVI ≈ 0.03 in December 2025).
 - Dissolved geometries can be large; they are simplified to 5 m (half a pixel) to keep the
   request small. The dry-run mode of `scripts/extract_monthly_indices.py` prints the vertex count
   before any credit is spent.
+
+## Addendum (2026-10-24): olive-dominant grid cells
+
+First real run for Martos (Jaén) failed before any job was created: the dissolved outline of
+~18,000 olive parcels was a 3 MB inline GeoJSON and CDSE answered **HTTP 413 Request Entity Too
+Large** (0 credits spent). Simplifying the outline enough to fit 1 MB lost more than 25 % of the
+measured olive area.
+
+**Revised unit:** 250 m grid cells (EPSG:25830, edges on multiples of 250 m, hence on the 10 m
+Sentinel-2 pixel grid) where SIGPAC olive parcels cover **≥ 80 %** of the cell
+(`oliveye.pipeline.olive_grid`). Each cell is sent as its own feature; municipality values are
+the olive-area-weighted mean of their cells.
+
+- Payload: 5 vertices per cell, ~150 bytes; a municipality fits easily under 1 MB.
+- Purity: cells are dominated by olive trees, so roads, villages and cereal fields at parcel
+  edges no longer dilute the signal (it replaces the 10 m inner buffer).
+- Coverage is reported per run (`coverage_pct`: share of the municipality's olive area inside
+  kept cells); the threshold is a parameter if a municipality is too fragmented.
+- Bonus: per-cell series feed the web map directly.

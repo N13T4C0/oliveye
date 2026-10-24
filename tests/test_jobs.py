@@ -32,7 +32,8 @@ def fake_sigpac(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
             "province_code": ["23", "23"],
             "municipality_code": ["60", "60"],
         },
-        geometry=[box(X0, Y0, X0 + 200, Y0 + 200), box(X0, Y0 + 500, X0 + 100, Y0 + 600)],
+        # A 500 m olive block on the 250 m grid (4 pure cells) and a small arable parcel.
+        geometry=[box(X0, Y0, X0 + 500, Y0 + 500), box(X0, Y0 + 600, X0 + 100, Y0 + 700)],
         crs="EPSG:25830",
     )
     gdf["area_ha"] = gdf.area / 1e4
@@ -77,7 +78,7 @@ def test_openeo_job_is_a_dry_run_by_default(ctx: JobContext, fake_sigpac: Path) 
     outputs = jobs.openeo_monthly_indices(params, ctx)
 
     summary = json.loads(outputs[0].read_text())
-    assert summary["olive_parcels"] == 1 and summary["months"] == 1
+    assert summary["cells"] == 4 and summary["months"] == 1
     assert len(summary["cache_key"]) == 16
     assert not ctx.openeo_cache_dir.exists()  # nothing was sent or cached
 
@@ -152,7 +153,7 @@ def test_only_explicit_false_spends_credits(
         "dry_run": dry_run,
     }
     outputs = jobs.openeo_monthly_indices(params, ctx)  # would need openEO auth if not a dry run
-    assert [p.name for p in outputs] == ["request_summary.json"]
+    assert [p.name for p in outputs] == ["request_summary.json", "cells.geojson"]
 
 
 def test_dates_must_be_first_of_month() -> None:
@@ -187,3 +188,33 @@ def test_logs_redact_secrets(monkeypatch: pytest.MonkeyPatch) -> None:
     buffer = io.StringIO()
     jobs._Tee(buffer).write("error with super-secret-token inside")
     assert buffer.getvalue() == "error with *** inside"
+
+
+def test_openeo_dry_run_uses_grid_cells(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """A 1 km block of olive in Martos -> 16 cells of 250 m, all kept."""
+    gdf = gpd.GeoDataFrame(
+        {
+            "parcel_id": ["a"],
+            "land_use_code": ["OV"],
+            "land_use_name": ["OLIVAR"],
+            "province_code": ["23"],
+            "municipality_code": ["60"],
+        },
+        geometry=[box(410_000, 4_170_000, 411_000, 4_171_000)],
+        crs="EPSG:25830",
+    )
+    gdf["area_ha"] = gdf.area / 1e4
+    path = tmp_path / "block.parquet"
+    gdf.to_parquet(path)
+    monkeypatch.setattr(jobs.sigpac, "fetch_and_cache_municipality", lambda *a, **k: path)
+    out = tmp_path / "out"
+    out.mkdir()
+    ctx = JobContext(out, tmp_path / "cache", tmp_path / "sigpac")
+
+    params = {"province": "23", "municipality": "60", "start": "2025-07-01", "end": "2025-08-01"}
+    outputs = jobs.openeo_monthly_indices(params, ctx)
+
+    summary = json.loads(outputs[0].read_text())
+    assert summary["cells"] == 16 and summary["coverage_pct"] == 100.0
+    assert summary["payload_bytes"] < 10_000
+    assert gpd.read_file(outputs[1]).crs.to_epsg() == 4326

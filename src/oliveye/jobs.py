@@ -183,7 +183,13 @@ def months_between(start: str, end: str) -> int:
 
 
 def openeo_monthly_indices(params: dict[str, Any], ctx: JobContext) -> list[Path]:
-    """Monthly NDVI/NDMI of one municipality's olive area. Dry run unless `dry_run` is false."""
+    """Monthly NDVI/NDMI of one municipality's olive-dominant grid cells.
+
+    Dry run unless `dry_run` is false. Optional params: `cell_m` (default 250) and
+    `min_olive_share` (default 0.8). Outputs one series per cell and the olive-area-weighted
+    series of the municipality.
+    """
+    from oliveye.pipeline import olive_grid as og
     from oliveye.pipeline import openeo_indices as oi
     from oliveye.pipeline.openeo_jobs import cache_key, run_cached_batch_job
 
@@ -195,38 +201,55 @@ def openeo_monthly_indices(params: dict[str, Any], ctx: JobContext) -> list[Path
         raise ValueError(f"Period must be 1..{MAX_OPENEO_MONTHS} months, got {n_months}")
 
     path = sigpac.fetch_and_cache_municipality(province, municipality, ctx.sigpac_dir)
-    areas, simplification = oi.olive_area_within_budget(gpd.read_parquet(path))
+    parcels = gpd.read_parquet(path)
+    cells = og.olive_grid_cells(
+        parcels,
+        cell_m=int(params.get("cell_m", og.DEFAULT_CELL_M)),
+        min_olive_share=float(params.get("min_olive_share", og.DEFAULT_MIN_OLIVE_SHARE)),
+    )
+    cells = cells[cells["municipality_code"].astype(str) == municipality].reset_index(drop=True)
+    if cells.empty:
+        raise ValueError(
+            f"No olive-dominant cells in {province}/{municipality}; lower `min_olive_share`."
+        )
     summary: dict[str, Any] = {
-        **oi.request_summary(areas),
-        **simplification,
+        **og.grid_summary(cells, parcels),
+        "payload_bytes": oi.payload_bytes(cells),
         "months": n_months,
     }
     print(json.dumps(summary, indent=1))
     summary_path = ctx.output_dir / "request_summary.json"
+    cells_path = ctx.output_dir / "cells.geojson"
+    cells.to_crs("EPSG:4326").to_file(cells_path, driver="GeoJSON")
 
     # Only an explicit JSON `false` spends credits: null, 0, "" or a missing key are dry runs.
     if params.get("dry_run", True) is not False:
-        process = oi.build_monthly_indices(areas, start, end)
+        process = oi.build_monthly_indices(cells, start, end)
         summary["cache_key"] = cache_key(process)
         summary_path.write_text(json.dumps(summary, indent=1))
         print("Dry run: nothing sent to openEO (0 credits).")
-        return [summary_path]
+        return [summary_path, cells_path]
 
     from oliveye.pipeline.openeo_auth import auth_method, connect_cdse
 
     print(f"Authenticating with openEO ({auth_method()})...")
     connection = connect_cdse()
-    process = oi.build_monthly_indices(areas, start, end, connection=connection)
+    process = oi.build_monthly_indices(cells, start, end, connection=connection)
     summary["cache_key"] = cache_key(process)
     summary_path.write_text(json.dumps(summary, indent=1))
     title = f"oliveye monthly indices {province}/{municipality} {start}..{end}"
     csv_path = run_cached_batch_job(process, ctx.openeo_cache_dir, title)
 
-    tidy = oi.clean_monthly_indices(oi.load_indices_csv(csv_path, areas))
-    out = ctx.output_dir / f"indices_monthly_{province}_{municipality}_{start}_{end}.csv"
-    tidy.assign(month=tidy["month"].astype(str)).to_csv(out, index=False)
-    print(tidy[["month", "ndvi", "ndmi", "ndvi_outlier", "ndmi_outlier"]].round(3).to_string())
-    return [summary_path, out]
+    per_cell = oi.load_indices_csv(csv_path, cells, id_columns=["cell_id"])
+    stem = f"{province}_{municipality}_{start}_{end}"
+    cells_out = ctx.output_dir / f"indices_cells_{stem}.csv"
+    per_cell.assign(month=per_cell["month"].astype(str)).to_csv(cells_out, index=False)
+
+    municipal = oi.clean_monthly_indices(og.aggregate_cells(per_cell, cells))
+    out = ctx.output_dir / f"indices_monthly_{stem}.csv"
+    municipal.assign(month=municipal["month"].astype(str)).to_csv(out, index=False)
+    print(municipal[["month", "ndvi", "ndmi", "valid_cells", "ndvi_outlier"]].round(3).to_string())
+    return [summary_path, cells_path, cells_out, out]
 
 
 def aforo_table(params: dict[str, Any], ctx: JobContext) -> list[Path]:
