@@ -66,9 +66,14 @@ parked in "Pending for the author" and the work moves on.
 - 23:15 Statistician amendments implemented with TDD (9 new tests written first, all RED, then
   GREEN). While running them on provisional data a design flaw appeared: the province indicator
   was shrunk by Ridge (both provinces pulled to a pooled mean, MAPE 80.8 %). Fixed with
-  `ProvinceAnomalyRidge` (province level unpenalised; 2 more tests). Provisional run (Jaén = 3.7 %
-  of its olive area): Ridge 44.9 %, province mean 45.4 %, last campaign 44.0 %, aforo 11.9 %
+  `ProvinceAnomalyRidge` (province level unpenalised; 2 more tests), a change driven by
+  the provisional LOCO results and labelled as such in ADR 0003. Provisional run, leave-one-campaign-out
+  (Jaén = 3.7 % of its olive area): Ridge 44.9 %, province mean 45.4 %, last campaign 44.0 %, aforo 11.9 %
   (9 campaigns, same 15 rows). Satellite/climate add nothing yet; not published. ADR 0003
   amended. 113 tests pass.
 - 23:15 Batch: 28/85 real municipalities; no new result since 22:13 (likely a job waiting in the
   CDSE queue; timeout + recovery cover it). Next check at the scheduled check-in.
+- 23:45 Code review (approve with 2 fixes) and oliveye-auditor (no leakage; doc honesty fixes)
+  applied: alpha guard for < 2 inner folds, unseen province is an error, 13a labelled as
+  result-driven, forward check documents its inner alpha choice, XGBoost experiment scored with
+  the same like-for-like summary. 115 tests pass.

@@ -16,8 +16,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from oliveye.models.evaluate import mape
-from oliveye.models.train import MODEL_COLUMNS, loco_splits
+from oliveye.models.evaluate import summarise
+from oliveye.models.train import MODEL_COLUMNS, baseline_predictions, loco_splits
 
 
 def main() -> None:
@@ -37,12 +37,10 @@ def main() -> None:
         pred = np.exp(model.predict(table.loc[test_idx, MODEL_COLUMNS]))
         predictions.append(pd.Series(pred, index=test_idx))
     pred_t = pd.concat(predictions).sort_index()
-    print(f"rows: {len(table)}")
-    print(f"XGBoost MAPE (leave-one-campaign-out): {mape(table['oil_final_t'], pred_t):.1f} %")
-    print(
-        f"Repeat last campaign MAPE:             "
-        f"{mape(table['oil_final_t'], np.exp(table['lag_log_production'])):.1f} %"
-    )
+    xgb = table[["campaign", "province"]].assign(pred_t=pred_t)
+    # Same like-for-like rows and metrics as scripts/train_models.py (XGBoost in the "ridge" slot).
+    summary = summarise(xgb, baseline_predictions(table)).replace({"model": {"ridge": "xgboost"}})
+    print(summary.to_string(index=False))
 
 
 if __name__ == "__main__":

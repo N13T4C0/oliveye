@@ -41,7 +41,8 @@ after looking at the results.
 ## Amendment — 2026-10-25 (statistician review, before results on the full data)
 
 Method corrections decided before seeing results on the 85-municipality data. None of them adds
-or searches features.
+or searches features. All except 13a came from the statistician's review of the design; 13a came
+from a defect visible in the provisional results and is labelled as such.
 
 | # | Change | Why (one line) |
 |---|---|---|
@@ -50,5 +51,5 @@ or searches features.
 | 6b | Extra references: province mean, and a lag + province model | Shows whether satellite and climate add anything over the simplest models |
 | 10a | Interval: conformal-style symmetric half-width on log residuals (rank ⌈(n+1)·0.8⌉, capped at n) next to the empirical quantiles | Distribution-free and simple; coverage is approximate because LOCO residuals are not strictly exchangeable |
 | 12a | Alpha grid `logspace(-1, 3, 9)`, one-standard-error rule (largest alpha within 1 SE of the best) | Prefer more shrinkage when the data cannot tell alphas apart |
-| 13a | `ProvinceAnomalyRidge`: province level unpenalised; features centred on their province mean, clipped to the training range, standardised; Ridge fits within-province anomalies | NDMI/NDVI levels are confounded with province; shrinking the province indicator pulled both provinces towards a pooled mean (provisional MAPE 80.8 % → 44.9 %); infinite shrinkage now gives the province mean |
-| 13b | Forward-chaining check (train only on earlier campaigns) reported next to leave-one-campaign-out | Leave-one-campaign-out also trains on future years |
+| 13a | `ProvinceAnomalyRidge`: province level unpenalised; features centred on their province mean, clipped to the training range, standardised; Ridge fits within-province anomalies | NDMI/NDVI levels are confounded with province, and shrinking the province indicator pulled both provinces towards a pooled mean. **Driven by results:** found on the provisional run (leave-one-campaign-out, 15 like-for-like rows, Jaén features from 3.7 % of its olive area): Ridge MAPE 80.8 % → 44.9 %, vs province mean 45.4 %, last campaign 44.0 %, aforo 11.9 %. It removes a defect (infinite shrinkage now gives the province mean) and adds no feature |
+| 13b | Forward-chaining check (train only on earlier campaigns) reported next to leave-one-campaign-out; inside it, alpha is chosen by leave-one-campaign-out among those earlier campaigns only | Leave-one-campaign-out also trains on future years; an inner forward split would leave too few folds to pick alpha |

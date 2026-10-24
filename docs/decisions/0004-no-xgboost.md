@@ -16,9 +16,10 @@ the same leave-one-campaign-out as everything else.
 
 ## Evidence
 
-| Run | Rows | XGBoost MAPE | "Repeat last campaign" MAPE |
-|---|---|---|---|
-| 2026-10-25, provisional (Jaén features from 1 municipality) | 16 | 84.1 % | 43.3 % |
+| Run (leave-one-campaign-out) | Rows | XGBoost MAPE | Ridge MAPE | "Repeat last campaign" MAPE | Aforo MAPE |
+|---|---|---|---|---|---|
+| 2026-10-25 21:50, provisional (Jaén features from 1 municipality), all rows, before the t+1 fix | 16 | 84.1 % | – | 43.3 % | – |
+| 2026-10-25 23:45, provisional, t+1 excluded, same 15 like-for-like rows | 15 | 76.2 % | 44.9 % | 44.0 % | 11.9 % |
 
 To be refreshed with the full 85-municipality data; the conclusion is not expected to change.
 

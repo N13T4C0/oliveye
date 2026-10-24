@@ -47,7 +47,11 @@ def loco_splits(table: pd.DataFrame) -> Iterator[tuple[pd.Index, pd.Index]]:
 def forward_splits(
     table: pd.DataFrame, *, min_train_campaigns: int = 4
 ) -> Iterator[tuple[pd.Index, pd.Index]]:
-    """Train on earlier campaigns only (a stricter, time-respecting check)."""
+    """Train on earlier campaigns only (a stricter, time-respecting check).
+
+    Used for the outer folds only: inside each one, alpha is still chosen by leave-one-campaign-out
+    among those earlier campaigns (only past data, but enough folds to choose from).
+    """
     for campaign in sorted(table["campaign"].unique()):
         train = table.index[table["campaign"] < campaign]
         if table.loc[train, "campaign"].nunique() < min_train_campaigns:
