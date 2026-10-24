@@ -18,13 +18,16 @@ Updated at the end of each phase.
 - [ ] Download SIGPAC for all of Jaén (23) and Granada (18) (Phase 2)
 - [x] Code `900` = Jaén capital (Catastro numbering: SIGPAC municipality codes are **Catastro codes, not INE**; 900 = provincial capital). Bounds around Jaén city; 24,113 ha OV. Not a duplicate.
 - [x] SIGPAC OV vs Junta yearbook: Jaén 584,828 / 588,818 ha (99.3 %), Granada 203,994 / 208,835 ha (97.7 %)
-- [ ] Map Catastro municipality codes to INE codes and names before joining other sources
+- [x] Catastro ↔ INE codes + names for 271 municipalities (`catastro_ine_mapping` job)
 - [x] Aforo per province: yearly Junta PDFs "Estimacion_ACEITE_MESA_<campaign>"; parser `oliveye.pipeline.production` (2021/22–2026/27)
   - Derived previous-campaign finals match AICA (Andalucía 2023/24: 578,100 vs 580,464 t)
 - [x] Aforo table 2021/22–2026/27 on the results branch (`aforo_by_province.csv`)
   - Junta aforo error in Jaén vs derived final: −21 % (2024/25) to +22 % (2025/26) → the bar to beat
-- [ ] Find aforo PDFs for 2015/16–2020/21
-- [ ] Actual production per province: find AICA provincial series (reports only give % per province)
+- [x] Aforo 2016/17, 2019/20, 2020/21 from official press releases (`docs/sources/aforo_press_releases.csv`)
+- [ ] Aforo 2015/16, 2017/18, 2018/19 (no PDF or release found yet)
+- [x] Target variable decided (ADR 0002): Junta final production derived from aforo variations,
+  validated vs AICA regional totals (−0.4 %, −0.2 %). Jaén: 8 campaigns, Granada: 7
+- [ ] Fill target gaps 2016/17, 2017/18, 2019/20 (Anuario de Estadísticas Agrarias / AICA releases)
 - [ ] Install uv and Docker; run `uv sync` (done on Windows) and `docker compose up -d`
 
 ## Automation (2026-10-24)
@@ -35,6 +38,18 @@ Updated at the end of each phase.
 - [x] Job queue on GitHub Actions (`jobs/` → `results` branch) + CI workflow
 - [ ] **Author, once:** `uv run python scripts/export_openeo_refresh_token.py` (stores the openEO secret)
 - [ ] Long term: client credentials + ask CDSE support to link them to the personal account
+
+## Automation hardening (2026-10-24, autonomous block)
+- [x] Parallel workers split by request; per-request credit logs; budget guard; safety-net publish
+- [x] Orphaned paid jobs recovered from the openEO backend by title (2 incidents, 0 credits lost)
+- [x] Skills: ponytail + 5 addyosmani agent-skills; graphify/OmniRoute evaluated and skipped
+
+## Phase 3 groundwork
+- [x] `oliveye.models.features`: seasonal NDVI/NDMI per campaign, data cut at August (aforo time)
+- [ ] Climate: RIA stations + daily weather (jobs ready: `ria_stations`, `ria_daily`); heat days in May
+- [ ] Feature table per province × campaign (indices + climate + lagged production for alternate bearing)
+- [ ] Baselines (last campaign, 5-year mean, aforo) and Ridge with leave-one-campaign-out
+- [ ] `/grill-me` session with the author on model design before training
 
 ## Phase 1 — Exploration
 - [x] `01_openeo_ndvi_sample_parcels.ipynb` + `oliveye.pipeline.openeo_ndvi` written and dry-run tested
@@ -49,8 +64,12 @@ Updated at the end of each phase.
 - [x] openEO secret set; first paid run 2026-10-24: Martos, July 2025, 3,130 olive cells (85.9 % of its olive area,
   mean purity 95.7 %), **4 credits**, ~3 min. NDVI 0.271, NDMI −0.068 (summer water stress)
   - First attempt failed with HTTP 413 (3 MB outline, 0 credits) → switched to 250 m olive-dominant grid (ADR 0001 addendum)
-- [ ] Full campaign 2024/25 for Martos (12 months) to measure how cost scales with months
-- [ ] **Before 2026-11-01**: spend the expiring credits on the largest olive municipalities
+- [x] Martos 2024/25 (12 months) = 6 credits; Martos 2016/17–2025/26 (120 months) = 23 credits, 16 min
+  → one job per municipality with its whole history (cap 120 months)
+- [~] **Running**: 2016/17–2025/26 indices for the 86 municipalities with 80 % of the olive area
+  (Jaén 48, Granada 38), two parallel CI workers, hard budget 3,100 credits (estimate 560–810)
+  - 25 fragmented municipalities (mostly Granada) have < 60 % coverage at 80 % purity (≥ 22 cells each)
+- [ ] Check the batch finished; re-queue anything with status error after reading its log
 - [ ] Extrapolate cost to a full campaign and to all municipalities of Jaén + Granada
 - [ ] `02_sigpac_olive_parcels.ipynb`: load SIGPAC, filter olive uses, areas per municipality/province, map
 - [ ] `03_production_history.ipynb`: production and aforo per province and campaign since 2015
