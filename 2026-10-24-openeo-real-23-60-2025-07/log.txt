@@ -1,0 +1,76 @@
+== 2026-10-24-openeo-real-23-60-2025-07 (openeo_monthly_indices)
+{
+ "geometries": 1,
+ "olive_parcels": 18200,
+ "olive_ha": 21618.5,
+ "sampled_ha": 14306.9,
+ "bbox_km2": 552.7,
+ "vertices": 135251,
+ "months": 1
+}
+Authenticating with openEO (refresh_token)...
+Preflight process graph validation failed: [413] Internal: 413 Request Entity Too Large: The data value transmitted exceeds the capacity limit. (ref: r-2610241531084b4e9a6b145011019ed8)
+urllib3.exceptions.SSLError: EOF occurred in violation of protocol (_ssl.c:2417)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/runner/work/oliveye/oliveye/.venv/lib/python3.12/site-packages/requests/adapters.py", line 696, in send
+    resp = conn.urlopen(
+           ^^^^^^^^^^^^^
+  File "/home/runner/work/oliveye/oliveye/.venv/lib/python3.12/site-packages/urllib3/connectionpool.py", line 886, in urlopen
+    return self.urlopen(
+           ^^^^^^^^^^^^^
+  File "/home/runner/work/oliveye/oliveye/.venv/lib/python3.12/site-packages/urllib3/connectionpool.py", line 886, in urlopen
+    return self.urlopen(
+           ^^^^^^^^^^^^^
+  File "/home/runner/work/oliveye/oliveye/.venv/lib/python3.12/site-packages/urllib3/connectionpool.py", line 886, in urlopen
+    return self.urlopen(
+           ^^^^^^^^^^^^^
+  File "/home/runner/work/oliveye/oliveye/.venv/lib/python3.12/site-packages/urllib3/connectionpool.py", line 847, in urlopen
+    retries = retries.increment(
+              ^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/oliveye/oliveye/.venv/lib/python3.12/site-packages/urllib3/util/retry.py", line 555, in increment
+    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+urllib3.exceptions.MaxRetryError: HTTPSConnectionPool(host='openeo.dataspace.copernicus.eu', port=443): Max retries exceeded with url: /openeo/1.2/jobs (Caused by SSLError(SSLEOFError(8, 'EOF occurred in violation of protocol (_ssl.c:2417)')))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/runner/work/oliveye/oliveye/src/oliveye/jobs.py", line 324, in run_job
+    outputs = HANDLERS[job.type](job.params, ctx)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/oliveye/oliveye/src/oliveye/jobs.py", line 219, in openeo_monthly_indices
+    csv_path = run_cached_batch_job(process, ctx.openeo_cache_dir, title)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/oliveye/oliveye/src/oliveye/pipeline/openeo_jobs.py", line 122, in run_cached_batch_job
+    job = process.create_job(title=title, out_format="CSV")
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/oliveye/oliveye/.venv/lib/python3.12/site-packages/openeo/rest/vectorcube.py", line 460, in create_job
+    return self._connection.create_job(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/oliveye/oliveye/.venv/lib/python3.12/site-packages/openeo/rest/connection.py", line 1922, in create_job
+    response = self.post("/jobs", json=pg_with_metadata, expected_status=HTTP_201_CREATED)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/oliveye/oliveye/.venv/lib/python3.12/site-packages/openeo/rest/_connection.py", line 266, in post
+    return self.request("post", path=path, json=json, allow_redirects=False, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/oliveye/oliveye/.venv/lib/python3.12/site-packages/openeo/rest/connection.py", line 787, in request
+    return _request()
+           ^^^^^^^^^^
+  File "/home/runner/work/oliveye/oliveye/.venv/lib/python3.12/site-packages/openeo/rest/connection.py", line 780, in _request
+    return super(Connection, self).request(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/oliveye/oliveye/.venv/lib/python3.12/site-packages/openeo/rest/_connection.py", line 152, in request
+    resp = self.session.request(
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/oliveye/oliveye/.venv/lib/python3.12/site-packages/requests/sessions.py", line 651, in request
+    resp = self.send(prep, **send_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/oliveye/oliveye/.venv/lib/python3.12/site-packages/requests/sessions.py", line 784, in send
+    r = adapter.send(request, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/oliveye/oliveye/.venv/lib/python3.12/site-packages/requests/adapters.py", line 727, in send
+    raise SSLError(e, request=request)
+requests.exceptions.SSLError: HTTPSConnectionPool(host='openeo.dataspace.copernicus.eu', port=443): Max retries exceeded with url: /openeo/1.2/jobs (Caused by SSLError(SSLEOFError(8, 'EOF occurred in violation of protocol (_ssl.c:2417)')))

@@ -1,0 +1,15 @@
+{
+ "job_id": "2026-10-24-openeo-real-23-60-2025-07",
+ "type": "openeo_monthly_indices",
+ "params": {
+  "province": "23",
+  "municipality": "60",
+  "start": "2025-07-01",
+  "end": "2025-08-01",
+  "dry_run": false
+ },
+ "started_at": "2026-10-24T15:30:19Z",
+ "status": "error",
+ "error": "SSLError: HTTPSConnectionPool(host='openeo.dataspace.copernicus.eu', port=443): Max retries exceeded with url: /openeo/1.2/jobs (Caused by SSLError(SSLEOFError(8, 'EOF occurred in violation of protocol (_ssl.c:2417)')))",
+ "finished_at": "2026-10-24T15:31:28Z"
+}
