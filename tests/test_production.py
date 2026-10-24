@@ -96,3 +96,31 @@ def test_final_series_reindexes_and_prefers_first_source() -> None:
     assert list(series["campaign"]) == ["2015/16", "2023/24"]
     assert series.set_index("campaign").loc["2023/24", "oil_final_t_derived"] == 205_900
     assert series.set_index("campaign").loc["2015/16", "oil_final_t_derived"] == 528_800
+
+
+def test_reported_values_win_over_derived() -> None:
+    import pandas as pd
+
+    from oliveye.pipeline.production import target_series
+
+    derived = pd.DataFrame(
+        {
+            "campaign": ["2018/19", "2020/21"],
+            "province": ["Jaén", "Jaén"],
+            "oil_final_t_derived": [665_200.0, 524_000.0],
+            "source_campaign": ["2019/20", "2021/22"],
+        }
+    )
+    reported = pd.DataFrame(
+        {
+            "campaign": ["2018/19"],
+            "province": ["Jaén"],
+            "oil_final_t": [667_855.0],
+            "method": ["reported"],
+        }
+    )
+    series = target_series(derived, reported).set_index("campaign")
+
+    assert series.loc["2018/19", "oil_final_t"] == 667_855
+    assert series.loc["2018/19", "method"] == "reported"
+    assert series.loc["2020/21", "method"] == "derived_from_aforo"

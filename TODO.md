@@ -27,7 +27,9 @@ Updated at the end of each phase.
 - [ ] Aforo 2015/16, 2017/18, 2018/19 (no PDF or release found yet)
 - [x] Target variable decided (ADR 0002): Junta final production derived from aforo variations,
   validated vs AICA regional totals (−0.4 %, −0.2 %). Jaén: 8 campaigns, Granada: 7
-- [ ] Fill target gaps 2016/17, 2017/18, 2019/20 (Anuario de Estadísticas Agrarias / AICA releases)
+- [x] Target gaps filled with cited sources: Jaén complete 2015/16–2025/26 (2018/19 = AICA 667,855 t,
+  matches the derived value within 0.4 %); Granada 2018/19 from a published share, 2019/20 from the 2020/21 aforo
+- [ ] Granada 2016/17 and 2017/18 still missing → those rows are dropped (ADR 0003 #16)
 - [ ] Install uv and Docker; run `uv sync` (done on Windows) and `docker compose up -d`
 
 ## Automation (2026-10-24)
@@ -50,7 +52,9 @@ Updated at the end of each phase.
 - [ ] RIA stations: the web service returns an HTML page to GitHub runners (bot protection?) — retry later or from the author's PC
 - [ ] Feature table per province × campaign (indices + climate + lagged production for alternate bearing)
 - [ ] Baselines (last campaign, 5-year mean, aforo) and Ridge with leave-one-campaign-out
-- [ ] `/grill-me` session with the author on model design before training
+- [x] `/grill-me` session with the author → ADR 0003 (17 decisions)
+- [ ] Implement `models/dataset.py`, `train.py`, `evaluate.py`, `scripts/train_models.py` once the openEO batch finishes
+  (expected rows: Jaén 2017/18–2025/26 = 9, Granada 2019/20–2025/26 = 7 → 16)
 
 ## Phase 1 — Exploration
 - [x] `01_openeo_ndvi_sample_parcels.ipynb` + `oliveye.pipeline.openeo_ndvi` written and dry-run tested

@@ -177,3 +177,23 @@ def final_production_series(*aforo_tables: pd.DataFrame) -> pd.DataFrame:
     series = pd.concat(frames, ignore_index=True)
     series = series.drop_duplicates(["campaign", "province"], keep="first")
     return series.sort_values(["province", "campaign"]).reset_index(drop=True)
+
+
+def target_series(derived: pd.DataFrame, reported: pd.DataFrame) -> pd.DataFrame:
+    """Final production per province and campaign: reported values win over derived ones.
+
+    Args:
+        derived: output of `final_production_series` (`oil_final_t_derived`).
+        reported: curated table with `campaign`, `province`, `oil_final_t`, `method`.
+
+    Returns:
+        campaign, province, oil_final_t, method ("reported", "share_of_total" or
+        "derived_from_aforo"), so every value says how it was obtained.
+    """
+    from_aforo = derived.rename(columns={"oil_final_t_derived": "oil_final_t"}).assign(
+        method="derived_from_aforo"
+    )[["campaign", "province", "oil_final_t", "method"]]
+    direct = reported[["campaign", "province", "oil_final_t", "method"]]
+    combined = pd.concat([direct, from_aforo], ignore_index=True)
+    combined = combined.drop_duplicates(["campaign", "province"], keep="first")
+    return combined.sort_values(["province", "campaign"]).reset_index(drop=True)
