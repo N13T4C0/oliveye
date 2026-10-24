@@ -122,6 +122,34 @@ def sigpac_municipality_summary(params: dict[str, Any], ctx: JobContext) -> list
     return [out_csv, out_json]
 
 
+def sigpac_schema(params: dict[str, Any], ctx: JobContext) -> list[Path]:
+    """Columns of the remote SIGPAC file, plus the distinct admin values of one province.
+
+    Used to find out whether the file carries municipality names or INE codes (it uses
+    Catastro municipality codes, e.g. 900 = provincial capital).
+    """
+    _require(params, "province")
+    con = sigpac._connect()
+    source = sigpac.SIGPAC_ANDALUSIA_URL
+    schema = con.execute(f"DESCRIBE SELECT * FROM read_parquet('{source}')").df()
+    schema_path = ctx.output_dir / "schema.csv"
+    schema.to_csv(schema_path, index=False)
+    print(schema[["column_name", "column_type"]].to_string(index=False))
+
+    admin = [c for c in schema["column_name"] if str(c).startswith("admin")]
+    columns = ", ".join(f'"{c}"' for c in admin)
+    province_filter = sigpac._code_filter(con, source, "admin_province_code")
+    values = con.execute(
+        f"SELECT DISTINCT {columns} FROM read_parquet('{source}') WHERE {province_filter} "
+        f"ORDER BY ALL",
+        [str(params["province"])],
+    ).df()
+    values_path = ctx.output_dir / f"admin_values_{params['province']}.csv"
+    values.to_csv(values_path, index=False)
+    print(values.head(20).to_string(index=False))
+    return [schema_path, values_path]
+
+
 def _host_allowed(url: str) -> bool:
     """HTTPS only, and the host must be (a subdomain of) an allow-listed one."""
     parsed = urlparse(url)
@@ -276,6 +304,7 @@ HANDLERS: dict[str, Handler] = {
     "aforo_table": aforo_table,
     "sigpac_rank": sigpac_rank,
     "sigpac_municipality_summary": sigpac_municipality_summary,
+    "sigpac_schema": sigpac_schema,
     "download": download,
     "openeo_monthly_indices": openeo_monthly_indices,
 }
