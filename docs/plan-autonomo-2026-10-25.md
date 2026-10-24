@@ -20,7 +20,7 @@ parked in "Pending for the author" and the work moves on.
 - [ ] D. Extras: XGBoost negative test + ADR 0004; Granada 2016/17–2017/18 gaps; RIA retry.
 - [ ] F. When the batch finishes: final training with all 85 municipalities; refresh results,
       notebook 04; `model-qa` + auditor again.
-- [ ] G. Phase 4 groundwork: FastAPI read-only service over the results (municipalities, monthly
+- [x] G. Phase 4 groundwork: FastAPI read-only service over the results (municipalities, monthly
       series, province predictions) with tests; no deployment.
 - [ ] H. README results section as a **draft** (`docs/results/README-draft.md`) for the author.
 - [ ] E. Wrap-up (~07:25): TODO (repo + project), sync the author's folder, morning summary.
@@ -45,3 +45,7 @@ parked in "Pending for the author" and the work moves on.
   Granada 58.5 %): pipeline works; Ridge blows up on extreme campaigns (alpha 0.1 picked,
   Jaén 2023/24 predicted 2.4 Mt). Not published; waiting for the statistician review and for
   the batch. Aforo MAPE on these rows: 11.9 %.
+- 22:05 Block G done (early, independent): FastAPI read-only service (`oliveye.api.app`) with 6
+  tests written first, `scripts/export_api_data.py`, `api/README.md`. Verified on real data
+  (Martos 120 months, production vs aforo, names from the Catastro table). 104 tests pass.
+- 22:05 Batch: 22/85 municipalities, 408 credits; ~10/h → expected to finish around 04:30.
