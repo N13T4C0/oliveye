@@ -260,3 +260,23 @@ def test_credit_budget_blocks_paid_jobs(tmp_path: Path, monkeypatch: pytest.Monk
     monkeypatch.setenv("OPENEO_CREDIT_BUDGET", "20")
     with pytest.raises(RuntimeError, match="Credit budget reached"):
         jobs.check_credit_budget(tmp_path)
+
+
+def test_parse_catastro_municipalities() -> None:
+    xml = """<?xml version="1.0" encoding="utf-8"?>
+<consulta_municipalero xmlns="http://www.catastro.meh.es/">
+  <municipiero>
+    <muni><nm>JAEN</nm>
+      <locat><cd>23</cd><cmc>900</cmc></locat>
+      <loine><cp>23</cp><cm>50</cm></loine></muni>
+    <muni><nm>MARTOS</nm>
+      <locat><cd>23</cd><cmc>60</cmc></locat>
+      <loine><cp>23</cp><cm>60</cm></loine></muni>
+  </municipiero>
+</consulta_municipalero>"""
+    table = jobs.parse_catastro_municipalities(xml)
+
+    assert table.to_dict("records") == [
+        {"province_code": "23", "catastro_code": "900", "ine_code": "50", "name": "JAEN"},
+        {"province_code": "23", "catastro_code": "60", "ine_code": "60", "name": "MARTOS"},
+    ]

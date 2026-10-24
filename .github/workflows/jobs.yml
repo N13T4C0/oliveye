@@ -70,6 +70,8 @@ jobs:
           W="--worker ${{ matrix.worker }} --workers 2"
           pending() {
             local n
+            # Pick up job files pushed after this run started (job files are data, not code).
+            git fetch -q --depth 1 origin main && git checkout -q FETCH_HEAD -- jobs/ || true
             n=$(uv run python scripts/run_jobs.py --results-dir results-branch $W --count) || exit 1
             case "$n" in ''|*[!0-9]*) echo "::error::bad pending count '$n'" >&2; exit 1 ;; esac
             echo "$n"

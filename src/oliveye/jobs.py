@@ -45,6 +45,8 @@ ALLOWED_DOWNLOAD_HOSTS: tuple[str, ...] = (
     "ine.es",
     "aemet.es",
     "source.coop",
+    "catastro.meh.es",
+    "catastro.hacienda.gob.es",
 )
 MAX_DOWNLOAD_BYTES = 50 * 1024 * 1024
 # Measured on 2026-10-24 (Martos, 3,130 cells): 1 month = 4 credits, 12 months = 6 credits.
@@ -149,6 +151,65 @@ def sigpac_schema(params: dict[str, Any], ctx: JobContext) -> list[Path]:
     values.to_csv(values_path, index=False)
     print(values.head(20).to_string(index=False))
     return [schema_path, values_path]
+
+
+CATASTRO_MUNICIPALITIES_URL = (
+    "https://ovc.catastro.meh.es/ovcservweb/OVCSWLocalizacionRC/OVCCallejero.asmx/"
+    "ConsultaMunicipio?Provincia={province}&Municipio="
+)
+
+
+def parse_catastro_municipalities(xml_text: str) -> pd.DataFrame:
+    """Parse Catastro's ConsultaMunicipio XML into Catastro ↔ INE municipality codes.
+
+    Each `<muni>` carries its name (`nm`), the Catastro code (`locat/cd` + `locat/cmc`) and the
+    INE code (`loine/cp` + `loine/cm`). SIGPAC uses the Catastro numbering.
+    """
+    import xml.etree.ElementTree as ET  # noqa: N817 - conventional alias
+
+    root = ET.fromstring(xml_text)
+
+    def text(node: ET.Element, path: str) -> str:
+        found = node.find(path)
+        return (found.text or "").strip() if found is not None else ""
+
+    # Strip namespaces so the paths below stay readable.
+    for element in root.iter():
+        if "}" in element.tag:
+            element.tag = element.tag.split("}", 1)[1]
+    rows = [
+        {
+            "province_code": f"{int(text(m, 'loine/cp')):02d}",
+            "catastro_code": str(int(text(m, "locat/cmc"))),
+            "ine_code": str(int(text(m, "loine/cm"))),
+            "name": text(m, "nm"),
+        }
+        for m in root.iter("muni")
+    ]
+    return pd.DataFrame(rows, columns=["province_code", "catastro_code", "ine_code", "name"])
+
+
+def catastro_ine_mapping(params: dict[str, Any], ctx: JobContext) -> list[Path]:
+    """Catastro → INE municipality codes and names for the given provinces.
+
+    `params["provinces"]` lists Catastro province names, e.g. ["JAEN", "GRANADA"].
+    """
+    _require(params, "provinces")
+    frames = []
+    for name in params["provinces"]:
+        if not str(name).isalpha():
+            raise ValueError(f"Province names are plain words, got {name!r}")
+        url = CATASTRO_MUNICIPALITIES_URL.format(province=str(name).upper())
+        request = urllib.request.Request(url, headers={"User-Agent": "oliveye-jobs/0.1"})
+        with _OPENER.open(request, timeout=120) as response:  # noqa: S310 - allow-listed
+            frames.append(parse_catastro_municipalities(response.read().decode("utf-8")))
+    table = pd.concat(frames, ignore_index=True)
+    out = ctx.output_dir / "catastro_ine_municipalities.csv"
+    table.to_csv(out, index=False)
+    differing = table[table["catastro_code"] != table["ine_code"]]
+    print(f"{len(table)} municipalities, {len(differing)} with different Catastro/INE codes")
+    print(differing.head(15).to_string(index=False))
+    return [out]
 
 
 def _host_allowed(url: str) -> bool:
@@ -335,6 +396,7 @@ def aforo_table(params: dict[str, Any], ctx: JobContext) -> list[Path]:
 
 HANDLERS: dict[str, Handler] = {
     "aforo_table": aforo_table,
+    "catastro_ine_mapping": catastro_ine_mapping,
     "sigpac_rank": sigpac_rank,
     "sigpac_municipality_summary": sigpac_municipality_summary,
     "sigpac_schema": sigpac_schema,
