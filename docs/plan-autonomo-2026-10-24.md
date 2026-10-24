@@ -55,3 +55,10 @@ repo. Each check-in reads this file, advances the next open step and logs progre
   has normal spring NDVI → satellite alone misses flowering failure; 2023/24 shows the lowest
   summer NDMI (−0.106). Climate (heat in May) and alternate bearing (lagged production) needed.
 9. [ ] NEW: climate source (RIA, Junta's agroclimatic network) → job type for daily data.
+- 19:10 INCIDENT: both parallel workers failed with exit 126 (publish script without exec bit).
+  Up to 4 paid openEO jobs finished without their results/credits being published.
+- 19:25 Fix (audited twice): call the script with bash + exec bit; recover orphaned jobs from the
+  openEO backend by title before creating new ones (fails closed). Queue restarted. Expected
+  recovered at 0 extra cost.
+- 19:00 Step 9 groundwork: `oliveye.pipeline.climate` + `ria_stations`/`ria_daily` jobs (RIA web
+  service); stations job queued.
