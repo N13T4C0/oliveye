@@ -1,0 +1,16 @@
+{
+ "job_id": "2026-10-24-catastro-ine-mapping",
+ "type": "catastro_ine_mapping",
+ "params": {
+  "provinces": [
+   "JAEN",
+   "GRANADA"
+  ]
+ },
+ "started_at": "2026-10-24T17:15:24Z",
+ "status": "ok",
+ "outputs": [
+  "catastro_ine_municipalities.csv"
+ ],
+ "finished_at": "2026-10-24T17:15:26Z"
+}

@@ -1,0 +1,18 @@
+== 2026-10-24-catastro-ine-mapping (catastro_ine_mapping)
+271 municipalities, 180 with different Catastro/INE codes
+province_code catastro_code ine_code              name
+           23           102      905 ARROYO DEL OJANCO
+           23            13      902  BEDMAR Y GARCIEZ
+           23            23      901         CARCHELES
+           23           900       50              JAEN
+           23            78      904 SANTIAGO-PONTONES
+           23           100      903       VILLATORRES
+           18             2        1             AGRON
+           18             3        2        ALAMEDILLA
+           18             4        3          ALBOLOTE
+           18             5        4          ALBONDON
+           18             6        5           ALBUÑAN
+           18             7        6           ALBUÑOL
+           18             8        7        ALBUÑUELAS
+           18            11       10           ALDEIRE
+           18            12       11           ALFACAR
