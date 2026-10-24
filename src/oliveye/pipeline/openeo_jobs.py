@@ -87,6 +87,45 @@ def unfinished_job_id(cache_dir: Path, key: str) -> str | None:
     return last["job_id"] or None
 
 
+def backend_job_id(
+    connection: Any,
+    keyed_title: str,
+    legacy_title: str,
+    known_job_ids: set[str],
+) -> str | None:
+    """Newest usable batch job on the backend for this request, if one exists.
+
+    Last line of defence against paying twice: if the local log was lost (e.g. a CI run died
+    before publishing it), the job still exists on openEO under its title, so we reuse it.
+
+    * `keyed_title` ("<title> [<cache key>]") identifies the exact request.
+    * `legacy_title` (no key, used before keys were added) is accepted only for jobs that are
+      not in our logs at all: a logged job belongs to a known request and must never be
+      reused for a different one.
+    * Jobs in 'error' or 'canceled' are ignored.
+
+    Fails closed: if the listing fails, raise instead of risking a duplicate paid job.
+    """
+    try:
+        listing = list(connection.list_jobs(limit=500))
+    except Exception as error:
+        raise RuntimeError(
+            "Could not list openEO jobs to check for an existing one; not creating a new job."
+        ) from error
+    usable = [
+        job
+        for job in listing
+        if job.get("status") not in ("error", "canceled")
+        and (
+            job.get("title") == keyed_title
+            or (job.get("title") == legacy_title and str(job.get("id")) not in known_job_ids)
+        )
+    ]
+    if not usable:
+        return None
+    return str(max(usable, key=lambda job: str(job.get("created", "")))["id"])
+
+
 def _wait(job: Any, timeout_s: float, poll_s: float) -> str:
     """Poll until the job reaches a terminal state; raise TimeoutError after `timeout_s`."""
     deadline = time.monotonic() + timeout_s
@@ -130,12 +169,21 @@ def run_cached_batch_job(
     graph_path = cache_dir / f"{key}.process.json"
     graph_path.write_text(json.dumps(process.flat_graph(), separators=(",", ":")))
 
+    # The cache key in the title lets a lost job be found again on the backend; the plain title
+    # matches jobs created before keys were added (same code, same request).
+    keyed_title = f"{title} [{key}]"
     previous = unfinished_job_id(cache_dir, key)
+    origin = "resumed"
+    if not previous:
+        known = {row["job_id"] for row in credits_table(cache_dir)}
+        previous = backend_job_id(process.connection, keyed_title, title, known)
+        origin = "recovered"
     if previous:
         job = process.connection.job(previous)
-        print(f"Resuming batch job {previous} (cache key {key}) instead of creating a new one")
+        print(f"{origin.capitalize()} batch job {previous} (cache key {key}): no new job created")
     else:
-        job = process.create_job(title=title, out_format="CSV")
+        job = process.create_job(title=keyed_title, out_format="CSV")
+        origin = "created"
 
     def log(status: str, costs: str = "") -> None:
         log_credits(
@@ -151,7 +199,7 @@ def run_cached_batch_job(
         )
 
     # Logged before starting: if anything below fails, the job (and its credits) stays traceable.
-    log("resumed" if previous else "created")
+    log(origin)
     print(f"Batch job {job.job_id} (cache key {key}); this usually takes a few minutes...")
     metadata: dict[str, Any] = {}
     try:

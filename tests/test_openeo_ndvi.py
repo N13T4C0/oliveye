@@ -131,6 +131,11 @@ class _FakeConnection:
         self.resumed.append(job_id)
         return self._job
 
+    def list_jobs(self, limit: int = 100) -> list[dict[str, str]]:
+        return self.backend_jobs
+
+    backend_jobs: list[dict[str, str]] = []
+
 
 class _FakeProcess:
     """Stands in for an openEO VectorCube; counts how many jobs are created."""
@@ -257,3 +262,52 @@ def test_resume_also_reads_the_legacy_log(tmp_path: Path) -> None:
 
     assert process.jobs_created == 0
     assert process.connection.resumed == ["j-old"]
+
+
+def test_lost_log_recovers_the_job_from_the_backend(tmp_path: Path) -> None:
+    process = _FakeProcess()
+    process.connection.backend_jobs = [
+        {"id": "j-old", "title": "test", "status": "finished", "created": "2026-10-24T16:41"},
+        {"id": "j-bad", "title": "test", "status": "error", "created": "2026-10-24T16:50"},
+        {"id": "j-other", "title": "other", "status": "finished", "created": "2026-10-24T16:55"},
+    ]
+    path = run_cached_batch_job(process, tmp_path, "test")
+
+    assert process.jobs_created == 0
+    assert process.connection.resumed == ["j-old"]
+    assert path.exists()
+    assert [r["status"] for r in credits_table(tmp_path)] == ["recovered", "finished"]
+
+
+def test_recovery_never_reuses_a_job_logged_for_another_request(tmp_path: Path) -> None:
+    from oliveye.pipeline.openeo_jobs import credits_log_path, log_credits
+
+    log_credits(
+        credits_log_path(tmp_path, "otherkey"),
+        {
+            "logged_at": "2026-10-24T15:00:00+00:00",
+            "job_id": "j-known",
+            "title": "test",
+            "cache_key": "otherkey",
+            "costs": "5",
+            "status": "finished",
+        },
+    )
+    process = _FakeProcess()
+    process.connection.backend_jobs = [
+        {"id": "j-known", "title": "test", "status": "finished", "created": "2026-10-24T15:00"}
+    ]
+    run_cached_batch_job(process, tmp_path, "test")
+    assert process.jobs_created == 1  # the known job belongs to another request
+
+
+def test_listing_failure_does_not_create_a_job(tmp_path: Path) -> None:
+    process = _FakeProcess()
+
+    def broken(limit: int = 100) -> list[dict[str, str]]:
+        raise ConnectionError("backend down")
+
+    process.connection.list_jobs = broken  # type: ignore[method-assign]
+    with pytest.raises(RuntimeError, match="not creating a new job"):
+        run_cached_batch_job(process, tmp_path, "test")
+    assert process.jobs_created == 0

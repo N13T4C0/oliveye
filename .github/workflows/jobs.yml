@@ -86,7 +86,7 @@ jobs:
             fi
             uv run python scripts/run_jobs.py --results-dir results-branch $W --max-jobs 1 \
               || echo "::warning::a job failed; see its status.json on the results branch"
-            .github/scripts/publish_results.sh \
+            bash .github/scripts/publish_results.sh \
               "results: job finished (run ${{ github.run_id }}, worker ${{ matrix.worker }})"
             now=$(pending)
             if [ "$now" -ge "$left" ]; then
@@ -102,7 +102,7 @@ jobs:
       - name: Publish results (safety net)
         if: always()
         run: |
-          .github/scripts/publish_results.sh \
+          bash .github/scripts/publish_results.sh \
             "results: safety net (run ${{ github.run_id }}, worker ${{ matrix.worker }})"
 
   continue:
