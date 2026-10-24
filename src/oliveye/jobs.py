@@ -212,6 +212,52 @@ def catastro_ine_mapping(params: dict[str, Any], ctx: JobContext) -> list[Path]:
     return [out]
 
 
+def _fetch_text(url: str) -> str:
+    """GET an allow-listed URL (redirects re-checked) and return it as text."""
+    if not _host_allowed(url):
+        raise ValueError(f"Host not allowed: {url}")
+    request = urllib.request.Request(url, headers={"User-Agent": "oliveye-jobs/0.1"})
+    with _OPENER.open(request, timeout=180) as response:  # noqa: S310 - allow-listed
+        return str(response.read(MAX_DOWNLOAD_BYTES).decode("utf-8"))
+
+
+def ria_stations(params: dict[str, Any], ctx: JobContext) -> list[Path]:
+    """List RIA agroclimatic stations (optionally filtered by province ids, e.g. [18, 23])."""
+    from oliveye.pipeline import climate
+
+    stations = climate.parse_stations(_fetch_text(climate.stations_url()))
+    wanted = [int(p) for p in params.get("provinces", [])]
+    if wanted:
+        stations = stations[stations["province_id"].isin(wanted)]
+    out = ctx.output_dir / "ria_stations.csv"
+    stations.to_csv(out, index=False)
+    print(stations.to_string(index=False))
+    return [out]
+
+
+def ria_daily(params: dict[str, Any], ctx: JobContext) -> list[Path]:
+    """Daily weather for RIA stations: `province_id`, `stations` (codes), `start`, `end`."""
+    from oliveye.pipeline import climate
+
+    _require(params, "province_id", "stations", "start", "end")
+    province_id = int(params["province_id"])
+    start, end = str(pd.Timestamp(params["start"]).date()), str(pd.Timestamp(params["end"]).date())
+    frames = []
+    for code in params["stations"]:
+        url = climate.daily_url(province_id, int(code), start, end)
+        try:
+            frames.append(climate.parse_daily(_fetch_text(url), province_id, int(code)))
+            print(f"station {province_id}-{code}: {len(frames[-1])} days")
+        except Exception as error:  # noqa: BLE001 - one broken station must not lose the rest
+            print(f"station {province_id}-{code}: failed ({type(error).__name__}: {error})")
+    if not frames:
+        raise RuntimeError("No station returned data")
+    table = pd.concat(frames, ignore_index=True)
+    out = ctx.output_dir / f"ria_daily_{province_id}_{start}_{end}.csv"
+    table.to_csv(out, index=False)
+    return [out]
+
+
 def _host_allowed(url: str) -> bool:
     """HTTPS only, and the host must be (a subdomain of) an allow-listed one."""
     parsed = urlparse(url)
@@ -397,6 +443,8 @@ def aforo_table(params: dict[str, Any], ctx: JobContext) -> list[Path]:
 HANDLERS: dict[str, Handler] = {
     "aforo_table": aforo_table,
     "catastro_ine_mapping": catastro_ine_mapping,
+    "ria_stations": ria_stations,
+    "ria_daily": ria_daily,
     "sigpac_rank": sigpac_rank,
     "sigpac_municipality_summary": sigpac_municipality_summary,
     "sigpac_schema": sigpac_schema,
