@@ -124,7 +124,10 @@ def test_auth_method_priority() -> None:
     assert auth_method({}) == "interactive"
     assert auth_method({"OPENEO_REFRESH_TOKEN": "t"}) == "refresh_token"
     both = {"OPENEO_REFRESH_TOKEN": "t", "OPENEO_CLIENT_ID": "i", "OPENEO_CLIENT_SECRET": "s"}
-    assert auth_method(both) == "client_credentials"
+    assert auth_method(both) == "refresh_token"  # personal credits first
+    assert (
+        auth_method({"OPENEO_CLIENT_ID": "i", "OPENEO_CLIENT_SECRET": "s"}) == "client_credentials"
+    )
 
 
 def test_ci_without_credentials_fails_fast(monkeypatch: pytest.MonkeyPatch) -> None:

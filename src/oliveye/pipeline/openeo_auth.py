@@ -2,12 +2,12 @@
 
 Three ways to authenticate, tried in this order:
 
-1. **Client credentials** (`OPENEO_CLIENT_ID` + `OPENEO_CLIENT_SECRET`): a service account. Best
-   for CI, but CDSE bills it separately until support links it to the personal account.
-2. **Refresh token** (`OPENEO_REFRESH_TOKEN`): the personal account, unattended. The token is
+1. **Refresh token** (`OPENEO_REFRESH_TOKEN`): the personal account, unattended. The token is
    exported once from a machine where the browser login was done
    (`scripts/export_openeo_refresh_token.py`). It expires after a period of inactivity, so it
    must be exported again if a CI run reports an authentication error.
+2. **Client credentials** (`OPENEO_CLIENT_ID` + `OPENEO_CLIENT_SECRET`): a service account.
+   CDSE bills it separately until support links it to the personal account.
 3. **Interactive** browser/device login (`authenticate_oidc`), the default on a laptop. The
    client stores the refresh token locally, so the browser is only needed now and then.
 """
@@ -30,10 +30,11 @@ ENV_REFRESH_TOKEN = "OPENEO_REFRESH_TOKEN"  # noqa: S105 - variable name, not a 
 
 def auth_method(env: Mapping[str, str] = os.environ) -> str:
     """Which authentication `connect_cdse` will use with the given environment."""
-    if env.get(ENV_CLIENT_ID) and env.get(ENV_CLIENT_SECRET):
-        return "client_credentials"
+    # The personal account first: a service account is billed separately until CDSE links it.
     if env.get(ENV_REFRESH_TOKEN):
         return "refresh_token"
+    if env.get(ENV_CLIENT_ID) and env.get(ENV_CLIENT_SECRET):
+        return "client_credentials"
     return "interactive"
 
 

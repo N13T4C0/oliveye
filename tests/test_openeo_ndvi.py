@@ -94,9 +94,20 @@ def test_cache_key_changes_with_dates(parcels: gpd.GeoDataFrame) -> None:
 
 
 class _FakeJob:
+    """Minimal openEO BatchJob: 'created' until started, then 'finished'."""
+
     job_id = "j-123"
 
-    def start_and_wait(self) -> None: ...
+    def __init__(self, state: str = "created") -> None:
+        self.state = state
+        self.starts = 0
+
+    def status(self) -> str:
+        return self.state
+
+    def start(self) -> None:
+        self.starts += 1
+        self.state = "finished"
 
     def get_results(self) -> "_FakeJob":
         return self
@@ -110,11 +121,22 @@ class _FakeJob:
         return {"costs": 12.5, "status": "finished"}
 
 
+class _FakeConnection:
+    def __init__(self, job: _FakeJob) -> None:
+        self._job = job
+        self.resumed: list[str] = []
+
+    def job(self, job_id: str) -> _FakeJob:
+        self.resumed.append(job_id)
+        return self._job
+
+
 class _FakeProcess:
     """Stands in for an openEO VectorCube; counts how many jobs are created."""
 
     def __init__(self) -> None:
         self.jobs_created = 0
+        self.connection = _FakeConnection(_FakeJob("finished"))
 
     def flat_graph(self) -> dict[str, Any]:
         return {"node": {"process_id": "fake", "arguments": {}}}
@@ -159,7 +181,7 @@ def test_load_csv_with_input_bands_kept(tmp_path: Path, parcels: gpd.GeoDataFram
 
 
 class _FailingJob(_FakeJob):
-    def start_and_wait(self) -> None:
+    def start(self) -> None:
         raise RuntimeError("backend error")
 
     def describe(self) -> dict[str, Any]:
@@ -176,3 +198,40 @@ def test_failed_job_still_logs_its_credits(tmp_path: Path) -> None:
     with (tmp_path / "credits_log.csv").open() as fh:
         rows = list(csv.DictReader(fh))
     assert [(r["status"], r["costs"]) for r in rows] == [("created", ""), ("error", "3.0")]
+
+
+def test_failed_job_is_not_retried_automatically(tmp_path: Path) -> None:
+    process = _FakeProcess()
+    process.create_job = lambda title, out_format: _FailingJob()  # type: ignore[method-assign]
+    with pytest.raises(RuntimeError):
+        run_cached_batch_job(process, tmp_path, "test")
+
+    with pytest.raises(RuntimeError, match="Inspect its logs before paying"):
+        run_cached_batch_job(_FakeProcess(), tmp_path, "test")
+
+
+class _StuckJob(_FakeJob):
+    def start(self) -> None:
+        self.state = "running"
+
+    def describe(self) -> dict[str, Any]:
+        return {"costs": "", "status": "running"}
+
+
+def test_unfinished_job_is_resumed_not_paid_twice(tmp_path: Path) -> None:
+    stuck = _FakeProcess()
+    stuck.create_job = lambda title, out_format: _StuckJob()  # type: ignore[method-assign]
+    with pytest.raises(TimeoutError):
+        run_cached_batch_job(stuck, tmp_path, "test", timeout_s=0, poll_s=0)
+
+    # Next run (e.g. the next push): the job finished meanwhile on the backend.
+    later = _FakeProcess()
+    path = run_cached_batch_job(later, tmp_path, "test")
+
+    assert later.jobs_created == 0  # no second job
+    assert later.connection.resumed == ["j-123"]
+    assert later.connection._job.starts == 0  # a finished job is never restarted
+    assert path.exists()
+    with (tmp_path / "credits_log.csv").open() as fh:
+        statuses = [r["status"] for r in csv.DictReader(fh)]
+    assert statuses == ["created", "running", "resumed", "finished"]

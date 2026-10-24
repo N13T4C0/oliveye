@@ -128,6 +128,17 @@ def _ndvi_ndmi(bands: ProcessBuilder) -> ProcessBuilder:
     return array_create([(nir - red) / (nir + red), (nir - swir) / (nir + swir)])
 
 
+def _round_coordinates(obj: Any, ndigits: int) -> Any:
+    """Recursively round every float in a GeoJSON-like structure."""
+    if isinstance(obj, float):
+        return round(obj, ndigits)
+    if isinstance(obj, list):
+        return [_round_coordinates(item, ndigits) for item in obj]
+    if isinstance(obj, dict):
+        return {k: _round_coordinates(v, ndigits) for k, v in obj.items()}
+    return obj
+
+
 def build_monthly_indices(
     geometries: gpd.GeoDataFrame,
     start_date: str,
@@ -170,7 +181,9 @@ def build_monthly_indices(
     )
     monthly = indices.aggregate_temporal_period(period="month", reducer="median")
 
-    feature_collection = json.loads(geometries[["geometry"]].to_json())
+    # 6 decimals of a degree is ~0.1 m: far below a 10 m pixel, and ~40 % fewer bytes per request.
+    feature_collection = json.loads(geometries[["geometry"]].to_json(to_wgs84=False, drop_id=True))
+    feature_collection = _round_coordinates(feature_collection, ndigits=6)
     return monthly.aggregate_spatial(geometries=feature_collection, reducer="mean")
 
 
