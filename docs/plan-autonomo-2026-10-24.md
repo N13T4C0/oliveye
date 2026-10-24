@@ -78,3 +78,7 @@ repo. Each check-in reads this file, advances the next open step and logs progre
 - 20:25 Check-in 4. 7/85 municipalities done, all ok. Credits logged: 180 (33 before the batch +
   147). Average ~21 credits per municipality → projected ~1,800 for the batch, above the
   560–810 estimate but well under the 3,100 hard budget.
+- 20:31 Open-Meteo answered 429 (10 points × 10 years per request is over the free limit).
+  Fix: snap points to the ERA5 grid (0.25°): 86 municipalities → 30 cells, one per request
+  with pauses and back-off. Re-queued.
+- 20:38 Author's local folder synced to the latest commit (git bundle, fast-forward).
