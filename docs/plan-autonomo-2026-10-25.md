@@ -39,3 +39,9 @@ parked in "Pending for the author" and the work moves on.
 - Publishing the dated 2026/27 forecast.
 
 ## Log
+- 21:45 Block A: TDD — 10 model tests written first (RED), then dataset/train/evaluate (GREEN);
+  includes a leakage test that corrupts held-out targets. 98 tests pass.
+- 21:50 First end-to-end run on provisional data (Jaén = Martos only, 3.7 % of its olive area;
+  Granada 58.5 %): pipeline works; Ridge blows up on extreme campaigns (alpha 0.1 picked,
+  Jaén 2023/24 predicted 2.4 Mt). Not published; waiting for the statistician review and for
+  the batch. Aforo MAPE on these rows: 11.9 %.
