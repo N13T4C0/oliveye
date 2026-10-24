@@ -49,3 +49,7 @@ parked in "Pending for the author" and the work moves on.
   tests written first, `scripts/export_api_data.py`, `api/README.md`. Verified on real data
   (Martos 120 months, production vs aforo, names from the Catastro table). 104 tests pass.
 - 22:05 Batch: 22/85 municipalities, 408 credits; ~10/h → expected to finish around 04:30.
+- 22:20 Check-in 1 (fired 22:17). Batch 27/85, 466 credits, 0 errors. The link to the author's PC
+  dropped (computer probably asleep): the local-folder sync is parked until it reconnects.
+- 22:25 Block D (part): ADR 0004 + `scripts/experiment_xgboost.py`; provisional XGBoost MAPE 84 %
+  vs 43 % for "repeat last campaign" → documented negative result, to refresh with full data.
