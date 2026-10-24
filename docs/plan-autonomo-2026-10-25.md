@@ -72,16 +72,19 @@ parked in "Pending for the author" and the work moves on.
   (9 campaigns, same 15 rows). Satellite/climate add nothing yet; not published. ADR 0003
   amended. 113 tests pass.
 - 23:15 Batch: reported as stalled at 28/85 — **wrong**: the local results worktree was not
-  updating `origin/results` (fetch without an explicit refspec). Corrected at 23:50.
-- 23:45 Code review (approve with 2 fixes) and oliveye-auditor (no leakage; doc honesty fixes)
+  updating `origin/results` (fetch without an explicit refspec). Corrected at 23:32.
+- 23:28 Code review (approve with 2 fixes) and oliveye-auditor (no leakage; doc honesty fixes)
   applied: alpha guard for < 2 inner folds, unseen province is an error, 13a labelled as
   result-driven, forward check documents its inner alpha choice, XGBoost experiment scored with
   the same like-for-like summary. 115 tests pass.
-- 23:50 Batch (fetched with `git fetch origin results:refs/remotes/origin/results`): 38/85
+- 23:32 Batch (fetched with `git fetch origin results:refs/remotes/origin/results`): 38/85
   municipalities, ~570 credits in the per-request logs, 0 errors; both workers running.
   Lesson recorded in docs/automation.md.
-- 00:00 The new "unseen province is an error" guard caught a real case: inner forward folds where
+- 23:36 The new "unseen province is an error" guard caught a real case: inner forward folds where
   Granada (history from 2019/20) had no training rows; before, it was silently filled with a
   pooled mean. Splits now never score a province without training rows (test first). Rerun with
   38 municipalities (Granada 77.9 % of its olive area, Jaén 5.0 %; the batch does Granada first):
   LOCO Ridge 44.6 %, province mean 45.4 %, aforo 11.9 % — unchanged in substance. Not published.
+- 23:40 Block C (part): local MLflow tracking (`uv sync --extra tracking`, MLflow 3.17, SQLite
+  store + artifacts under data/mlflow/, git-ignored); verified with a real run. Batch 42/85,
+  0 errors, expected to finish around 04:00.

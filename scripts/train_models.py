@@ -5,7 +5,8 @@
 
 Writes to `--out` (default data/processed/model_run/, git-ignored): table.csv,
 predictions.csv, lag_only.csv, forward.csv, corrector.csv, summary.csv,
-per_campaign.csv and run.json. Logs to MLflow when it is installed.
+per_campaign.csv and run.json. Logs to a local MLflow store
+(data/mlflow/, git-ignored) when the `tracking` extra is installed.
 Nothing is published automatically: results are reviewed (model-qa + auditor) before any of
 them is copied to docs/results/.
 """
@@ -16,8 +17,10 @@ import argparse
 import json
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 import numpy as np
+import pandas as pd
 
 from oliveye.models.evaluate import (
     conformal_half_width,
@@ -42,6 +45,7 @@ def main() -> None:
     parser.add_argument("--results-dir", type=Path, required=True)
     parser.add_argument("--sources-dir", type=Path, default=REPO_ROOT / "docs" / "sources")
     parser.add_argument("--out", type=Path, default=REPO_ROOT / "data" / "processed" / "model_run")
+    parser.add_argument("--mlflow-dir", type=Path, default=REPO_ROOT / "data" / "mlflow")
     args = parser.parse_args()
     args.out.mkdir(parents=True, exist_ok=True)
 
@@ -94,19 +98,37 @@ def main() -> None:
     print(per_campaign.round(3).to_string())
     print(json.dumps(run, indent=1))
 
+    log_to_mlflow(run, summary, args.out, args.mlflow_dir)
+
+
+def log_to_mlflow(run: dict[str, Any], summary: pd.DataFrame, out: Path, mlflow_dir: Path) -> None:
+    """Record the run in a local MLflow store (SQLite + artifacts under data/, git-ignored)."""
     try:
         import mlflow
     except ImportError:
-        print("MLflow not installed: skipping experiment tracking")
+        print("MLflow not installed (uv sync --extra tracking): skipping experiment tracking")
         return
-    mlflow.set_experiment("oliveye-province-production")
+    mlflow_dir.mkdir(parents=True, exist_ok=True)
+    mlflow.set_tracking_uri(f"sqlite:///{mlflow_dir / 'mlflow.db'}")
+    name = "oliveye-province-production"
+    if mlflow.get_experiment_by_name(name) is None:
+        mlflow.create_experiment(name, artifact_location=(mlflow_dir / "artifacts").as_uri())
+    mlflow.set_experiment(name)
     with mlflow.start_run():
-        mlflow.log_params({"rows": run["rows"], "campaigns": run["campaigns"]})
+        mlflow.log_params(
+            {
+                "rows": run["rows"],
+                "campaigns": run["campaigns"],
+                "validation": "leave-one-campaign-out (t and t+1 held out)",
+                **{f"olive_area_{k}": v for k, v in run["olive_area_covered"].items()},
+            }
+        )
         for row in summary.itertuples(index=False):
-            if row.mape_pct is not None:
-                mlflow.log_metric(f"mape_{row.model}", float(row.mape_pct))
-            mlflow.log_metric(f"wins_vs_aforo_{row.model}", float(row.wins_vs_aforo))
-        mlflow.log_artifacts(str(args.out))
+            for metric in ("mape_pct", "mean_abs_log_error", "campaign_wins_vs_aforo"):
+                value = getattr(row, metric)
+                if pd.notna(value):
+                    mlflow.log_metric(f"{metric}_{row.model}", float(value))
+        mlflow.log_artifacts(str(out))
 
 
 if __name__ == "__main__":
