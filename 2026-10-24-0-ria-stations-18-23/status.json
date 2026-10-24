@@ -1,0 +1,14 @@
+{
+ "job_id": "2026-10-24-0-ria-stations-18-23",
+ "type": "ria_stations",
+ "params": {
+  "provinces": [
+   18,
+   23
+  ]
+ },
+ "started_at": "2026-10-24T18:01:56Z",
+ "status": "error",
+ "error": "JSONDecodeError: Expecting value: line 1 column 1 (char 0)",
+ "finished_at": "2026-10-24T18:01:59Z"
+}
