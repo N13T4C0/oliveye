@@ -1,0 +1,28 @@
+== 2026-10-24-0-open-meteo-daily-86-municipalities (open_meteo_daily)
+points 1-10: 39260 rows
+points 11-20: 39260 rows
+Traceback (most recent call last):
+  File "/home/runner/work/oliveye/oliveye/src/oliveye/jobs.py", line 559, in run_job
+    outputs = HANDLERS[job.type](job.params, ctx)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/oliveye/oliveye/src/oliveye/jobs.py", line 284, in open_meteo_daily
+    payload = _fetch_text(url)
+              ^^^^^^^^^^^^^^^^
+  File "/home/runner/work/oliveye/oliveye/src/oliveye/jobs.py", line 222, in _fetch_text
+    with _OPENER.open(request, timeout=180) as response:  # noqa: S310 - allow-listed
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 521, in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 630, in http_response
+    response = self.parent.error(
+               ^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 559, in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 492, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 639, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 429: Too Many Requests
