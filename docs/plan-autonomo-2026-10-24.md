@@ -19,7 +19,13 @@ repo. Each check-in reads this file, advances the next open step and logs progre
 4. [ ] Aforo PDFs 2015/16–2020/21 (find URLs, `aforo_table` job).
 5. [ ] AICA actual production per province and campaign (find a primary source).
 6. [ ] Catastro → INE municipality code mapping (names for the map, joins with climate).
-7. [ ] Evaluate ponytail, omniroute, graphify, addyosmani agent-skills; install what helps.
+7. [x] Evaluate ponytail, omniroute, graphify, addyosmani agent-skills; install what helps.
 8. [ ] Wrap-up: TODO (repo + project), sync the author's folder, summary message.
 
 ## Log
+- 18:05 Plan written; 5 check-ins scheduled (every ~35 min until ~21:00).
+- 18:10 Queued 85 dry runs (Jaén 47 + Granada 38, 80 % of olive area). Martos 120-month real job running.
+- 18:15 Step 7 done: installed ponytail + 5 addyosmani skills; graphify and OmniRoute left out (README).
+- 18:25 Step 4 partial: aforo 2016/17, 2019/20, 2020/21 curated from official press releases
+  (`docs/sources/aforo_press_releases.csv`); 2015/16, 2017/18, 2018/19 still missing.
+- 18:30 Step 6 started: `sigpac_schema` job + INE municipality dictionary download queued.
