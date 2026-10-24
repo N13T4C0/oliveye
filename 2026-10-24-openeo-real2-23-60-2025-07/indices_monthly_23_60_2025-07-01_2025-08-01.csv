@@ -1,0 +1,2 @@
+month,province_code,municipality_code,ndvi,ndmi,valid_cells,ndvi_outlier,ndvi_clean,ndmi_outlier,ndmi_clean
+2025-07,23,60,0.27076781663908456,-0.0675419084427057,3130,False,0.27076781663908456,False,-0.0675419084427057
