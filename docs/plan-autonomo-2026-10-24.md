@@ -17,7 +17,7 @@ repo. Each check-in reads this file, advances the next open step and logs progre
        cells, coverage, payload.
 3. [ ] Auditor → real runs for the same municipalities (largest first, stop at the budget).
 4. [ ] Aforo PDFs 2015/16–2020/21 (find URLs, `aforo_table` job).
-5. [ ] AICA actual production per province and campaign (find a primary source).
+5. [x] AICA actual production per province and campaign (find a primary source).
 6. [ ] Catastro → INE municipality code mapping (names for the map, joins with climate).
 7. [x] Evaluate ponytail, omniroute, graphify, addyosmani agent-skills; install what helps.
 8. [ ] Wrap-up: TODO (repo + project), sync the author's folder, summary message.
@@ -29,3 +29,5 @@ repo. Each check-in reads this file, advances the next open step and logs progre
 - 18:25 Step 4 partial: aforo 2016/17, 2019/20, 2020/21 curated from official press releases
   (`docs/sources/aforo_press_releases.csv`); 2015/16, 2017/18, 2018/19 still missing.
 - 18:30 Step 6 started: `sigpac_schema` job + INE municipality dictionary download queued.
+- 18:40 Step 5: no open AICA provincial series; ADR 0002 sets the target to the Junta final
+  production derived from aforo variations (validated vs AICA: −0.4 %, −0.2 %). Gaps: 2016/17–2017/18, 2019/20.
