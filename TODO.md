@@ -21,12 +21,17 @@ Updated at the end of each phase.
 - [ ] Map Catastro municipality codes to INE codes and names before joining other sources
 - [x] Aforo per province: yearly Junta PDFs "Estimacion_ACEITE_MESA_<campaign>"; parser `oliveye.pipeline.production` (2021/22–2026/27)
   - Derived previous-campaign finals match AICA (Andalucía 2023/24: 578,100 vs 580,464 t)
+- [x] Aforo table 2021/22–2026/27 on the results branch (`aforo_by_province.csv`)
+  - Junta aforo error in Jaén vs derived final: −21 % (2024/25) to +22 % (2025/26) → the bar to beat
 - [ ] Find aforo PDFs for 2015/16–2020/21
 - [ ] Actual production per province: find AICA provincial series (reports only give % per province)
 - [ ] Install uv and Docker; run `uv sync` (done on Windows) and `docker compose up -d`
 
 ## Automation (2026-10-24)
-- [x] 7 subagents from agency-agents in `.claude/agents/`
+- [x] 9 subagents from agency-agents + `oliveye-auditor` in `.claude/agents/`
+- [x] Skills in `.claude/skills/`: grill-me, find-skills, impeccable, web-design-guidelines, seo-audit, ai-seo
+- [x] `DESIGN.md` (adapted from Wise on styles.refero.design)
+- [x] Local folder on the author's PC is a git clone of the repo
 - [x] Job queue on GitHub Actions (`jobs/` → `results` branch) + CI workflow
 - [ ] **Author, once:** `uv run python scripts/export_openeo_refresh_token.py` (stores the openEO secret)
 - [ ] Long term: client credentials + ask CDSE support to link them to the personal account

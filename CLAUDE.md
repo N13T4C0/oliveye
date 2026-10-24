@@ -99,9 +99,11 @@ fixed few credits each; batch jobs are billed by resources used. Rules:
   push to `main`, read the outcome on the `results` branch. Full guide: `docs/automation.md`.
 - openEO jobs are **dry runs by default**. Review the dry run before any real run, and check
   `_cache/openeo/credits_log.csv` on the results branch after it.
-- Subagents for this repo live in `.claude/agents/` (selected from agency-agents, MIT). Use
-  `code-reviewer` before committing non-trivial changes and `model-qa`/`statistician` before
-  publishing any metric.
+- Subagents live in `.claude/agents/`, skills in `.claude/skills/` (see their READMEs).
+  **Audit before you ship:** `oliveye-auditor` before committing pipeline/job/model changes and
+  before any openEO run with `dry_run: false`; `code-reviewer` for non-trivial code;
+  `model-qa` + `statistician` before publishing a metric; `reality-checker` before closing a phase.
+- UI work (Phase 5) follows `DESIGN.md` at the repo root, using the `impeccable` skill.
 
 ## Common commands
 
