@@ -25,6 +25,11 @@ dependencies = [
     "uvicorn>=0.32",
 ]
 
+[project.optional-dependencies]
+experiments = [
+    "xgboost>=2.1",
+]
+
 [dependency-groups]
 dev = [
     "ruff>=0.7",
