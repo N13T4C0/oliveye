@@ -1,6 +1,6 @@
 # ADR 0002 — Target variable: final olive oil production per province
 
-- **Status:** accepted (provisional, see "Open")
+- **Status:** accepted (confirmed by the author on 2026-10-24; see "Open")
 - **Date:** 2026-10-24
 
 ## Context
