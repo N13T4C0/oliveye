@@ -31,3 +31,6 @@ repo. Each check-in reads this file, advances the next open step and logs progre
 - 18:30 Step 6 started: `sigpac_schema` job + INE municipality dictionary download queued.
 - 18:40 Step 5: no open AICA provincial series; ADR 0002 sets the target to the Junta final
   production derived from aforo variations (validated vs AICA: −0.4 %, −0.2 %). Gaps: 2016/17–2017/18, 2019/20.
+- 18:50 Target series built (`final_production_series`): Jaén 8 campaigns (2015/16, 2018/19,
+  2020/21–2025/26), Granada 7. With satellite data from 2016/17, Jaén has 7 usable campaigns.
+- 18:50 Martos 120-month job still running on openEO (~55 min); dry runs queued behind it.
