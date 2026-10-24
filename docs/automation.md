@@ -41,7 +41,9 @@ Example, `jobs/2026-10-24-sigpac-rank-23.json`:
 ## Reading results
 
 ```bash
-git fetch origin results
+# Explicit refspec: a clone whose fetch config only tracks main would otherwise update
+# FETCH_HEAD but leave origin/results stale (and every read below silently out of date).
+git fetch origin results:refs/remotes/origin/results
 git show origin/results:2026-10-24-sigpac-rank-23/status.json
 git show origin/results:2026-10-24-sigpac-rank-23/log.txt
 ```

@@ -12,7 +12,7 @@ parked in "Pending for the author" and the work moves on.
 
 ## Blocks
 
-- [ ] A. Model code with TDD: `models/dataset.py`, `train.py`, `evaluate.py`,
+- [x] A. Model code with TDD: `models/dataset.py`, `train.py`, `evaluate.py`,
       `scripts/train_models.py`; `statistician` review of the validation; `code-reviewer`.
 - [ ] B. Watch the openEO batch (progress, re-dispatch, budget, failed jobs).
 - [ ] C. First real training on the municipalities available; MLflow local; `docs/results/`;
@@ -71,9 +71,12 @@ parked in "Pending for the author" and the work moves on.
   (Jaén = 3.7 % of its olive area): Ridge 44.9 %, province mean 45.4 %, last campaign 44.0 %, aforo 11.9 %
   (9 campaigns, same 15 rows). Satellite/climate add nothing yet; not published. ADR 0003
   amended. 113 tests pass.
-- 23:15 Batch: 28/85 real municipalities; no new result since 22:13 (likely a job waiting in the
-  CDSE queue; timeout + recovery cover it). Next check at the scheduled check-in.
+- 23:15 Batch: reported as stalled at 28/85 — **wrong**: the local results worktree was not
+  updating `origin/results` (fetch without an explicit refspec). Corrected at 23:50.
 - 23:45 Code review (approve with 2 fixes) and oliveye-auditor (no leakage; doc honesty fixes)
   applied: alpha guard for < 2 inner folds, unseen province is an error, 13a labelled as
   result-driven, forward check documents its inner alpha choice, XGBoost experiment scored with
   the same like-for-like summary. 115 tests pass.
+- 23:50 Batch (fetched with `git fetch origin results:refs/remotes/origin/results`): 38/85
+  municipalities, ~570 credits in the per-request logs, 0 errors; both workers running.
+  Lesson recorded in docs/automation.md.
