@@ -72,3 +72,6 @@ repo. Each check-in reads this file, advances the next open step and logs progre
   is recovered from the backend by title on the next run (0 extra credits).
 - 19:51 Check-in 3. Second orphan (Granada 102, 19 credits) recovered. 3/85 municipalities done.
   RIA station job renamed to run before the openEO backlog (queue is alphabetical). TODO updated.
+- 20:17 RIA web service answers GitHub runners with an HTML page (likely bot protection);
+  left pending. Fallback: Open-Meteo archive (ERA5, no key) → `open_meteo_daily` job queued for
+  the olive-cell centre of the 86 municipalities, 2016-01-01..2026-09-30.
