@@ -24,26 +24,28 @@ repo. Each check-in reads this file, advances the next open step and logs progre
 
 ## Log
 - 18:05 Plan written; 5 check-ins scheduled (every ~35 min until ~21:00).
-- 18:10 Queued 85 dry runs (Jaén 47 + Granada 38, 80 % of olive area). Martos 120-month real job running.
-- 18:15 Step 7 done: installed ponytail + 5 addyosmani skills; graphify and OmniRoute left out (README).
-- 18:25 Step 4 partial: aforo 2016/17, 2019/20, 2020/21 curated from official press releases
+- 18:07 Queued 85 dry runs (Jaén 47 + Granada 38, 80 % of olive area). Martos 120-month real job running.
+- 18:10 Step 7 done: installed ponytail + 5 addyosmani skills; graphify and OmniRoute left out (README).
+- 18:13 Step 4 partial: aforo 2016/17, 2019/20, 2020/21 curated from official press releases
   (`docs/sources/aforo_press_releases.csv`); 2015/16, 2017/18, 2018/19 still missing.
-- 18:30 Step 6 started: `sigpac_schema` job + INE municipality dictionary download queued.
-- 18:40 Step 5: no open AICA provincial series; ADR 0002 sets the target to the Junta final
+- 18:15 Step 6 started: `sigpac_schema` job + INE municipality dictionary download queued.
+- 18:18 Step 5: no open AICA provincial series; ADR 0002 sets the target to the Junta final
   production derived from aforo variations (validated vs AICA: −0.4 %, −0.2 %). Gaps: 2016/17–2017/18, 2019/20.
-- 18:50 Target series built (`final_production_series`): Jaén 8 campaigns (2015/16, 2018/19,
+- 18:20 Target series built (`final_production_series`): Jaén 8 campaigns (2015/16, 2018/19,
   2020/21–2025/26), Granada 7. With satellite data from 2016/17, Jaén has 7 usable campaigns.
-- 18:50 Martos 120-month job still running on openEO (~55 min); dry runs queued behind it.
-- 19:05 Step 1 done: Martos 2016/17–2025/26 in one job = **23 credits, 16 min**. Credits are
+- 18:20 Martos 120-month job still running on openEO (~55 min); dry runs queued behind it.
+- 18:22 Step 1 done: Martos 2016/17–2025/26 in one job = **23 credits, 16 min**. Credits are
   fine (~85 × ≤23 ≈ 2,000), time is the bottleneck (~22 h serial) → two parallel workers.
-- 19:20 Two-worker queue audited (NEEDS WORK → fixed: split by request, legacy log on resume,
+- 18:27 Two-worker queue audited (NEEDS WORK → fixed: split by request, legacy log on resume,
   clean rebase abort, single re-dispatcher) and pushed without job files.
-- 19:20 Dry runs progressing on the old single-worker run (14/86).
-- 19:45 Step 2 done: 86/86 dry runs ok, all payloads < 1 MB (max 814 KB), median coverage 71 %;
+- 18:27 Dry runs progressing on the old single-worker run (14/86).
+- 18:33 Step 2 done: 86/86 dry runs ok, all payloads < 1 MB (max 814 KB), median coverage 71 %;
   25 fragmented municipalities (mostly Granada) below 60 % coverage but ≥ 22 pure cells each.
-- 19:50 Credit budget guard added (OPENEO_CREDIT_BUDGET=3100 in the workflow).
-- 19:55 Step 3 started: auditor PASS → 85 real jobs pushed (estimated 560–810 credits),
+- 18:35 Credit budget guard added (OPENEO_CREDIT_BUDGET=3100 in the workflow).
+- 18:37 Step 3 started: auditor PASS → 85 real jobs pushed (estimated 560–810 credits),
   two parallel workers.
-- 20:05 Step 6: SIGPAC uses Catastro codes (Jaén 6 differ from INE, Granada 40). Added
+- 18:41 Step 6: SIGPAC uses Catastro codes (Jaén 6 differ from INE, Granada 40). Added
   `catastro_ine_mapping` job (Catastro ConsultaMunicipio gives both codes + name); queued.
   Workers now re-read jobs/ from main before each job (applies to future runs).
+- 18:42 Check-in 1 (fired 18:39). Log times above corrected: earlier entries were estimated
+  and ran ahead of the real clock. Waiting for the first parallel openEO results.
