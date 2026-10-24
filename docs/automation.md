@@ -15,7 +15,10 @@ jobs/<id>.json  ──push to main──►  .github/workflows/jobs.yml  ──�
 - The openEO cache and credits logs (`_cache/openeo/credits/<cache key>.csv`, one per request so
   parallel workers never conflict) live on the results branch, so a repeated request is a cache
   hit (0 credits) even across CI runs.
-- Two workers run in parallel; each job always goes to the same worker (CRC32 of its id).
+- Two workers run in parallel; jobs are split by request (type + params without `dry_run`, see
+  `oliveye.jobs.worker_of`), so identical requests never run at once.
+- A paid openEO job lost by a failed CI run is recovered from the backend by title, never paid twice.
+- Hard credit budget: `OPENEO_CREDIT_BUDGET` in the workflow (3,100).
 - Data never lands on `main`. Small outputs (CSV, JSON, PDFs) go to the `results` branch; large
   reproducible inputs (SIGPAC subsets) live in the Actions cache.
 
@@ -47,7 +50,7 @@ git show origin/results:2026-10-24-sigpac-rank-23/log.txt
 
 1. Always queue a **dry run** first and read `request_summary.json` (area, bbox, vertices).
 2. Real runs (`"dry_run": false`) are capped at 120 months and one municipality per job (cost is mostly a fixed overhead per job: 4 credits for 1 month, 6 for 12 months in Martos).
-3. After each real run, read the credits in `_cache/openeo/credits_log.csv` before queueing more.
+3. After each real run, read the credits in `_cache/openeo/credits/*.csv` before queueing more.
 4. Never queue a real run whose dry run was not reviewed.
 
 ## One-time setup (author)
