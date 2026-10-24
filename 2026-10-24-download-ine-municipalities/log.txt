@@ -1,0 +1,2 @@
+== 2026-10-24-download-ine-municipalities (download)
+Downloaded https://www.ine.es/daco/daco42/codmun/diccionario26.xlsx -> ine_diccionario26.xlsx (306,819 bytes)
