@@ -268,26 +268,52 @@ def open_meteo_daily(params: dict[str, Any], ctx: JobContext) -> list[Path]:
     """Daily ERA5 weather from Open-Meteo for named points.
 
     `points`: list of {"id": ..., "lat": ..., "lon": ...}; `start`, `end` (ISO dates).
-    Points are requested in chunks of 10 to keep each response small.
+
+    ERA5 has a ~0.25° (~25 km) grid, so points are snapped to it and each grid cell is requested
+    once (one cell per request, with pauses and back-off on HTTP 429) to stay inside the free
+    API limits. `point_cells.csv` maps every point to its cell.
     """
+    import time
+    import urllib.error
+
     from oliveye.pipeline import climate
 
     _require(params, "points", "start", "end")
-    points: list[dict[str, Any]] = params["points"]
+    points = pd.DataFrame(params["points"])
     start, end = str(pd.Timestamp(params["start"]).date()), str(pd.Timestamp(params["end"]).date())
+    points["cell_lat"] = (points["lat"].astype(float) / 0.25).round() * 0.25
+    points["cell_lon"] = (points["lon"].astype(float) / 0.25).round() * 0.25
+    points["cell_id"] = [
+        f"{la:.2f}_{lo:.2f}" for la, lo in zip(points.cell_lat, points.cell_lon, strict=True)
+    ]
+    cells = points.drop_duplicates("cell_id")[["cell_id", "cell_lat", "cell_lon"]]
+    print(f"{len(points)} points -> {len(cells)} ERA5 cells")
+
     frames = []
-    for i in range(0, len(points), 10):
-        chunk = points[i : i + 10]
-        url = climate.open_meteo_url(
-            [float(p["lat"]) for p in chunk], [float(p["lon"]) for p in chunk], start, end
-        )
-        payload = _fetch_text(url)
-        frames.append(climate.parse_open_meteo(payload, [str(p["id"]) for p in chunk]))
-        print(f"points {i + 1}-{i + len(chunk)}: {len(frames[-1])} rows")
-    table = pd.concat(frames, ignore_index=True)
+    cell_rows = zip(
+        cells["cell_id"].astype(str).tolist(),
+        cells["cell_lat"].astype(float).tolist(),
+        cells["cell_lon"].astype(float).tolist(),
+        strict=True,
+    )
+    for cell_id, cell_lat, cell_lon in cell_rows:
+        url = climate.open_meteo_url([cell_lat], [cell_lon], start, end)
+        for attempt in range(5):
+            try:
+                frames.append(climate.parse_open_meteo(_fetch_text(url), [cell_id]))
+                break
+            except urllib.error.HTTPError as error:
+                if error.code != 429 or attempt == 4:
+                    raise
+                time.sleep(60 * (attempt + 1))
+        print(f"cell {cell_id}: {len(frames[-1])} days")
+        time.sleep(10)
+    table = pd.concat(frames, ignore_index=True).rename(columns={"point_id": "cell_id"})
     out = ctx.output_dir / f"open_meteo_daily_{start}_{end}.csv"
     table.to_csv(out, index=False)
-    return [out]
+    mapping = ctx.output_dir / "point_cells.csv"
+    points.to_csv(mapping, index=False)
+    return [out, mapping]
 
 
 def _host_allowed(url: str) -> bool:
