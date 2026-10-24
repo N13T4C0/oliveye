@@ -96,3 +96,7 @@ parked in "Pending for the author" and the work moves on.
   been on one openEO job since ~23:22 (likely queued at CDSE; the 150-min job timeout ends it by
   ~01:52 at worst). Throughput ~5/h until the next generation re-dispatches both workers
   (~02:20); full data now expected around 05:30–06:30.
+- 01:38 Check-in 6. Batch 52/85 (Jaén 14), 52 ok, 0 errors, 771 credits in the per-request
+  logs (budget 3,100). Correction to check-in 5: worker 1 was not stuck — it published its last
+  job at 23:52 and ended cleanly at its 3-h start deadline. Worker 0 stops taking jobs around
+  02:18; then `continue` re-dispatches generation 1 with both workers.
