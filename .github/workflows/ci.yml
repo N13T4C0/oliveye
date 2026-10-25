@@ -43,3 +43,13 @@ jobs:
         run: npm run format:check
       - name: Tests
         run: npm test
+
+  spark:
+    # PySpark parity tests (ADR 0006); the runner image ships a Java runtime.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync --frozen --extra bigdata
+      - name: Spark parity tests
+        run: uv run pytest -q tests/test_spark.py

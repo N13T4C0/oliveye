@@ -58,5 +58,8 @@ campaigns but do not predict new ones.
   de 455.000 t") are rounded figures from press releases.
 - **Interval:** the 80 % interval (forecast ÷/× 2.0) comes from all 16 out-of-sample residuals;
   its coverage cannot be validated on the same residuals.
-- Features cover 80.1 % of Jaén's and 80.6 % of Granada's SIGPAC olive area (86 municipalities).
+- Features come from the 86 municipalities that hold 80.1 % of Jaén's and 80.6 % of Granada's SIGPAC
+  olive area; inside them, pure olive cells (≥ 80 % olive) sample 79 % (Jaén) and 59 % (Granada) of
+  the hectares, so about 64 % and 48 % of each province's olive area is measured directly
+  (notebook 02).
 - Granada has no reliable figures for 2016/17 and 2017/18 (rows dropped, not imputed).

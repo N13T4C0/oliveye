@@ -1,0 +1,30 @@
+# Autonomous afternoon block — 2026-10-25 16:40 → 18:40 (Europe/Madrid)
+
+The author is out. Anything needing a decision is parked under "Pending for the author".
+
+## Guard rails
+
+- No changes to the Vercel projects or their settings; no openEO spending.
+- `oliveye-auditor` before committing pipeline changes; commits as Nieto, no AI trailers.
+- Heavy jobs run in the background with bounded parallelism.
+
+## Blocks
+
+- [x] A. Phase 2 — PySpark ETL (`oliveye.spark`): full run over the 86 municipalities' cell series
+      (~9.5 M rows), parity vs the job outputs, timings vs pandas, ADR 0006, CI job, auditor, commit.
+- [x] B. Phase 1 leftovers: `02_sigpac_olive_parcels.ipynb` and `03_production_history.ipynb` from data
+      already on the results branch (no new downloads).
+- [ ] C. Wrap-up (18:40): TODO (repo + project), sync the author's folder, summary.
+
+## Pending for the author
+
+## Log
+- 16:40 Plan written; check-ins scheduled at 17:20, 18:00 and 18:40. Spark parity tests already GREEN
+  (synthetic data, incl. fully masked months).
+- 16:45 Block A: Spark ETL over 9,481,800 cell-month rows; parity vs the 86 job outputs to 3e-15,
+  0 unmatched rows; CSV→Parquet 17.4 s, re-aggregation 4.0 s, pandas loop 13.6 s (Spark not faster at
+  this size: stated in ADR 0006). CI job `spark` added.
+- 16:45 Block B: notebooks 02 (SIGPAC concentration, coverage, measured-area map) and 03 (alternate
+  bearing, aforo error per campaign), both from committed `api/data/`, outputs cleared. Finding:
+  cell-level sampling is 79 % (Jaén) / 59 % (Granada) of the hectares inside the 86 municipalities,
+  ~64 % / 48 % of each province — wording added to docs/results caveats.
