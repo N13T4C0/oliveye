@@ -19,9 +19,10 @@ the same leave-one-campaign-out as everything else.
 | Run (leave-one-campaign-out) | Rows | XGBoost MAPE | Ridge MAPE | "Repeat last campaign" MAPE | Aforo MAPE |
 |---|---|---|---|---|---|
 | 2026-10-25 21:50, provisional (Jaén features from 1 municipality), all rows, before the t+1 fix | 16 | 84.1 % | – | 43.3 % | – |
-| 2026-10-25 23:45, provisional, t+1 excluded, same 15 like-for-like rows | 15 | 76.2 % | 44.9 % | 44.0 % | 11.9 % |
+| 2026-10-25 23:30, provisional, t+1 excluded, same 15 like-for-like rows | 15 | 76.2 % | 44.9 % | 44.0 % | 11.9 % |
+| 2026-10-25 05:25 CET, **full data** (86 municipalities, ~80 % of each province's olive area), same rows | 15 | 49.4 % | 44.0 % | 44.0 % | 11.9 % |
 
-To be refreshed with the full 85-municipality data; the conclusion is not expected to change.
+With the full data XGBoost is still worse than Ridge and than repeating last year's harvest; the conclusion stands.
 
 ## Why
 

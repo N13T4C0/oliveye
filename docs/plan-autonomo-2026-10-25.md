@@ -120,3 +120,9 @@ parked in "Pending for the author" and the work moves on.
   expected ~05:30–06:00 CET, leaving time for the final run + model-qa before the 07:25 wrap-up.
 - 04:40 CET Check-in 12. Batch 82/85 (Granada 38/38, Jaén 44/48), 0 errors. The last 3 run in
   generation 2 after the current run ends; full data expected ~05:15–05:30 CET.
+- 05:25 CET Batch finished: 86 municipalities ok, 0 errors, 1,459 credits in the per-request logs
+  (+33 legacy; estimate was 560–810: Jaén municipalities are larger; budget 3,100). Final LOCO
+  run (Jaén 80.1 % / Granada 80.6 % of olive area, 15 like-for-like rows, 9 campaigns): Ridge
+  44.0 %, last campaign 44.0 %, province mean 45.4 %, aforo 11.9 %; forward Ridge 54.6 % vs aforo
+  12.4 %. XGBoost 49.4 % (ADR 0004 refreshed). model-qa + oliveye-auditor running before anything
+  goes to docs/results/.
