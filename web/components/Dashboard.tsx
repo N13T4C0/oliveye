@@ -105,7 +105,12 @@ export function Dashboard({ data }: { data: PageData }) {
             scores={data.summary}
           />
         )}
-        <Method lang={lang} mode={mode} onShowTechnical={showTechnical} />
+        <Method
+          lang={lang}
+          mode={mode}
+          campaigns={data.summary.find((s) => s.model === "ridge")?.campaigns ?? 0}
+          onShowTechnical={showTechnical}
+        />
       </main>
     </>
   );

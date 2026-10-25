@@ -10,11 +10,13 @@ const REPO = "https://github.com/N13T4C0/oliveye";
 interface Props {
   lang: Lang;
   mode: Mode;
+  /** Campaigns the published scores cover (fills "{campaigns}" in the simple text). */
+  campaigns: number;
   onShowTechnical: () => void;
 }
 
 /** How it was validated (two sentences, DESIGN.md callout) plus sources and links. */
-export function Method({ lang, mode, onShowTechnical }: Props) {
+export function Method({ lang, mode, campaigns, onShowTechnical }: Props) {
   const simple = mode === "simple";
   return (
     <>
@@ -24,7 +26,7 @@ export function Method({ lang, mode, onShowTechnical }: Props) {
             {t(lang, simple ? "methodTitleSimple" : "methodTitle")}
           </h2>
           <p>{t(lang, simple ? "method1Simple" : "method1")}</p>
-          <p>{t(lang, simple ? "method2Simple" : "method2")}</p>
+          <p>{t(lang, simple ? "method2Simple" : "method2", { campaigns })}</p>
           {simple ? (
             <button type="button" className={styles.linkButton} onClick={onShowTechnical}>
               {t(lang, "showTechnical")}

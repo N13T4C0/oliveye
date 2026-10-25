@@ -50,7 +50,7 @@ const es = {
   harvestSatellite: "Estimación del satélite · experimental",
   harvestSatelliteNote:
     "En las campañas pasadas (cada una estimada sin conocerla), el satélite se equivocó de media un {model} y el aforo un {aforo}. De momento no acierta más que repetir la cosecha del año anterior ({last}): tómalo solo como orientación.",
-  satelliteRange: "margen: {low}–{high}",
+  satelliteRange: "margen (80 %): {low}–{high}",
   noDataOrHistory: "Sin dato o sin historial suficiente",
   province: "Provincia",
   priceSource: "Fuente del precio",
@@ -208,7 +208,7 @@ const en: Record<MessageKey, string> = {
   harvestSatellite: "Satellite estimate · experimental",
   harvestSatelliteNote:
     "In past campaigns (each estimated without knowing it), the satellite was off by {model} on average and the official forecast by {aforo}. For now it does no better than repeating last year's harvest ({last}): take it as a rough guide only.",
-  satelliteRange: "margin: {low}–{high}",
+  satelliteRange: "margin (80 %): {low}–{high}",
   noDataOrHistory: "No data or not enough history",
   province: "Province",
   priceSource: "Price source",
