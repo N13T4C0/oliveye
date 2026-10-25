@@ -57,12 +57,13 @@ export function Workbench({
   }, [features, index, campaign, query, sort, lang]);
 
   const mapArea = useRef<HTMLDivElement>(null);
-  // On narrow screens the map sits below the list: scroll so the series drawer is visible.
+  // After a selection, scroll just enough for the series drawer (at the map's bottom) to show.
   const select = useCallback(
     (id: string | null) => {
       onSelect(id);
-      if (id && window.matchMedia("(max-width: 860px)").matches) {
-        mapArea.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+      const area = mapArea.current;
+      if (id && area && area.getBoundingClientRect().bottom > window.innerHeight) {
+        area.scrollIntoView({ behavior: "smooth", block: "end" });
       }
     },
     [onSelect],
