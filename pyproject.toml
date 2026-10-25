@@ -32,6 +32,9 @@ experiments = [
 tracking = [
     "mlflow>=2.17",   # local experiment tracking (ADR 0003 #11); runs stay under data/, git-ignored
 ]
+bigdata = [
+    "pyspark>=4.0",
+]
 
 [dependency-groups]
 dev = [
