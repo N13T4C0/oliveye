@@ -24,8 +24,10 @@ after that every push to `main` redeploys automatically.
 
 ## 3. Optional
 
-- In each project: *Settings → Git → Ignored Build Step* → "Only build if there are changes in the
-  Root Directory", so an API change does not rebuild the web and vice versa.
+- Ignored builds live in the repo (`api/vercel.json`, `web/vercel.json`, `ignoreCommand`): only
+  `main` deploys, and only when that project's folder changed. Added on 2026-10-25 after hitting
+  the Hobby plan's daily deployment limit (every branch push and docs commit was deploying both
+  projects). If a deploy was rate-limited, use *Redeploy* in the Vercel dashboard once it resets.
 - *Settings → Domains*: rename to `oliveye.vercel.app` and `oliveye-api.vercel.app` if free.
 - Put the web link at the top of the README and in the CV/LinkedIn.
 

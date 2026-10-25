@@ -115,7 +115,8 @@ Updated at the end of each phase.
   list and API calls verified in the author's browser, 2026-10-25
 - [x] Public link at the top of the README
 - [ ] **Author:** add the link to the CV and LinkedIn
-- [ ] Optional: Vercel *Ignored Build Step* per project (only rebuild when its folder changes)
+- [x] Vercel ignored builds via `vercel.json` (`main` only, only when the folder changed) (2026-10-25)
+- [ ] Redeploy both Vercel projects once the daily limit resets (simple view + dark theme are on `main`)
 - [x] Dark theme (system preference + remembered toggle, dark basemap and ramps) and per-campaign
   error view (signed bars + table, derived figures marked †, MAPE with last-campaign baseline);
   API `GET /models/errors` (2026-10-25)
