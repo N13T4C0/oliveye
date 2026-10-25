@@ -1,0 +1,7 @@
+model,rows,campaigns,mape_pct,median_ape_pct,mean_abs_log_error,median_abs_error_t,wins_vs_aforo,campaign_wins_vs_aforo,p_vs_aforo
+last_campaign,15,9,44.0,28.6,0.398,67800.0,2,1,0.008
+mean_5_campaigns,15,9,47.2,28.9,0.348,60300.0,4,3,0.051
+province_mean,15,9,45.4,30.6,0.378,45800.0,3,3,0.062
+aforo,15,9,11.9,11.2,0.116,20000.0,0,0,
+ridge,15,9,44.1,30.7,0.373,46600.0,3,3,0.055
+lag_only,15,9,45.4,30.6,0.379,45900.0,3,3,0.059

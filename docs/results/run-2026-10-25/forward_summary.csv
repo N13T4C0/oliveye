@@ -1,0 +1,3 @@
+model,rows,campaigns,mape_pct,median_ape_pct,mean_abs_log_error,median_abs_error_t,wins_vs_aforo,campaign_wins_vs_aforo,p_vs_aforo
+aforo,10,5,12.4,11.7,0.124,17200.0,0,0,
+ridge,10,5,53.9,30.8,0.396,39900.0,2,2,0.25

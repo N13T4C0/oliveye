@@ -1,9 +1,7 @@
 # DRAFT — Results section for the README (for the author to review)
 
-> Status: **skeleton, no numbers yet.** It is filled only from a run on the complete
-> 85-municipality data, after `model-qa` and `oliveye-auditor` have reviewed it. The author
-> decides the headline and whether it goes into the README.
-> Every `{…}` is a placeholder taken from `data/processed/model_run/` (summary.csv, run.json).
+> Status: **filled from the reviewed 2026-10-25 run** ([`README.md`](README.md) in this folder).
+> The author decides the headline and whether it goes into the README.
 
 ## Results
 
@@ -11,37 +9,42 @@
 forecast a province's olive oil harvest as well as the official forecast (*aforo*) published by
 the Junta de Andalucía in October (which also uses field fruit counts)?
 
-**Short answer:** {one honest sentence, e.g. "Not yet: the aforo is about {x}× more accurate"
-or "On {k} of {n} campaigns it was closer than the aforo, but the difference is not
-statistically clear (p = {p})."}
+**Short answer:** not yet. With 9 campaigns the model reduces to the province average (44 %
+MAPE, the same as repeating last year's harvest), while the aforo, which also counts fruit in the
+field in October, has 12 %: about 3–4× lower and closer in 6 of 9 campaigns (suggestive, not
+conclusive: p = 0.055).
 
-| Model (same {rows} rows, {campaigns} campaigns) | MAPE | Median APE | Campaigns closer than the aforo |
+| Model (same 15 rows, 9 campaigns) | MAPE | Median APE | Campaigns closer than the aforo |
 |---|---|---|---|
-| Aforo (Junta, October, field counts) | {…} % | {…} % | – |
-| **OlivEye — Ridge, data to August** | {…} % | {…} % | {k} / {n} (p = {p}) |
-| Repeat last campaign | {…} % | {…} % | {…} |
-| Province mean | {…} % | {…} % | {…} |
+| Aforo (Junta, October, field counts) | 11.9 % | 11.2 % | – |
+| **OlivEye — Ridge, data to August** | 44.1 % | 30.7 % | 3 / 9 (p = 0.055) |
+| Repeat last campaign | 44.0 % | 28.6 % | 1 / 9 |
+| Province mean | 45.4 % | 30.6 % | 3 / 9 |
 
-![Real production, aforo and OlivEye per campaign](figures/production_vs_aforo.png)
+![Real production, aforo and OlivEye per campaign](docs/results/figures/production_vs_aforo.png)
 
 ### How it was validated
 
 - **Leave-one-campaign-out:** each campaign (both provinces) is predicted by a model that never
   saw it, nor the following campaign, whose "last year's production" feature would reveal it.
-- **Forward check:** training only on earlier campaigns gives {…} % MAPE ({n} campaigns).
+- **Forward check:** training only on earlier campaigns gives 53.9 % MAPE vs 12.4 % for the
+  aforo (5 campaigns, too few for inference).
 - Ridge regression on 4 features fixed in advance (last year's production, May heat days,
-  summer NDMI, spring NDVI), with the province level unpenalised (ADR 0003).
-- 80 % interval: forecast ÷/× {factor}, from the out-of-sample errors.
+  summer NDMI, spring NDVI), with the province level unpenalised (ADR 0003). The selected
+  shrinkage removes the features: the model is, in practice, the province mean.
+- 80 % interval: forecast ÷/× 2.0, from the 16 out-of-sample errors (coverage not validated).
 
 ### Limitations (read before quoting a number)
 
-- Only {campaigns} campaigns since Sentinel-2 (2015): every metric is noisy.
+- Only 9 campaigns since Sentinel-2 (2015): every metric is noisy.
+- 15 of 16 "real" production values are derived from the Junta's aforo variations (ADR 0002).
 - Olive trees alternate heavy and light years; the aforo uses field fruit counts in October that
   a satellite cannot see in August.
 - Granada lacks reliable figures for 2016/17 and 2017/18 (rows dropped, not imputed).
-- Features cover {jaen} % of Jaén's and {granada} % of Granada's SIGPAC olive area.
+- Features cover 80.1 % of Jaén's and 80.6 % of Granada's SIGPAC olive area.
 
 ### Next test
 
-A dated 2026/27 forecast is published next to the aforo ({…} kt Jaén, {…} kt Granada) and will
-be scored when the Junta's final figure is known. *(Pending the author's confirmation.)*
+A dated 2026/27 model forecast, published next to the aforo (575 kt Jaén, 106.7 kt Granada — the
+aforo's figures), would be scored when the Junta's final figure is known. The model's own
+forecast is not computed yet. *(Pending the author's confirmation.)*

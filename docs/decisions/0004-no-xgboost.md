@@ -20,7 +20,8 @@ the same leave-one-campaign-out as everything else.
 |---|---|---|---|---|---|
 | 2026-10-25 21:50, provisional (Jaén features from 1 municipality), all rows, before the t+1 fix | 16 | 84.1 % | – | 43.3 % | – |
 | 2026-10-25 23:30, provisional, t+1 excluded, same 15 like-for-like rows | 15 | 76.2 % | 44.9 % | 44.0 % | 11.9 % |
-| 2026-10-25 05:25 CET, **full data** (86 municipalities, ~80 % of each province's olive area), same rows | 15 | 49.4 % | 44.0 % | 44.0 % | 11.9 % |
+| 2026-10-25 05:25 CET, full data (86 municipalities, ~80 % of each province's olive area), same rows | 15 | 49.4 % | 44.0 % | 44.0 % | 11.9 % |
+| 2026-10-25 05:40 CET, **final** (full data + causal outlier filter), same rows | 15 | 51.0 % | 44.1 % | 44.0 % | 11.9 % |
 
 With the full data XGBoost is still worse than Ridge and than repeating last year's harvest; the conclusion stands.
 

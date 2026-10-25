@@ -14,15 +14,15 @@ parked in "Pending for the author" and the work moves on.
 
 - [x] A. Model code with TDD: `models/dataset.py`, `train.py`, `evaluate.py`,
       `scripts/train_models.py`; `statistician` review of the validation; `code-reviewer`.
-- [ ] B. Watch the openEO batch (progress, re-dispatch, budget, failed jobs).
-- [ ] C. First real training on the municipalities available; MLflow local; `docs/results/`;
+- [x] B. Watch the openEO batch (progress, re-dispatch, budget, failed jobs).
+- [x] C. First real training on the municipalities available; MLflow local; `docs/results/`;
       notebook 04 (dataviz); `model-qa` + auditor review.
-- [ ] D. Extras: XGBoost negative test + ADR 0004; Granada 2016/17–2017/18 gaps; RIA retry.
-- [ ] F. When the batch finishes: final training with all 85 municipalities; refresh results,
+- [x] D. Extras: XGBoost negative test + ADR 0004; Granada 2016/17–2017/18 gaps; RIA retry.
+- [x] F. When the batch finishes: final training with all 85 municipalities; refresh results,
       notebook 04; `model-qa` + auditor again.
 - [x] G. Phase 4 groundwork: FastAPI read-only service over the results (municipalities, monthly
       series, province predictions) with tests; no deployment.
-- [~] H. README results section as a **draft** (`docs/results/README-draft.md`) for the author.
+- [x] H. README results section as a **draft** (`docs/results/README-draft.md`) for the author.
 - [ ] E. Wrap-up (~07:25): TODO (repo + project), sync the author's folder, morning summary.
 
 ## If the assistant stops (usage limits, errors)
@@ -132,3 +132,7 @@ parked in "Pending for the author" and the work moves on.
   targets; minor: centred Hampel window let Sep/Oct images clean Jul/Aug. Both fixed with tests
   first (target_method column; causal Hampel recomputed at load time, no openEO request). Rerun:
   Ridge 44.1 %, forward 53.9 %; conclusions unchanged. 119 tests pass.
+- 05:50 CET Results written to `docs/results/` (README, figures, run-2026-10-25 outputs) after
+  model-qa + auditor; bootstrap CI of the MAPE ratio recomputed on the final run (3.7×,
+  1.3–7.6×); XGBoost refreshed (51.0 %). `README-draft.md` filled for the author. RIA retry left
+  for a later session (low priority, climate already covered by ERA5).
