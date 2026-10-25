@@ -1,0 +1,68 @@
+.group {
+  display: inline-flex;
+  margin: 0;
+  padding: 3px;
+  border: 1px solid;
+  border-radius: var(--radius-pill);
+  min-inline-size: auto;
+}
+
+.option {
+  position: relative;
+  display: inline-flex;
+}
+
+.input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  margin: 0;
+  cursor: pointer;
+}
+
+.face {
+  padding: 4px 14px;
+  border-radius: var(--radius-pill);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.5;
+  transition:
+    background-color 0.2s var(--ease-out),
+    color 0.2s var(--ease-out);
+}
+
+.input:focus-visible + .face {
+  outline: 2px solid currentColor;
+  outline-offset: 1px;
+}
+
+/* On the forest-ink bar. */
+.ink {
+  border-color: rgba(226, 246, 213, 0.35);
+}
+.ink .face {
+  color: var(--on-ink);
+}
+.ink .input:hover + .face {
+  background: rgba(226, 246, 213, 0.12);
+}
+.ink .input:checked + .face {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+/* On white or fog. */
+.paper {
+  border-color: var(--rule);
+  background: var(--paper);
+}
+.paper .face {
+  color: var(--body);
+}
+.paper .input:hover + .face {
+  background: var(--fog);
+}
+.paper .input:checked + .face {
+  background: var(--ink);
+  color: var(--paper);
+}
