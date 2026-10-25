@@ -38,3 +38,5 @@ The author is out. Anything needing a decision is parked under "Pending for the 
   loader left open. Remote branch `phase2-spark` could not be deleted (proxy) — parked for the author.
 - 17:21 Check-in 1: blocks A and B already closed. Health check on `main`: ruff + mypy clean,
   133 tests pass (incl. Spark); GitHub CI green on `be820c2` (jobs quality, web, spark). Only C left.
+- 18:01 Check-in 2: nothing open besides C. Wrap-up prepared; the author's PC is not reachable right
+  now (bridge offline), so the folder sync waits for 18:40 or for the author's return.
