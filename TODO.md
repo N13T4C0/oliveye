@@ -137,3 +137,11 @@ Updated at the end of each phase.
 - [ ] Then the other 85 real jobs (~350–550 credits), re-export API data, add 2016/17 to the web,
   retrain (expected +1 row: Jaén 2016/17) → model-qa + statistician before publishing new metrics
 
+## Simple view for growers (2026-10-25)
+- [x] Default plain-language view: aforo in million litres, kg of oil/ha (province average over declared
+  SIGPAC area) and a euro range at a dated Poolred price; satellite estimate with its 80 % margin and its
+  errors (44 % vs 12 %, no better than repeating last year); greenness/thirst vs each municipality's
+  own other campaigns (±1/±2 sd); technical view behind a toggle; `GET /prices/reference`
+- [ ] Update `docs/sources/oil_prices.csv` with a newer Poolred week when refreshing the page
+- [ ] Optional: Jaén-specific (picual) prices for Jaén instead of the all-varieties average
+
