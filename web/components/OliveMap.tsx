@@ -133,7 +133,13 @@ export function OliveMap({
           container: container.current,
           style: BASEMAP,
           bounds: extent,
-          fitBoundsOptions: { padding: { top: 40, bottom: 40, left: 40, right: 40 } },
+          fitBoundsOptions: {
+            // Keep the measured olive area clear of the floating legend card.
+            padding:
+              container.current.clientWidth < 640
+                ? { top: 150, bottom: 70, left: 20, right: 20 }
+                : { top: 40, bottom: 90, left: 360, right: 60 },
+          },
           attributionControl: { compact: true },
           dragRotate: false,
           pitchWithRotate: false,

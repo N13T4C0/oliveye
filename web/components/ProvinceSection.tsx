@@ -60,6 +60,10 @@ export function ProvinceSection({ lang, campaign, production, forecast }: Props)
             <span className={`${styles.mark} ${styles.markForecast}`} aria-hidden="true" />
             {t(lang, "forecast")} · {t(lang, "interval")}
           </li>
+          <li>
+            <span className={`${styles.mark} ${styles.markSelected}`} aria-hidden="true" />
+            {t(lang, "selectedCampaign")} ({campaign})
+          </li>
         </ul>
 
         <div className={styles.panels}>
@@ -134,7 +138,7 @@ function ProvincePanel({
             <ReferenceLine
               x={campaign}
               stroke="#9fe870"
-              strokeOpacity={0.45}
+              strokeOpacity={0.3}
               strokeWidth={22}
               ifOverflow="hidden"
             />

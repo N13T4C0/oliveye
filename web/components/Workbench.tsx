@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 
 import { listRows, matchesSearch, sortRows, type Campaign, type SortMode } from "@/lib/campaigns";
 import { t } from "@/lib/i18n";
@@ -55,6 +55,18 @@ export function Workbench({
     const all = listRows(features, index, campaign).filter((r) => matchesSearch(r.name, query));
     return sortRows(all, sort, lang);
   }, [features, index, campaign, query, sort, lang]);
+
+  const mapArea = useRef<HTMLDivElement>(null);
+  // On narrow screens the map sits below the list: scroll so the series drawer is visible.
+  const select = useCallback(
+    (id: string | null) => {
+      onSelect(id);
+      if (id && window.matchMedia("(max-width: 860px)").matches) {
+        mapArea.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+      }
+    },
+    [onSelect],
+  );
 
   const ramp = RAMPS[index];
   const selectedId = selected ? `${selected.province_code}-${selected.municipality_code}` : null;
@@ -113,7 +125,7 @@ export function Workbench({
                   type="button"
                   className={styles.row}
                   aria-pressed={row.id === selectedId}
-                  onClick={() => onSelect(row.id === selectedId ? null : row.id)}
+                  onClick={() => select(row.id === selectedId ? null : row.id)}
                 >
                   <span
                     className={styles.swatch}
@@ -134,7 +146,7 @@ export function Workbench({
         </ul>
       </aside>
 
-      <div className={styles.mapArea}>
+      <div ref={mapArea} className={styles.mapArea}>
         <OliveMap
           lang={lang}
           campaign={campaign}
@@ -142,7 +154,7 @@ export function Workbench({
           breaks={breaks}
           selectedId={selectedId}
           onFeatures={onFeatures}
-          onSelect={onSelect}
+          onSelect={select}
         />
         <Legend lang={lang} campaign={campaign} index={index} breaks={breaks} />
         <SeriesPanel

@@ -5,7 +5,7 @@
 .inner {
   max-width: 1440px;
   margin: 0 auto;
-  padding: 32px var(--gutter) 28px;
+  padding: 22px var(--gutter) 20px;
   display: grid;
   grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.4fr);
   gap: clamp(24px, 4vw, 56px);
@@ -13,7 +13,7 @@
 }
 
 .question {
-  font-size: clamp(26px, 2.6vw, 36px);
+  font-size: clamp(24px, 2.2vw, 32px);
   font-weight: 800;
   line-height: 1.12;
   letter-spacing: -0.03em;
@@ -27,9 +27,9 @@
 }
 
 .detail {
-  margin-top: 14px;
-  max-width: 52ch;
-  font-size: 17px;
+  margin-top: 10px;
+  max-width: 56ch;
+  font-size: 16px;
   line-height: 1.55;
 }
 
@@ -41,12 +41,12 @@
 
 .tile {
   margin: 0;
-  padding: 18px 20px 16px;
+  padding: 14px 18px 12px;
   background: var(--fog);
   border-radius: var(--radius-card);
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .tileTitle {
@@ -87,7 +87,7 @@
 }
 
 .value {
-  font-size: 26px;
+  font-size: 24px;
   font-weight: 700;
   color: var(--spruce);
   letter-spacing: -0.02em;
@@ -96,6 +96,14 @@
 
 .official {
   color: var(--signal);
+}
+
+.baseline {
+  color: var(--body);
+}
+
+.small {
+  font-size: 18px;
 }
 
 .range {
@@ -114,12 +122,12 @@
 .bars {
   margin: 0;
   display: grid;
-  gap: 10px;
+  gap: 6px;
 }
 
 .barRow {
   display: grid;
-  grid-template-columns: 5.5em 1fr;
+  grid-template-columns: 9.5em 1fr;
   align-items: center;
   gap: 8px;
 }
@@ -157,6 +165,10 @@
 
 .fillModel {
   background: var(--spruce);
+}
+
+.fillBaseline {
+  background: var(--hairline);
 }
 
 .fillAforo {

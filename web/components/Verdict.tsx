@@ -14,9 +14,34 @@ interface Props {
 export function Verdict({ lang, summary, forecast }: Props) {
   const ridge = summary.find((s) => s.model === "ridge");
   const aforo = summary.find((s) => s.model === "aforo");
+  const baseline = summary.find((s) => s.model === "province_mean");
   const modelError = ridge?.mape_pct ?? null;
   const aforoError = aforo?.mape_pct ?? null;
-  const scale = Math.max(modelError ?? 0, aforoError ?? 0) || 1;
+  const baselineError = baseline?.mape_pct ?? null;
+  const scale = Math.max(modelError ?? 0, aforoError ?? 0, baselineError ?? 0) || 1;
+  const bars = [
+    {
+      key: "model",
+      label: t(lang, "oliveye"),
+      value: modelError,
+      fill: styles.fillModel,
+      text: "",
+    },
+    {
+      key: "baseline",
+      label: t(lang, "provinceMean"),
+      value: baselineError,
+      fill: styles.fillBaseline,
+      text: styles.baseline,
+    },
+    {
+      key: "aforo",
+      label: t(lang, "aforo"),
+      value: aforoError,
+      fill: styles.fillAforo,
+      text: styles.official,
+    },
+  ];
   const rows = [...forecast.rows].sort((a, b) =>
     a.province === "Jaén" ? -1 : b.province === "Jaén" ? 1 : 0,
   );
@@ -74,36 +99,24 @@ export function Verdict({ lang, summary, forecast }: Props) {
           </figure>
 
           <figure className={styles.tile}>
-            <figcaption className={styles.tileTitle}>
-              {lang === "es" ? "Error medio absoluto (MAPE)" : "Mean absolute percentage error"}
-            </figcaption>
+            <figcaption className={styles.tileTitle}>{t(lang, "mapeTitle")}</figcaption>
             <dl className={styles.bars}>
-              <div className={styles.barRow}>
-                <dt>{t(lang, "oliveye")}</dt>
-                <dd>
-                  <span className={styles.track}>
-                    <span
-                      className={`${styles.fill} ${styles.fillModel}`}
-                      style={{ inlineSize: `${((modelError ?? 0) / scale) * 100}%` }}
-                    />
-                  </span>
-                  <span className={`${styles.value} num`}>{formatPercent(modelError, lang)}</span>
-                </dd>
-              </div>
-              <div className={styles.barRow}>
-                <dt>{t(lang, "aforo")}</dt>
-                <dd>
-                  <span className={styles.track}>
-                    <span
-                      className={`${styles.fill} ${styles.fillAforo}`}
-                      style={{ inlineSize: `${((aforoError ?? 0) / scale) * 100}%` }}
-                    />
-                  </span>
-                  <span className={`${styles.value} ${styles.official} num`}>
-                    {formatPercent(aforoError, lang)}
-                  </span>
-                </dd>
-              </div>
+              {bars.map((bar) => (
+                <div key={bar.key} className={styles.barRow}>
+                  <dt>{bar.label}</dt>
+                  <dd>
+                    <span className={styles.track}>
+                      <span
+                        className={`${styles.fill} ${bar.fill}`}
+                        style={{ inlineSize: `${((bar.value ?? 0) / scale) * 100}%` }}
+                      />
+                    </span>
+                    <span className={`${styles.value} ${styles.small} ${bar.text} num`}>
+                      {formatPercent(bar.value, lang)}
+                    </span>
+                  </dd>
+                </div>
+              ))}
             </dl>
             <p className={styles.note}>
               {ridge

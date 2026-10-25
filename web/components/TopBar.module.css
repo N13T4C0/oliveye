@@ -71,6 +71,9 @@
 }
 
 @media (max-width: 640px) {
+  .bar {
+    position: static;
+  }
   .inner {
     padding-block: 10px;
   }
