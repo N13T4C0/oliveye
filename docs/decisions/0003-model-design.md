@@ -15,7 +15,7 @@ after looking at the results.
 | # | Decision | Why (one line) |
 |---|---|---|
 | 1 | One model for both provinces, with a province indicator | 7 rows per province are not enough for separate models |
-| 2 | Data cut at the end of August of the campaign's first year | Same information as the aforo (published late September) |
+| 2 | Data cut at the end of August of the campaign's first year | Before the aforo, which is published in mid/late October with field fruit counts (see amendment 2a) |
 | 3 | Predict `log(production)`, report tonnes | Effects are multiplicative; big years must not dominate |
 | 4 | Main model is independent of the aforo; an *aforo corrector* is a secondary experiment | "My model vs the official one" is the honest portfolio story |
 | 5 | Leave-one-campaign-out, both provinces of a campaign held out together | Holding out one province leaks that year's weather |
@@ -53,3 +53,5 @@ from a defect visible in the provisional results and is labelled as such.
 | 12a | Alpha grid `logspace(-1, 3, 9)`, one-standard-error rule (largest alpha within 1 SE of the best) | Prefer more shrinkage when the data cannot tell alphas apart |
 | 13a | `ProvinceAnomalyRidge`: province level unpenalised; features centred on their province mean, clipped to the training range, standardised; Ridge fits within-province anomalies | NDMI/NDVI levels are confounded with province, and shrinking the province indicator pulled both provinces towards a pooled mean. **Driven by results:** found on the provisional run (leave-one-campaign-out, 15 like-for-like rows, Jaén features from 3.7 % of its olive area): Ridge MAPE 80.8 % → 44.9 %, vs province mean 45.4 %, last campaign 44.0 %, aforo 11.9 %. It removes a defect (infinite shrinkage now gives the province mean) and adds no feature |
 | 13b | Forward-chaining check (train only on earlier campaigns) reported next to leave-one-campaign-out; inside it, alpha is chosen by leave-one-campaign-out among those earlier campaigns only | Leave-one-campaign-out also trains on future years; an inner forward split would leave too few folds to pick alpha |
+| 2a | Correction (model-qa, 2026-10-25): the aforo is published 16–28 October and uses field fruit counts, not late September | The comparison is *not* like-for-like in information: the August cut handicaps the model; results must say so |
+| 15a | The 575 kt (Jaén) and 106.7 kt (Granada) of decision 15 are the **aforo's** 2026/27 figures; the model's own dated forecast is not computed yet | Never present the aforo's numbers as the model's forecast |

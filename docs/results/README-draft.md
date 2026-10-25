@@ -9,7 +9,7 @@
 
 **Question:** with satellite (Sentinel-2) and climate data up to August, can a simple model
 forecast a province's olive oil harvest as well as the official forecast (*aforo*) published by
-the Junta de Andalucía in late September?
+the Junta de Andalucía in October (which also uses field fruit counts)?
 
 **Short answer:** {one honest sentence, e.g. "Not yet: the aforo is about {x}× more accurate"
 or "On {k} of {n} campaigns it was closer than the aforo, but the difference is not
@@ -17,7 +17,7 @@ statistically clear (p = {p})."}
 
 | Model (same {rows} rows, {campaigns} campaigns) | MAPE | Median APE | Campaigns closer than the aforo |
 |---|---|---|---|
-| Aforo (Junta, late September) | {…} % | {…} % | – |
+| Aforo (Junta, October, field counts) | {…} % | {…} % | – |
 | **OlivEye — Ridge, data to August** | {…} % | {…} % | {k} / {n} (p = {p}) |
 | Repeat last campaign | {…} % | {…} % | {…} |
 | Province mean | {…} % | {…} % | {…} |
@@ -36,7 +36,7 @@ statistically clear (p = {p})."}
 ### Limitations (read before quoting a number)
 
 - Only {campaigns} campaigns since Sentinel-2 (2015): every metric is noisy.
-- Olive trees alternate heavy and light years; the aforo uses field sampling in September that
+- Olive trees alternate heavy and light years; the aforo uses field fruit counts in October that
   a satellite cannot see in August.
 - Granada lacks reliable figures for 2016/17 and 2017/18 (rows dropped, not imputed).
 - Features cover {jaen} % of Jaén's and {granada} % of Granada's SIGPAC olive area.

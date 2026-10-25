@@ -5,9 +5,9 @@ Timing (the most important modelling decision, see the oliveye-auditor leakage c
 * Campaign "2022/23" is the harvest from October 2022 to September 2023. Its fruit is formed in
   the **previous** months: flowering in April–May 2022, fruit set and oil accumulation in summer
   and early autumn 2022.
-* The official aforo for "2022/23" is published at the end of **September 2022**. A fair
-  comparison may only use data available by then, so features for campaign Y/Y+1 use the months
-  **October Y-1 to August Y** (the cut-off is a parameter).
+* The official aforo for "2022/23" is published in mid/late **October 2022** and also uses field
+  fruit counts. Features for campaign Y/Y+1 use only the months **October Y-1 to August Y** (the
+  cut-off is a parameter), so the model always knows less than the aforo, never more.
 
 Example: features for "2022/23" come from Oct 2021–Aug 2022; the drought of spring 2022 shows up
 as a low `ndvi_spring` and a very negative `ndmi_summer` for that campaign.
