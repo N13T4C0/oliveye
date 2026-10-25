@@ -17,7 +17,7 @@ parked in "Pending for the author" and the work moves on.
 - [x] B. Watch the openEO batch (progress, re-dispatch, budget, failed jobs).
 - [x] C. First real training on the municipalities available; MLflow local; `docs/results/`;
       notebook 04 (dataviz); `model-qa` + auditor review.
-- [x] D. Extras: XGBoost negative test + ADR 0004; Granada 2016/17–2017/18 gaps; RIA retry.
+- [x] D. Extras: XGBoost negative test + ADR 0004; Granada 2016/17–2017/18 gaps (parked); RIA retry deferred.
 - [x] F. When the batch finishes: final training with all 85 municipalities; refresh results,
       notebook 04; `model-qa` + auditor again.
 - [x] G. Phase 4 groundwork: FastAPI read-only service over the results (municipalities, monthly
@@ -136,3 +136,6 @@ parked in "Pending for the author" and the work moves on.
   model-qa + auditor; bootstrap CI of the MAPE ratio recomputed on the final run (3.7×,
   1.3–7.6×); XGBoost refreshed (51.0 %). `README-draft.md` filled for the author. RIA retry left
   for a later session (low priority, climate already covered by ERA5).
+- 05:57 CET Check-in 14. CI green on the results commit. API data re-exported from the final run
+  (data/processed/api, git-ignored) and smoke-tested (/health, /municipalities, /models/summary,
+  /provinces/{p}/production). Only block E (wrap-up, 07:25) remains.
