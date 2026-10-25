@@ -156,3 +156,24 @@ def aggregate_cells(
         rows.append(row)
     result = pd.DataFrame(rows)
     return result.sort_values([*group_columns, "month"]).reset_index(drop=True)
+
+
+def municipality_footprints(
+    cells: gpd.GeoDataFrame,
+    *,
+    simplify_m: float = 60.0,
+    group_columns: tuple[str, ...] = ("province_code", "municipality_code"),
+) -> gpd.GeoDataFrame:
+    """One (multi)polygon per municipality: the olive cells we measured, dissolved for a map.
+
+    Dissolving merges touching cells into one shape; simplifying removes vertices that are
+    invisible at map scale (`simplify_m`, in metres). Both run in EPSG:25830 (metres); the result
+    is returned in EPSG:4326, the storage CRS. Example: Martos' 3,130 cells become one shape.
+    """
+    metric = cells.to_crs(METRIC_CRS)
+    dissolved = metric.dissolve(by=list(group_columns), aggfunc={"olive_ha": "sum"})
+    dissolved["cells"] = metric.groupby(list(group_columns)).size()
+    dissolved["geometry"] = dissolved.geometry.buffer(0).simplify(
+        simplify_m, preserve_topology=True
+    )
+    return dissolved.reset_index().to_crs("EPSG:4326")

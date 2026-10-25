@@ -67,7 +67,7 @@ ignore = ["ANN401"]  # allow typing.Any where unavoidable (e.g. openEO process g
 [tool.mypy]
 python_version = "3.12"
 strict = true
-files = ["src"]
+files = ["src", "api"]
 
 [[tool.mypy.overrides]]
 # These libraries ship without complete type information.
@@ -76,3 +76,4 @@ ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["api"]  # the deployable API lives in api/ (Vercel project root)

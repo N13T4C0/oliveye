@@ -6,7 +6,12 @@ import pandas as pd
 import pytest
 from shapely.geometry import box
 
-from oliveye.pipeline.olive_grid import aggregate_cells, grid_summary, olive_grid_cells
+from oliveye.pipeline.olive_grid import (
+    aggregate_cells,
+    grid_summary,
+    municipality_footprints,
+    olive_grid_cells,
+)
 
 X0, Y0 = 410_000, 4_170_000  # multiples of 250 m, Martos (EPSG:25830)
 
@@ -87,3 +92,31 @@ def test_aggregate_is_area_weighted_and_skips_gaps() -> None:
     assert result.loc[0, "ndvi"] == pytest.approx((0.4 * 6 + 0.8 * 2) / 8)
     assert result.loc[0, "ndmi"] == pytest.approx(0.1)
     assert result.loc[0, "valid_cells"] == 2
+
+
+def test_footprints_dissolve_cells_per_municipality() -> None:
+    """Adjacent cells of one municipality become one polygon; area kept; output in EPSG:4326."""
+    cells = gpd.GeoDataFrame(
+        {
+            "province_code": ["23", "23", "23"],
+            "municipality_code": ["60", "60", "61"],
+            "olive_ha": [6.0, 6.0, 5.0],
+        },
+        geometry=[
+            box(400000, 4170000, 400250, 4170250),
+            box(400250, 4170000, 400500, 4170250),  # touches the first one
+            box(410000, 4170000, 410250, 4170250),
+        ],
+        crs="EPSG:25830",
+    ).to_crs("EPSG:4326")
+
+    footprints = municipality_footprints(cells, simplify_m=10)
+
+    assert footprints.crs.to_epsg() == 4326
+    assert len(footprints) == 2
+    martos = footprints[footprints["municipality_code"] == "60"].iloc[0]
+    assert martos.geometry.geom_type == "Polygon"
+    assert martos["olive_ha"] == pytest.approx(12.0)
+    assert martos["cells"] == 2
+    area_ha = footprints.to_crs("EPSG:25830").area.iloc[0] / 1e4
+    assert area_ha == pytest.approx(12.5, rel=0.02)  # 2 cells of 6.25 ha

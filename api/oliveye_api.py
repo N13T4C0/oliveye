@@ -1,0 +1,150 @@
+"""OlivEye read-only API: olive grove indices and olive oil production estimates.
+
+Designed to run as a serverless function (Vercel): it only reads small JSON files prepared by
+`scripts/export_api_data.py` (the heavy lifting happens there, once), so cold starts are fast
+and the bundle is tiny. Every response is cacheable, so the CDN answers most requests without
+running Python at all.
+
+Run locally:
+
+    uv run uvicorn app:app --app-dir api --reload      # docs at http://127.0.0.1:8000/docs
+"""
+
+from __future__ import annotations
+
+import json
+from collections.abc import Awaitable, Callable
+from pathlib import Path
+from typing import Any
+
+from fastapi import FastAPI, HTTPException, Query, Request, Response
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+
+# Data changes once a year: browsers keep it 1 h, the CDN 1 day (and serves stale while it
+# refreshes in the background).
+CACHE_CONTROL = "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800"
+
+
+class Municipality(BaseModel):
+    province_code: str
+    municipality_code: str
+    name: str
+    olive_hectares: float
+    processed: bool
+
+
+class MonthlyIndex(BaseModel):
+    month: str
+    ndvi: float | None
+    ndmi: float | None
+    valid_cells: int | None
+
+
+class ProductionPoint(BaseModel):
+    campaign: str
+    oil_final_t: float | None
+    oil_aforo_t: float | None
+    pred_t: float | None
+    target_method: str | None
+
+
+class ModelScore(BaseModel):
+    model: str
+    rows: int
+    campaigns: int
+    mape_pct: float | None
+    campaign_wins_vs_aforo: int
+    p_vs_aforo: float | None
+
+
+class ForecastRow(BaseModel):
+    province: str
+    pred_t: float
+    low_t: float
+    high_t: float
+    oil_aforo_t: float | None
+
+
+class Forecast(BaseModel):
+    campaign: str
+    published: str
+    interval_factor: float
+    rows: list[ForecastRow]
+
+
+def _load(path: Path) -> Any:
+    if not path.exists():
+        raise FileNotFoundError(f"Missing API data file: {path}")
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def create_app(data_dir: Path) -> FastAPI:
+    """Build the app over one data directory (files are read once, at start-up)."""
+    municipalities: list[dict[str, Any]] = _load(data_dir / "municipalities.json")
+    indices: dict[str, list[dict[str, Any]]] = _load(data_dir / "indices.json")
+    production: dict[str, list[dict[str, Any]]] = _load(data_dir / "production.json")
+    summary: list[dict[str, Any]] = _load(data_dir / "summary.json")
+    forecast: dict[str, Any] = _load(data_dir / "forecast.json")
+    olive_map: dict[str, Any] = _load(data_dir / "map.geojson")
+
+    app = FastAPI(
+        title="OlivEye API",
+        description=(
+            "Sentinel-2 olive grove indices (NDVI, NDMI) for 86 municipalities of Jaén and "
+            "Granada, and olive oil production: official aforo, final figures and the OlivEye "
+            "model (leave-one-campaign-out). Read-only."
+        ),
+        version="1.0.0",
+    )
+    app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["GET"])
+
+    @app.middleware("http")
+    async def cache_headers(
+        request: Request, call_next: Callable[[Request], Awaitable[Response]]
+    ) -> Response:
+        response = await call_next(request)
+        if request.method == "GET" and response.status_code == 200:
+            response.headers["Cache-Control"] = CACHE_CONTROL
+        return response
+
+    @app.get("/health")
+    def health() -> dict[str, str]:
+        return {"status": "ok"}
+
+    @app.get("/municipalities", response_model=list[Municipality])
+    def list_municipalities(
+        province: str | None = Query(default=None, description="INE province code: 23 or 18"),
+    ) -> list[dict[str, Any]]:
+        if province is None:
+            return municipalities
+        return [m for m in municipalities if m["province_code"] == province]
+
+    @app.get("/municipalities/{province}/{municipality}/indices", response_model=list[MonthlyIndex])
+    def municipality_indices(province: str, municipality: str) -> list[dict[str, Any]]:
+        series = indices.get(f"{province}-{municipality}")
+        if series is None:
+            raise HTTPException(status_code=404, detail="No indices for this municipality")
+        return series
+
+    @app.get("/provinces/{province}/production", response_model=list[ProductionPoint])
+    def province_production(province: str) -> list[dict[str, Any]]:
+        series = production.get(province)
+        if series is None:
+            raise HTTPException(status_code=404, detail="Unknown province (Jaén or Granada)")
+        return series
+
+    @app.get("/models/summary", response_model=list[ModelScore])
+    def model_summary() -> list[dict[str, Any]]:
+        return summary
+
+    @app.get("/forecast", response_model=Forecast)
+    def dated_forecast() -> dict[str, Any]:
+        return forecast
+
+    @app.get("/map/municipalities")
+    def map_municipalities() -> dict[str, Any]:
+        """GeoJSON (EPSG:4326): each municipality's measured olive area with seasonal indices."""
+        return olive_map
+
+    return app

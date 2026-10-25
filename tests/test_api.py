@@ -1,52 +1,126 @@
-"""Tests for the read-only API over exported results."""
+"""Tests for the deployable read-only API (api/oliveye_api.py) over exported JSON files."""
 
+import json
 from pathlib import Path
 
-import pandas as pd
 import pytest
 from fastapi.testclient import TestClient
+from oliveye_api import create_app
 
-from oliveye.api.app import create_app
+
+def _write(path: Path, payload: object) -> None:
+    path.write_text(json.dumps(payload), encoding="utf-8")
 
 
 @pytest.fixture
 def client(tmp_path: Path) -> TestClient:
-    pd.DataFrame(
+    _write(
+        tmp_path / "municipalities.json",
+        [
+            {
+                "province_code": "23",
+                "municipality_code": "60",
+                "name": "Martos",
+                "olive_hectares": 21796.4,
+                "processed": True,
+            },
+            {
+                "province_code": "23",
+                "municipality_code": "92",
+                "name": "Úbeda",
+                "olive_hectares": 30559.9,
+                "processed": False,
+            },
+            {
+                "province_code": "18",
+                "municipality_code": "104",
+                "name": "Loja",
+                "olive_hectares": 9000.0,
+                "processed": True,
+            },
+        ],
+    )
+    _write(
+        tmp_path / "indices.json",
         {
-            "province_code": ["23", "23", "18"],
-            "municipality_code": ["60", "92", "104"],
-            "name": ["MARTOS", "UBEDA", "LOJA"],
-            "olive_hectares": [21796.4, 30559.9, 9000.0],
-            "processed": [True, False, True],
-        }
-    ).to_csv(tmp_path / "municipalities.csv", index=False)
-    pd.DataFrame(
+            "23-60": [
+                {"month": "2025-07", "ndvi": 0.271, "ndmi": -0.068, "valid_cells": 3130},
+                {"month": "2025-08", "ndvi": 0.260, "ndmi": None, "valid_cells": 3130},
+            ]
+        },
+    )
+    _write(
+        tmp_path / "production.json",
         {
-            "province_code": ["23", "23"],
-            "municipality_code": ["60", "60"],
-            "month": ["2025-07", "2025-08"],
-            "ndvi": [0.271, 0.260],
-            "ndmi": [-0.068, -0.061],
-            "valid_cells": [3130, 3130],
-        }
-    ).to_csv(tmp_path / "indices_monthly.csv", index=False)
-    pd.DataFrame(
+            "Jaén": [
+                {
+                    "campaign": "2024/25",
+                    "oil_final_t": 560800.0,
+                    "oil_aforo_t": 445000.0,
+                    "pred_t": 500000.0,
+                    "target_method": "derived_from_aforo",
+                },
+                {
+                    "campaign": "2025/26",
+                    "oil_final_t": 389000.0,
+                    "oil_aforo_t": 475000.0,
+                    "pred_t": None,
+                    "target_method": "derived_from_aforo",
+                },
+            ]
+        },
+    )
+    _write(
+        tmp_path / "summary.json",
+        [
+            {
+                "model": "aforo",
+                "rows": 15,
+                "campaigns": 9,
+                "mape_pct": 11.9,
+                "campaign_wins_vs_aforo": 0,
+                "p_vs_aforo": None,
+            },
+            {
+                "model": "ridge",
+                "rows": 15,
+                "campaigns": 9,
+                "mape_pct": 44.1,
+                "campaign_wins_vs_aforo": 3,
+                "p_vs_aforo": 0.055,
+            },
+        ],
+    )
+    _write(
+        tmp_path / "forecast.json",
         {
-            "province": ["Jaén", "Jaén"],
-            "campaign": ["2024/25", "2025/26"],
-            "oil_final_t": [560800.0, 389000.0],
-            "oil_aforo_t": [445000.0, 475000.0],
-            "pred_t": [500000.0, 410000.0],
-        }
-    ).to_csv(tmp_path / "production.csv", index=False)
-    pd.DataFrame(
+            "campaign": "2026/27",
+            "published": "2026-10-25",
+            "interval_factor": 2.0,
+            "rows": [
+                {
+                    "province": "Jaén",
+                    "pred_t": 392348.0,
+                    "low_t": 196140.0,
+                    "high_t": 784835.0,
+                    "oil_aforo_t": 575000.0,
+                }
+            ],
+        },
+    )
+    _write(
+        tmp_path / "map.geojson",
         {
-            "model": ["aforo", "ridge"],
-            "rows": [15, 16],
-            "mape_pct": [11.9, 20.0],
-            "wins_vs_aforo": [0, 5],
-        }
-    ).to_csv(tmp_path / "summary.csv", index=False)
+            "type": "FeatureCollection",
+            "features": [
+                {
+                    "type": "Feature",
+                    "properties": {"province_code": "23", "municipality_code": "60"},
+                    "geometry": {"type": "Point", "coordinates": [-3.97, 37.72]},
+                }
+            ],
+        },
+    )
     return TestClient(create_app(tmp_path))
 
 
@@ -58,16 +132,15 @@ def test_municipalities_filtered_by_province(client: TestClient) -> None:
     response = client.get("/municipalities", params={"province": "23"})
 
     assert response.status_code == 200
-    names = [m["name"] for m in response.json()]
-    assert names == ["MARTOS", "UBEDA"]
+    assert [m["name"] for m in response.json()] == ["Martos", "Úbeda"]
 
 
 def test_monthly_indices_of_a_municipality(client: TestClient) -> None:
-    response = client.get("/municipalities/23/60/indices")
+    body = client.get("/municipalities/23/60/indices").json()
 
-    body = response.json()
     assert [row["month"] for row in body] == ["2025-07", "2025-08"]
     assert body[0]["ndvi"] == pytest.approx(0.271)
+    assert body[1]["ndmi"] is None  # a masked month stays empty, never invented
 
 
 def test_unknown_municipality_is_404(client: TestClient) -> None:
@@ -77,14 +150,30 @@ def test_unknown_municipality_is_404(client: TestClient) -> None:
 def test_province_production_series(client: TestClient) -> None:
     body = client.get("/provinces/Jaén/production").json()
 
-    assert body[0] == {
-        "campaign": "2024/25",
-        "oil_final_t": 560800.0,
-        "oil_aforo_t": 445000.0,
-        "pred_t": 500000.0,
-    }
+    assert body[0]["campaign"] == "2024/25"
+    assert body[0]["target_method"] == "derived_from_aforo"
+    assert body[1]["pred_t"] is None
+    assert client.get("/provinces/Sevilla/production").status_code == 404
 
 
-def test_model_summary(client: TestClient) -> None:
-    body = client.get("/models/summary").json()
-    assert {m["model"] for m in body} == {"aforo", "ridge"}
+def test_model_summary_and_forecast(client: TestClient) -> None:
+    summary = client.get("/models/summary").json()
+    assert {row["model"] for row in summary} == {"aforo", "ridge"}
+
+    forecast = client.get("/forecast").json()
+    assert forecast["campaign"] == "2026/27"
+    assert forecast["rows"][0]["low_t"] < forecast["rows"][0]["pred_t"]
+
+
+def test_map_is_geojson(client: TestClient) -> None:
+    response = client.get("/map/municipalities")
+
+    assert response.status_code == 200
+    assert response.json()["type"] == "FeatureCollection"
+
+
+def test_responses_are_cacheable_and_open_to_browsers(client: TestClient) -> None:
+    response = client.get("/models/summary", headers={"Origin": "https://example.org"})
+
+    assert "s-maxage" in response.headers["cache-control"]
+    assert response.headers["access-control-allow-origin"] == "*"

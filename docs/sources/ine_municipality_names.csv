@@ -1,0 +1,272 @@
+province_code,ine_code,name
+18,1,Agrón
+18,10,Aldeire
+18,100,Huétor Tájar
+18,101,Huétor Vega
+18,102,Íllora
+18,103,Ítrabo
+18,105,Iznalloz
+18,106,Játar
+18,107,Jayena
+18,108,Jérez del Marquesado
+18,109,Jete
+18,11,Alfacar
+18,111,Jun
+18,112,Juviles
+18,114,"Calahorra, La"
+18,115,Láchar
+18,116,Lanjarón
+18,117,Lanteira
+18,119,Lecrín
+18,12,Algarinejo
+18,120,Lentegí
+18,121,Lobras
+18,122,Loja
+18,123,Lugros
+18,124,Lújar
+18,126,"Malahá, La"
+18,127,Maracena
+18,128,Marchal
+18,13,Alhama de Granada
+18,132,Moclín
+18,133,Molvízar
+18,134,Monachil
+18,135,Montefrío
+18,136,Montejícar
+18,137,Montillana
+18,138,Moraleda de Zafayona
+18,14,Alhendín
+18,140,Motril
+18,141,Murtas
+18,143,Nigüelas
+18,144,Nívar
+18,145,Ogíjares
+18,146,Orce
+18,147,Órgiva
+18,148,Otívar
+18,149,Villa de Otura
+18,15,Alicún de Ortega
+18,150,Padul
+18,151,Pampaneira
+18,152,Pedro Martínez
+18,153,Peligros
+18,154,"Peza, La"
+18,157,Pinos Genil
+18,158,Pinos Puente
+18,159,Píñar
+18,16,Almegíjar
+18,161,Polícar
+18,162,Polopos
+18,163,Pórtugos
+18,164,Puebla de Don Fadrique
+18,165,Pulianas
+18,167,Purullena
+18,168,Quéntar
+18,17,Almuñécar
+18,170,Rubite
+18,171,Salar
+18,173,Salobreña
+18,174,Santa Cruz del Comercio
+18,175,Santa Fe
+18,176,Soportújar
+18,177,Sorvilán
+18,178,Torre-Cardela
+18,179,Torvizcón
+18,18,Alquife
+18,180,Trevélez
+18,181,Turón
+18,182,Ugíjar
+18,183,Válor
+18,184,Vélez de Benaudalla
+18,185,Ventas de Huelma
+18,187,Villanueva de las Torres
+18,188,Villanueva Mesía
+18,189,Víznar
+18,192,Zafarraya
+18,193,"Zubia, La"
+18,194,Zújar
+18,2,Alamedilla
+18,20,Arenas del Rey
+18,21,Armilla
+18,22,Atarfe
+18,23,Baza
+18,24,Beas de Granada
+18,25,Beas de Guadix
+18,27,Benalúa
+18,28,Benalúa de las Villas
+18,29,Benamaurel
+18,3,Albolote
+18,30,Bérchules
+18,32,Bubión
+18,33,Busquístar
+18,34,Cacín
+18,35,Cádiar
+18,36,Cájar
+18,37,Calicasas
+18,38,Campotéjar
+18,39,Caniles
+18,4,Albondón
+18,40,Cáñar
+18,42,Capileira
+18,43,Carataunas
+18,44,Cástaras
+18,45,Castilléjar
+18,46,Castril
+18,47,Cenes de la Vega
+18,48,Cijuela
+18,49,Cogollos de Guadix
+18,5,Albuñán
+18,50,Cogollos de la Vega
+18,51,Colomera
+18,53,Cortes de Baza
+18,54,Cortes y Graena
+18,56,Cúllar
+18,57,Cúllar Vega
+18,59,Chauchina
+18,6,Albuñol
+18,61,Chimeneas
+18,62,Churriana de la Vega
+18,63,Darro
+18,64,Dehesas de Guadix
+18,65,Dehesas Viejas
+18,66,Deifontes
+18,67,Diezma
+18,68,Dílar
+18,69,Dólar
+18,7,Albuñuelas
+18,70,Dúdar
+18,71,Dúrcal
+18,72,Escúzar
+18,74,Ferreira
+18,76,Fonelas
+18,77,Fornes
+18,78,Freila
+18,79,Fuente Vaqueros
+18,82,Galera
+18,83,Gobernador
+18,84,Gójar
+18,85,Gor
+18,86,Gorafe
+18,87,Granada
+18,88,Guadahortuna
+18,89,Guadix
+18,901,"Taha, La"
+18,902,"Valle, El"
+18,903,Nevada
+18,904,Alpujarra de la Sierra
+18,905,"Gabias, Las"
+18,906,"Guájares, Los"
+18,907,Valle del Zalabí
+18,908,Villamena
+18,909,Morelábor
+18,910,"Pinar, El"
+18,911,Vegas del Genil
+18,912,Cuevas del Campo
+18,913,Zagra
+18,914,Valderrubio
+18,915,Domingo Pérez de Granada
+18,916,Torrenueva Costa
+18,93,Gualchos
+18,94,Güéjar Sierra
+18,95,Güevéjar
+18,96,Huélago
+18,97,Huéneja
+18,98,Huéscar
+18,99,Huétor de Santillán
+23,1,Albanchez de Mágina
+23,10,Bailén
+23,101,Villarrodrigo
+23,11,Baños de la Encina
+23,12,Beas de Segura
+23,14,Begíjar
+23,15,Bélmez de la Moraleda
+23,16,Benatae
+23,17,Cabra del Santo Cristo
+23,18,Cambil
+23,19,Campillo de Arenas
+23,2,Alcalá la Real
+23,20,Canena
+23,21,Carboneros
+23,24,"Carolina, La"
+23,25,Castellar
+23,26,Castillo de Locubín
+23,27,Cazalilla
+23,28,Cazorla
+23,29,Chiclana de Segura
+23,3,Alcaudete
+23,30,Chilluévar
+23,31,Escañuela
+23,32,Espeluy
+23,33,Frailes
+23,34,Fuensanta de Martos
+23,35,Fuerte del Rey
+23,37,Génave
+23,38,"Guardia de Jaén, La"
+23,39,Guarromán
+23,4,Aldeaquemada
+23,40,Lahiguera
+23,41,Higuera de Calatrava
+23,42,Hinojares
+23,43,Hornos
+23,44,Huelma
+23,45,Huesa
+23,46,Ibros
+23,47,"Iruela, La"
+23,48,Iznatoraf
+23,49,Jabalquinto
+23,5,Andújar
+23,50,Jaén
+23,51,Jamilena
+23,52,Jimena
+23,53,Jódar
+23,54,Larva
+23,55,Linares
+23,56,Lopera
+23,57,Lupión
+23,58,Mancha Real
+23,59,Marmolejo
+23,6,Arjona
+23,60,Martos
+23,61,Mengíbar
+23,62,Montizón
+23,63,Navas de San Juan
+23,64,Noalejo
+23,65,Orcera
+23,66,Peal de Becerro
+23,67,Pegalajar
+23,69,Porcuna
+23,7,Arjonilla
+23,70,Pozo Alcón
+23,71,Puente de Génave
+23,72,"Puerta de Segura, La"
+23,73,Quesada
+23,74,Rus
+23,75,Sabiote
+23,76,Santa Elena
+23,77,Santiago de Calatrava
+23,79,Santisteban del Puerto
+23,8,Arquillos
+23,80,Santo Tomé
+23,81,Segura de la Sierra
+23,82,Siles
+23,84,Sorihuela del Guadalimar
+23,85,Torreblascopedro
+23,86,Torredelcampo
+23,87,Torredonjimeno
+23,88,Torreperogil
+23,9,Baeza
+23,90,Torres
+23,901,Cárcheles
+23,902,Bedmar y Garcíez
+23,903,Villatorres
+23,904,Santiago-Pontones
+23,905,Arroyo del Ojanco
+23,91,Torres de Albánchez
+23,92,Úbeda
+23,93,Valdepeñas de Jaén
+23,94,Vilches
+23,95,Villacarrillo
+23,96,Villanueva de la Reina
+23,97,Villanueva del Arzobispo
+23,98,Villardompardo
+23,99,"Villares, Los"
