@@ -1,5 +1,5 @@
 -- OlivEye tables. Idempotent: run by the PostGIS container on first start, and again by
--- `scripts/load_postgis.py` (oliveye.db.schema.apply_schema) on databases created earlier.
+-- `scripts/load_postgis.py` (oliveye.db.load.apply_schema) on databases created earlier.
 --
 -- CRS discipline: geometries are stored in EPSG:4326 (WGS 84, what web maps and GeoJSON use);
 -- areas are computed in EPSG:25830 (ETRS89 / UTM 30N, metres), never in degrees.
@@ -49,7 +49,8 @@ COMMENT ON COLUMN oliveye.monthly_index.month IS 'First day of the month (monthl
 
 -- Olive oil per province and campaign: final figure, official aforo and OlivEye (LOCO) estimate.
 CREATE TABLE IF NOT EXISTS oliveye.production (
-    province       text NOT NULL,
+    province       text NOT NULL,  -- name as published by the Junta ("Jaén", "Granada")
+    province_code  text NOT NULL CHECK (province_code IN ('18', '23')),  -- INE code, joins municipality
     campaign       text NOT NULL CHECK (campaign ~ '^\d{4}/\d{2}$'),
     oil_final_t    double precision,
     oil_aforo_t    double precision,
@@ -61,7 +62,9 @@ COMMENT ON COLUMN oliveye.production.pred_t IS
     'OlivEye estimate made leave-one-campaign-out (never saw that campaign nor the next).';
 
 -- Measured area recomputed in metres, next to the value the pipeline reported.
-CREATE OR REPLACE VIEW oliveye.v_olive_area_check AS
+-- Views hold no data: drop and recreate so a changed column list never blocks a load.
+DROP VIEW IF EXISTS oliveye.v_olive_area_check;
+CREATE VIEW oliveye.v_olive_area_check AS
 SELECT
     m.province_code,
     m.municipality_code,
@@ -74,7 +77,8 @@ FROM oliveye.municipality AS m
 JOIN oliveye.olive_area AS a USING (province_code, municipality_code);
 
 -- Signed percentage error of OlivEye and the aforo per campaign (same definition as GET /models/errors).
-CREATE OR REPLACE VIEW oliveye.v_campaign_error AS
+DROP VIEW IF EXISTS oliveye.v_campaign_error;
+CREATE VIEW oliveye.v_campaign_error AS
 SELECT
     province,
     campaign,
@@ -83,6 +87,13 @@ SELECT
     oil_aforo_t,
     100 * (pred_t - oil_final_t) / oil_final_t AS error_pct,
     100 * (oil_aforo_t - oil_final_t) / oil_final_t AS aforo_error_pct,
-    oil_aforo_t IS NOT NULL AS like_for_like
+    CASE
+        WHEN oil_aforo_t IS NULL THEN NULL
+        WHEN abs(pred_t - oil_final_t) < abs(oil_aforo_t - oil_final_t) THEN 'oliveye'
+        WHEN abs(pred_t - oil_final_t) > abs(oil_aforo_t - oil_final_t) THEN 'aforo'
+        ELSE 'tie'
+    END AS closer,
+    oil_aforo_t IS NOT NULL AS like_for_like,
+    target_method  -- 'derived_from_aforo': back-calculated from the Junta's published variations
 FROM oliveye.production
 WHERE pred_t IS NOT NULL AND oil_final_t > 0;

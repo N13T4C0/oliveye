@@ -73,6 +73,15 @@ def main() -> None:
     write_parquet(enriched, args.data_dir / "interim" / "cells.parquet", ["province_code"])
     timings["csv → partitioned Parquet"] = time.perf_counter() - start
 
+    # Periods must not overlap, and every cell of every period must have its olive weight:
+    # pandas (load_monthly) would silently drop a duplicate month, Spark would count it twice.
+    total, distinct = cells.count(), cells.select("cell_id", "month").distinct().count()
+    kept = spark.read.parquet(str(args.data_dir / "interim" / "cells.parquet")).count()
+    if total != distinct:
+        raise SystemExit(f"{total - distinct} duplicate cell-months across extraction periods")
+    if kept != total:
+        raise SystemExit(f"{total - kept} cell-months have no cell metadata (SIGPAC grid changed?)")
+
     start = time.perf_counter()
     stored = spark.read.parquet(str(args.data_dir / "interim" / "cells.parquet"))
     rows = stored.count()

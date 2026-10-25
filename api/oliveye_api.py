@@ -15,7 +15,7 @@ from __future__ import annotations
 import json
 from collections.abc import Awaitable, Callable
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from fastapi import FastAPI, HTTPException, Query, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
@@ -66,8 +66,9 @@ class CampaignError(BaseModel):
     oil_aforo_t: float | None
     error_pct: float
     aforo_error_pct: float | None
-    closer: str | None
+    closer: Literal["oliveye", "aforo", "tie"] | None
     like_for_like: bool
+    target_method: str | None
 
 
 class ForecastRow(BaseModel):
@@ -97,6 +98,9 @@ def campaign_errors(production: dict[str, list[dict[str, Any]]]) -> list[dict[st
     Only rows with an OlivEye estimate (made leave-one-campaign-out) and a final figure. Rows
     without an aforo are kept but flagged `like_for_like: false`: the published MAPE compares the
     two only on rows that have both. Positive error = the estimate was above the harvest.
+
+    The web page recomputes the same numbers from /provinces/*/production on purpose (it is
+    rendered statically, without an extra request); tests keep both equal to /models/summary.
     """
     rows: list[dict[str, Any]] = []
     for province, series in sorted(production.items()):
@@ -121,6 +125,8 @@ def campaign_errors(production: dict[str, list[dict[str, Any]]]) -> list[dict[st
                     "aforo_error_pct": None if aforo_error is None else round(aforo_error, 2),
                     "closer": closer,
                     "like_for_like": aforo_error is not None,
+                    # "derived_from_aforo": back-calculated from the Junta's published variations
+                    "target_method": point.get("target_method"),
                 }
             )
     return rows

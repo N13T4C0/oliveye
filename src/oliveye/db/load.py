@@ -29,10 +29,11 @@ from typing import Any
 import geopandas as gpd
 import pandas as pd
 from shapely.geometry import MultiPolygon, Polygon
-from sqlalchemy import Engine, text
+from sqlalchemy import URL, Engine, text
 from sqlalchemy.engine import Connection
 
 STORAGE_CRS = "EPSG:4326"
+PROVINCE_CODES = {"Jaén": "23", "Granada": "18"}  # INE codes, as in SIGPAC
 SCHEMA = "oliveye"
 # The SQL lives at the repository root (db/init/), next to docker-compose.yml.
 SCHEMA_DIR = Path(__file__).resolve().parents[3] / "db" / "init"
@@ -48,19 +49,28 @@ def database_url(env: Mapping[str, str] | None = None) -> str:
     password = env.get("POSTGRES_PASSWORD")
     if not password:
         raise RuntimeError("Set DATABASE_URL or POSTGRES_PASSWORD (see .env.example).")
-    user = env.get("POSTGRES_USER", "oliveye")
-    host = env.get("POSTGRES_HOST", "localhost")
-    port = env.get("POSTGRES_PORT", "5432")
-    name = env.get("POSTGRES_DB", "oliveye")
-    return f"postgresql+psycopg://{user}:{password}@{host}:{port}/{name}"
+    url = URL.create(
+        "postgresql+psycopg",
+        username=env.get("POSTGRES_USER", "oliveye"),
+        password=password,  # URL.create escapes characters such as @ : / # in passwords
+        host=env.get("POSTGRES_HOST", "localhost"),
+        port=int(env.get("POSTGRES_PORT", "5432")),
+        database=env.get("POSTGRES_DB", "oliveye"),
+    )
+    return url.render_as_string(hide_password=False)
 
 
 def apply_schema(connection: Connection, schema_dir: Path = SCHEMA_DIR) -> None:
     """Run every `db/init/*.sql` file in name order (they are idempotent).
 
     The driver treats `%` as a parameter marker, so the SQL files avoid it (comments included).
+    `CREATE TABLE IF NOT EXISTS` leaves existing tables untouched: there are no migrations yet,
+    so a column change needs a fresh volume (`docker compose down -v`) or a migration tool.
     """
-    for path in sorted(schema_dir.glob("*.sql")):
+    paths = sorted(schema_dir.glob("*.sql"))
+    if not paths:
+        raise FileNotFoundError(f"No schema files in {schema_dir}")
+    for path in paths:
         connection.exec_driver_sql(path.read_text(encoding="utf-8"))
 
 
@@ -114,9 +124,12 @@ def production_frame(data_dir: Path) -> pd.DataFrame:
     rows = [
         {"province": province, **point} for province, points in series.items() for point in points
     ]
-    return pd.DataFrame(rows)[
-        ["province", "campaign", "oil_final_t", "oil_aforo_t", "pred_t", "target_method"]
-    ]
+    frame = pd.DataFrame(rows)
+    frame.insert(1, "province_code", frame["province"].map(PROVINCE_CODES))
+    if frame["province_code"].isna().any():
+        raise ValueError(f"Unknown province in production.json: {set(frame['province'])}")
+    columns = ["province", "province_code", "campaign", "oil_final_t", "oil_aforo_t", "pred_t"]
+    return frame[[*columns, "target_method"]]
 
 
 # --------------------------------------------------------------------------------------------
@@ -124,7 +137,7 @@ def production_frame(data_dir: Path) -> pd.DataFrame:
 # --------------------------------------------------------------------------------------------
 
 
-def load_all(engine: Engine, data_dir: Path) -> dict[str, int]:
+def load_all(engine: Engine, data_dir: Path, schema_dir: Path = SCHEMA_DIR) -> dict[str, int]:
     """Replace the content of every table with `data_dir`, atomically. Returns rows per table."""
     frames: dict[str, pd.DataFrame] = {
         "municipality": municipalities_frame(data_dir),
@@ -133,7 +146,7 @@ def load_all(engine: Engine, data_dir: Path) -> dict[str, int]:
         "production": production_frame(data_dir),
     }
     with engine.begin() as connection:  # one transaction: all or nothing
-        apply_schema(connection)
+        apply_schema(connection, schema_dir)
         tables = ", ".join(f"{SCHEMA}.{name}" for name in TABLES)
         connection.execute(text(f"TRUNCATE {tables}"))
         for name in TABLES:

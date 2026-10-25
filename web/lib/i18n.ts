@@ -67,9 +67,10 @@ const es = {
   errorsLead:
     "Cuánto se alejó cada estimación de la producción final. Por encima de cero, la estimación se pasó; por debajo, se quedó corta. Las de OlivEye se hicieron sin ver esa campaña ni la siguiente.",
   errorsSummary:
-    "OlivEye estuvo más cerca que el aforo en {n} de {total} provincias-campaña. Error medio: {model} OlivEye, {aforo} el aforo.",
+    "OlivEye estuvo más cerca que el aforo en {n} de {total} provincias-campaña. Error absoluto medio (MAPE): OlivEye {model}, aforo {aforo}; repetir la producción de la campaña anterior, {last}.",
   errorsNote:
-    "Solo cuentan las provincias-campaña con las dos estimaciones; las que no tienen aforo en nuestras fuentes se muestran, pero quedan fuera de la comparación. Fuente: Junta de Andalucía (aforos), AICA.",
+    "Solo cuentan las provincias-campaña con las dos estimaciones; las que no tienen aforo en nuestras fuentes se muestran, pero quedan fuera de la comparación. † Producción final calculada a partir de las variaciones que publica la Junta (no es una cifra publicada directamente). Fuente: Junta de Andalucía (aforos), AICA.",
+  derivedMark: "† calculada",
   noAforo: "sin aforo",
   closer: "Más cerca: {who}",
   closerTie: "Empate",
@@ -155,9 +156,10 @@ const en: Record<MessageKey, string> = {
   errorsLead:
     "How far each estimate was from the final production. Above zero the estimate was too high; below zero, too low. OlivEye's estimates were made without seeing that campaign or the next one.",
   errorsSummary:
-    "OlivEye was closer than the aforo in {n} of {total} province-campaigns. Mean error: {model} OlivEye, {aforo} the aforo.",
+    "OlivEye was closer than the aforo in {n} of {total} province-campaigns. Mean absolute percentage error (MAPE): OlivEye {model}, aforo {aforo}; repeating last campaign's production, {last}.",
   errorsNote:
-    "Only province-campaigns with both estimates count; those without an aforo in our sources are shown but left out of the comparison. Source: Junta de Andalucía (aforos), AICA.",
+    "Only province-campaigns with both estimates count; those without an aforo in our sources are shown but left out of the comparison. † Final figure back-calculated from the variations the Junta publishes (not a figure published directly). Source: Junta de Andalucía (aforos), AICA.",
+  derivedMark: "† back-calculated",
   noAforo: "no aforo",
   closer: "Closer: {who}",
   closerTie: "Tie",

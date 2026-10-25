@@ -49,6 +49,8 @@ def index_series_paths(results_dir: Path, filename_glob: str) -> list[Path]:
     """Files named `filename_glob` in the job folders of every period in `INDEX_PERIODS`.
 
     One-off test extractions (e.g. a single month) have other suffixes and are never read.
+    Within a period, job folders start with their date, so a re-run sorts after the original
+    (and wins in `load_monthly`).
     """
     paths: list[Path] = []
     for period in INDEX_PERIODS:

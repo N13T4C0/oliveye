@@ -42,8 +42,8 @@
 /*
  * Dark theme (DESIGN.md › Themes): near-black canvas, forest surfaces, mist text, lime unchanged.
  * Data colours that carry meaning (spruce = OlivEye, signal = aforo) are lightened just enough to
- * keep 4.5:1 contrast on the dark canvas; the NDVI/NDMI ramps stay the same in both themes so a
- * colour means the same value whatever the theme.
+ * keep 4.5:1 contrast on the dark canvas. The map ramps switch to RAMPS_DARK (lib/scale.ts), where
+ * brighter means more; the legend always shows the active ramp.
  *
  * `data-theme` is set before the first paint by a script in app/layout.tsx; the media query is the
  * fallback when scripts are off.

@@ -1,3 +1,5 @@
+"use client";
+
 import { t } from "@/lib/i18n";
 import { formatIndex, rampOf, type Lang } from "@/lib/scale";
 import { PALETTES, useTheme } from "@/lib/theme";

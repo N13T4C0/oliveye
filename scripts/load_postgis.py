@@ -31,7 +31,7 @@ def read_dotenv(path: Path) -> None:
         line = line.strip()
         if line and not line.startswith("#") and "=" in line:
             key, value = line.split("=", 1)
-            os.environ.setdefault(key.strip(), value.strip())
+            os.environ.setdefault(key.strip(), value.strip().strip("'\""))
 
 
 def main() -> None:
@@ -42,7 +42,7 @@ def main() -> None:
 
     read_dotenv(ROOT / ".env")
     engine = create_engine(database_url())
-    counts = load_all(engine, args.data_dir)
+    counts = load_all(engine, args.data_dir, ROOT / "db" / "init")
     for table, rows in counts.items():
         print(f"oliveye.{table:<14} {rows:>7,} rows")
     if args.check:

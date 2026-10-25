@@ -1,9 +1,10 @@
 /**
  * Light and dark themes.
  *
- * CSS components read the tokens in app/globals.css. Charts (SVG attributes) and the map (WebGL
- * paint properties) cannot read CSS variables, so they take the same colours from `PALETTES`;
- * lib/theme.test.ts checks both lists stay identical.
+ * CSS components read the tokens in app/globals.css. The map (WebGL paint properties) cannot read
+ * CSS variables, and Recharts takes colours as SVG attributes, so both take the same colours from
+ * `PALETTES`; lib/theme.test.ts checks both lists stay identical. (Server HTML is rendered with
+ * the light palette; charts switch to dark on the first client render after hydration.)
  */
 
 import { useCallback, useSyncExternalStore } from "react";
@@ -99,31 +100,55 @@ export function chartColours(theme: Theme) {
 }
 
 const listeners = new Set<() => void>();
+let stopWatching: (() => void) | null = null;
 
 function current(): Theme {
   return document.documentElement.dataset.theme === "dark" ? "dark" : "light";
 }
 
-function subscribe(listener: () => void): () => void {
-  listeners.add(listener);
-  // Follow the system setting until the visitor picks a theme explicitly.
+function savedTheme(): Theme | null {
+  try {
+    const saved = localStorage.getItem(THEME_STORAGE_KEY);
+    return saved === "light" || saved === "dark" ? saved : null;
+  } catch {
+    return null;
+  }
+}
+
+function apply(theme: Theme): void {
+  document.documentElement.dataset.theme = theme;
+  listeners.forEach((listener) => listener());
+}
+
+/**
+ * One set of window listeners for the whole page, however many components use the theme:
+ * follow the system setting until the visitor picks a theme, and follow other tabs' choices.
+ */
+function watch(): () => void {
   const media = window.matchMedia("(prefers-color-scheme: dark)");
   const onSystem = () => {
-    let saved: string | null = null;
-    try {
-      saved = localStorage.getItem(THEME_STORAGE_KEY);
-    } catch {
-      saved = null;
-    }
-    if (saved !== "light" && saved !== "dark") {
-      document.documentElement.dataset.theme = media.matches ? "dark" : "light";
-      listeners.forEach((l) => l());
-    }
+    if (savedTheme() === null) apply(media.matches ? "dark" : "light");
+  };
+  const onStorage = (event: StorageEvent) => {
+    if (event.key === THEME_STORAGE_KEY) apply(savedTheme() ?? (media.matches ? "dark" : "light"));
   };
   media.addEventListener("change", onSystem);
+  window.addEventListener("storage", onStorage);
+  return () => {
+    media.removeEventListener("change", onSystem);
+    window.removeEventListener("storage", onStorage);
+  };
+}
+
+function subscribe(listener: () => void): () => void {
+  listeners.add(listener);
+  stopWatching ??= watch();
   return () => {
     listeners.delete(listener);
-    media.removeEventListener("change", onSystem);
+    if (listeners.size === 0 && stopWatching) {
+      stopWatching();
+      stopWatching = null;
+    }
   };
 }
 
@@ -131,13 +156,12 @@ function subscribe(listener: () => void): () => void {
 export function useTheme(): [Theme, (theme: Theme) => void] {
   const theme = useSyncExternalStore(subscribe, current, () => "light" as Theme);
   const setTheme = useCallback((next: Theme) => {
-    document.documentElement.dataset.theme = next;
     try {
       localStorage.setItem(THEME_STORAGE_KEY, next);
     } catch {
       // Private mode or blocked storage: the choice simply lasts for this page view.
     }
-    listeners.forEach((l) => l());
+    apply(next);
   }, []);
   return [theme, setTheme];
 }

@@ -3,11 +3,11 @@
 import { useMemo, useState } from "react";
 import { Bar, BarChart, CartesianGrid, ReferenceLine, Tooltip, XAxis, YAxis } from "recharts";
 
-import { campaignErrors, summariseErrors, type CampaignError } from "@/lib/errors";
+import { campaignErrors, summariseErrors, type CampaignError, type Closer } from "@/lib/errors";
 import { t } from "@/lib/i18n";
 import { formatPercent, formatSignedPercent, formatTonnes, type Lang } from "@/lib/scale";
 import { chartColours, useTheme } from "@/lib/theme";
-import type { ProductionPoint, ProvinceName } from "@/lib/types";
+import type { ModelScore, ProductionPoint, ProvinceName } from "@/lib/types";
 
 import layout from "./ChartSection.module.css";
 import styles from "./ErrorSection.module.css";
@@ -18,13 +18,17 @@ interface Props {
   lang: Lang;
   campaign: string;
   production: Record<ProvinceName, ProductionPoint[]>;
+  /** Published scores, for the naive "last campaign" baseline next to OlivEye and the aforo. */
+  scores: ModelScore[];
 }
+
+const isDerived = (row: CampaignError) => row.targetMethod === "derived_from_aforo";
 
 /**
  * Campaign by campaign: how far OlivEye and the aforo were from the final production.
  * Bars above zero over-estimated the harvest, bars below under-estimated it.
  */
-export function ErrorSection({ lang, campaign, production }: Props) {
+export function ErrorSection({ lang, campaign, production, scores }: Props) {
   const [showTable, setShowTable] = useState(false);
   const rows = useMemo(() => campaignErrors(production), [production]);
   const summary = summariseErrors(rows);
@@ -51,6 +55,10 @@ export function ErrorSection({ lang, campaign, production }: Props) {
             total: summary.rows,
             model: formatPercent(summary.oliveyeMape, lang),
             aforo: formatPercent(summary.aforoMape, lang),
+            last: formatPercent(
+              scores.find((s) => s.model === "last_campaign")?.mape_pct ?? null,
+              lang,
+            ),
           })}
         </p>
 
@@ -199,6 +207,7 @@ function ErrorTooltip({ active, payload, lang }: TooltipProps) {
       </strong>
       <span className="num">
         {t(lang, "real")}: {formatTonnes(row.finalT, lang)}
+        {isDerived(row) && ` (${t(lang, "derivedMark")})`}
       </span>
       <span className="num">
         {t(lang, "oliveye")}: {formatSignedPercent(row.oliveyePct, lang)}
@@ -207,15 +216,16 @@ function ErrorTooltip({ active, payload, lang }: TooltipProps) {
         {t(lang, "aforo")}:{" "}
         {row.aforoPct === null ? t(lang, "noAforo") : formatSignedPercent(row.aforoPct, lang)}
       </span>
-      {row.closer && <span className={styles.closer}>{closerLabel(row, lang)}</span>}
+      {row.closer && <span className={styles.closer}>{closerLabel(row.closer, lang)}</span>}
     </div>
   );
 }
 
-function closerLabel(row: CampaignError, lang: Lang): string {
-  if (row.closer === null) return t(lang, "noAforo");
-  if (row.closer === "tie") return t(lang, "closerTie");
-  return t(lang, "closer", { who: t(lang, row.closer === "oliveye" ? "oliveye" : "aforo") });
+/** "Más cerca: OlivEye" in the tooltip, just "OlivEye" in the table's "closer" column. */
+function closerLabel(closer: Closer | null, lang: Lang, short = false): string {
+  if (closer === null) return t(lang, "noAforo");
+  if (closer === "tie") return t(lang, "closerTie");
+  return short ? t(lang, closer) : t(lang, "closer", { who: t(lang, closer) });
 }
 
 function ErrorTable({ lang, rows }: { lang: Lang; rows: CampaignError[] }) {
@@ -238,18 +248,15 @@ function ErrorTable({ lang, rows }: { lang: Lang; rows: CampaignError[] }) {
             <tr key={`${r.province}-${r.campaign}`}>
               <th scope="row">{r.province}</th>
               <td className="num">{r.campaign}</td>
-              <td className="num">{formatTonnes(r.finalT, lang)}</td>
+              <td className="num">
+                {formatTonnes(r.finalT, lang)}
+                {isDerived(r) ? " †" : ""}
+              </td>
               <td className="num">{formatSignedPercent(r.oliveyePct, lang)}</td>
               <td className="num">
                 {r.aforoPct === null ? "—" : formatSignedPercent(r.aforoPct, lang)}
               </td>
-              <td>
-                {r.closer === null
-                  ? t(lang, "noAforo")
-                  : r.closer === "tie"
-                    ? t(lang, "closerTie")
-                    : t(lang, r.closer)}
-              </td>
+              <td>{closerLabel(r.closer, lang, true)}</td>
             </tr>
           ))}
         </tbody>

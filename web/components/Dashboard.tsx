@@ -67,7 +67,12 @@ export function Dashboard({ data }: { data: PageData }) {
           production={data.production}
           forecast={data.forecast}
         />
-        <ErrorSection lang={lang} campaign={campaign} production={data.production} />
+        <ErrorSection
+          lang={lang}
+          campaign={campaign}
+          production={data.production}
+          scores={data.summary}
+        />
         <Method lang={lang} />
       </main>
     </>

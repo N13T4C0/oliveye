@@ -71,7 +71,7 @@ describe("published data", () => {
 
   it("reproduces the like-for-like MAPE of OlivEye (Ridge) and the aforo", () => {
     const summary = summariseErrors(campaignErrors(production));
-    expect(summary.rows).toBe(scores[0].rows);
+    expect(summary.rows).toBe(scores.find((s) => s.model === "ridge")?.rows);
     expect(Number(summary.oliveyeMape?.toFixed(1))).toBe(score("ridge"));
     expect(Number(summary.aforoMape?.toFixed(1))).toBe(score("aforo"));
   });

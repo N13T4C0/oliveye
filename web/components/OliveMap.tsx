@@ -164,8 +164,12 @@ export function OliveMap({
         map.addControl(new NavigationControl({ showCompass: false }), "top-right");
         mapRef.current = map;
 
-        map.on("error", () => {
-          if (map && !fellBack.current && !map.isStyleLoaded()) {
+        // Fall back to a plain ground only when the basemap style itself cannot be loaded; a
+        // failed tile, sprite or glyph (errors that carry a sourceId or happen after the style
+        // loaded) must not throw the basemap away for the rest of the visit.
+        map.on("error", (event) => {
+          const fromSource = "sourceId" in event && Boolean(event.sourceId);
+          if (map && !fellBack.current && !fromSource && !map.isStyleLoaded()) {
             fellBack.current = true;
             map.setStyle(fallbackStyle(styleTheme.current));
           }
@@ -255,7 +259,8 @@ export function OliveMap({
   // Signature move: campaign or index changes recolour the measured olive area.
   useEffect(() => {
     const map = mapRef.current;
-    if (!ready || !map || !map.getLayer("olive-fill")) return;
+    // During a theme switch the old layers are about to be replaced: style.load paints the new ones.
+    if (!ready || !map || !map.getLayer("olive-fill") || styleTheme.current !== theme) return;
     map.setPaintProperty("olive-fill", "fill-color", fillColour(index, campaign, breaks, theme));
   }, [ready, index, campaign, breaks, theme]);
 

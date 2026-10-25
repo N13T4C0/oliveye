@@ -12,7 +12,6 @@ export const RAMPS: Record<IndexKey, readonly string[]> = {
   ndmi_summer: ["#eef5f9", "#c6dceb", "#9cc3da", "#6aa2c6", "#3d82ad", "#0b4c72"],
 };
 
-/** Missing-data grey of the light theme (lib/theme.ts has the dark one). */
 /**
  * Dark-theme ramps: on a near-black map the light ramps' darkest classes vanish into the ground,
  * so here more vigour (or more water) is brighter. The legend always shows the active ramp.
@@ -27,6 +26,7 @@ export function rampOf(index: IndexKey, dark = false): readonly string[] {
   return (dark ? RAMPS_DARK : RAMPS)[index];
 }
 
+/** Missing-data grey of the light theme (lib/theme.ts has the dark one). */
 export const NO_DATA = "#e8ebe6";
 
 /**

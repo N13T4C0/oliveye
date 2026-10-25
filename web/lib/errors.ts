@@ -4,7 +4,7 @@
  * Every OlivEye estimate in the production series was made leave-one-campaign-out (the model
  * never saw that campaign nor the next one), so these errors are honest out-of-sample errors.
  * The headline compares both only on "like-for-like" rows: campaigns with an OlivEye estimate,
- * an aforo and a final figure, the same 15 rows as the published MAPE.
+ * an aforo and a final figure, the same rows as the published MAPE.
  */
 
 import type { ProductionPoint, ProvinceName } from "./types";

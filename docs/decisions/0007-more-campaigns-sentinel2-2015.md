@@ -1,6 +1,6 @@
 # ADR 0007: More campaigns from Sentinel-2 back to 2015, not Landsat
 
-- **Status:** accepted (code and dry runs). The real extraction waits for the author's approval.
+- **Status:** accepted; 86 dry runs queued. The real extraction waits for the author's approval.
 - **Date:** 2026-10-25
 
 ## Context
@@ -43,10 +43,15 @@ the archive.
 
 ## Cost
 
-Martos cost 6 credits for 12 months (2026-10-24), and the 86 municipalities cost 1,459 credits in
-total for 120 months. An estimate for 86 × 12 months is 350–550 credits, within the monthly
-allowance and the workflow budget (`OPENEO_CREDIT_BUDGET` 3,100; 1,459 spent so far). The 86
-dry runs cost 0 credits.
+Martos cost 6 credits for 12 months and 23 for 120 months (2026-10-24); the 86 municipalities
+cost 1,482 credits for 120 months, and 1,492 have been spent in total (per-job logs plus the older
+shared `credits_log.csv`, both counted by the budget check). An estimate for 86 × 12 months is
+350–550 credits, within the monthly allowance and the workflow budget (`OPENEO_CREDIT_BUDGET`
+3,100). The 86 dry runs cost 0 credits.
+
+Dry runs build the request offline, so they cannot prove that CDSE serves L2A for October 2015 –
+September 2016 over Jaén. Order: review the dry-run summaries, then **one real probe (Martos,
+about 6 credits)**, check its months and `valid_cells`, and only then the other 85.
 
 ## Interview line
 
