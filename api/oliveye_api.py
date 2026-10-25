@@ -58,6 +58,18 @@ class ModelScore(BaseModel):
     p_vs_aforo: float | None
 
 
+class CampaignError(BaseModel):
+    province: str
+    campaign: str
+    oil_final_t: float
+    pred_t: float
+    oil_aforo_t: float | None
+    error_pct: float
+    aforo_error_pct: float | None
+    closer: str | None
+    like_for_like: bool
+
+
 class ForecastRow(BaseModel):
     province: str
     pred_t: float
@@ -77,6 +89,41 @@ def _load(path: Path) -> Any:
     if not path.exists():
         raise FileNotFoundError(f"Missing API data file: {path}")
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def campaign_errors(production: dict[str, list[dict[str, Any]]]) -> list[dict[str, Any]]:
+    """Signed % error of OlivEye and of the aforo against the final production, per campaign.
+
+    Only rows with an OlivEye estimate (made leave-one-campaign-out) and a final figure. Rows
+    without an aforo are kept but flagged `like_for_like: false`: the published MAPE compares the
+    two only on rows that have both. Positive error = the estimate was above the harvest.
+    """
+    rows: list[dict[str, Any]] = []
+    for province, series in sorted(production.items()):
+        for point in series:
+            final, pred, aforo = point["oil_final_t"], point["pred_t"], point["oil_aforo_t"]
+            if final is None or pred is None or final <= 0:
+                continue
+            error = 100 * (pred - final) / final
+            aforo_error = None if aforo is None else 100 * (aforo - final) / final
+            closer = None
+            if aforo_error is not None:
+                gap = abs(error) - abs(aforo_error)
+                closer = "oliveye" if gap < 0 else "aforo" if gap > 0 else "tie"
+            rows.append(
+                {
+                    "province": province,
+                    "campaign": point["campaign"],
+                    "oil_final_t": final,
+                    "pred_t": pred,
+                    "oil_aforo_t": aforo,
+                    "error_pct": round(error, 2),
+                    "aforo_error_pct": None if aforo_error is None else round(aforo_error, 2),
+                    "closer": closer,
+                    "like_for_like": aforo_error is not None,
+                }
+            )
+    return rows
 
 
 def create_app(data_dir: Path) -> FastAPI:
@@ -137,6 +184,13 @@ def create_app(data_dir: Path) -> FastAPI:
     @app.get("/models/summary", response_model=list[ModelScore])
     def model_summary() -> list[dict[str, Any]]:
         return summary
+
+    errors = campaign_errors(production)
+
+    @app.get("/models/errors", response_model=list[CampaignError])
+    def model_errors() -> list[dict[str, Any]]:
+        """OlivEye vs aforo error per province and campaign (leave-one-campaign-out estimates)."""
+        return errors
 
     @app.get("/forecast", response_model=Forecast)
     def dated_forecast() -> dict[str, Any]:

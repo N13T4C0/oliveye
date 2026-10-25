@@ -177,3 +177,28 @@ def test_responses_are_cacheable_and_open_to_browsers(client: TestClient) -> Non
 
     assert "s-maxage" in response.headers["cache-control"]
     assert response.headers["access-control-allow-origin"] == "*"
+
+
+def test_campaign_errors_reproduce_the_published_mape() -> None:
+    """The per-campaign errors must add up to the MAPE published in /models/summary."""
+    data = Path(__file__).resolve().parents[1] / "api" / "data"
+    published = TestClient(create_app(data))
+    errors = published.get("/models/errors").json()
+    summary = {row["model"]: row for row in published.get("/models/summary").json()}
+
+    common = [row for row in errors if row["like_for_like"]]
+    assert len(common) == summary["ridge"]["rows"]
+    mape = sum(abs(row["error_pct"]) for row in common) / len(common)
+    aforo_mape = sum(abs(row["aforo_error_pct"]) for row in common) / len(common)
+    assert round(mape, 1) == summary["ridge"]["mape_pct"]
+    assert round(aforo_mape, 1) == summary["aforo"]["mape_pct"]
+
+
+def test_campaign_errors_sign_and_closer(client: TestClient) -> None:
+    rows = client.get("/models/errors").json()
+    assert rows, "the fixture has at least one comparable row"
+    row = rows[0]
+    expected = 100 * (row["pred_t"] - row["oil_final_t"]) / row["oil_final_t"]
+    assert row["error_pct"] == pytest.approx(expected, abs=0.01)
+    if row["like_for_like"]:
+        assert row["closer"] in {"oliveye", "aforo", "tie"}
