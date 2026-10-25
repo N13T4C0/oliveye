@@ -94,10 +94,10 @@ export function formatIndex(value: number | null | undefined, lang: Lang): strin
 
 export function formatPercent(value: number | null, lang: Lang): string {
   if (value === null || !Number.isFinite(value)) return "—";
-  return `${new Intl.NumberFormat(LOCALES[lang], { maximumFractionDigits: 0 }).format(value)} %`;
+  return `${new Intl.NumberFormat(LOCALES[lang], { maximumFractionDigits: 0 }).format(value)}\u00a0%`;
 }
 
-/** Signed percentage with a real minus sign: "+20 %", "−45 %", "0 %". */
+/** Signed percentage with a real minus sign: "+20 %", "−45 %", "0 %" (no-break space). */
 export function formatSignedPercent(value: number | null, lang: Lang): string {
   if (value === null || !Number.isFinite(value)) return "—";
   const rounded = Math.round(value);
@@ -105,7 +105,7 @@ export function formatSignedPercent(value: number | null, lang: Lang): string {
     Math.abs(rounded),
   );
   const sign = rounded > 0 ? "+" : rounded < 0 ? "\u2212" : "";
-  return `${sign}${digits} %`;
+  return `${sign}${digits}\u00a0%`;
 }
 
 /** Months (YYYY-MM) whose images feed campaign "Y/Y+1": October Y-1 to August Y. */

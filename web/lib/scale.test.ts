@@ -63,9 +63,9 @@ describe("campaignWindow", () => {
 
 describe("formatSignedPercent", () => {
   it("signs over- and under-estimates with a real minus sign", () => {
-    expect(formatSignedPercent(154.8, "es")).toBe("+155 %");
-    expect(formatSignedPercent(-45.6, "en")).toBe("\u221246 %");
-    expect(formatSignedPercent(0.3, "es")).toBe("0 %");
+    expect(formatSignedPercent(154.8, "es")).toBe("+155\u00a0%");
+    expect(formatSignedPercent(-45.6, "en")).toBe("\u221246\u00a0%");
+    expect(formatSignedPercent(0.3, "es")).toBe("0\u00a0%");
     expect(formatSignedPercent(null, "es")).toBe("—");
   });
 });
