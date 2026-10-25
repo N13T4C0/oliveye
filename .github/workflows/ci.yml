@@ -13,7 +13,6 @@ jobs:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
       - run: uv sync --frozen
-      # Notebooks are excluded until notebook 01's lint errors are fixed (see TODO.md).
       - name: Lint
         run: uv run ruff check .
       - name: Format
@@ -22,3 +21,25 @@ jobs:
         run: uv run mypy
       - name: Tests
         run: uv run pytest -q
+
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Types
+        run: npm run typecheck
+      - name: Format
+        run: npm run format:check
+      - name: Tests
+        run: npm test
