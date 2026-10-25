@@ -80,3 +80,25 @@ def test_masked_month_stays_missing(spark) -> None:  # type: ignore[no-untyped-d
     martos_august = result[(result["municipality_code"] == "60") & (result["month"] == "2025-08")]
     assert martos_august["ndvi"].isna().all()
     assert martos_august["valid_cells"].tolist() == [0]
+
+
+def test_literal_nan_is_missing_like_in_pandas(spark) -> None:  # type: ignore[no-untyped-def]
+    """A NaN value (not a null) must be left out of the mean, as pandas does."""
+    cells, tidy = _cells(), _tidy()
+    expected = aggregate_cells(tidy, cells).sort_values(
+        ["province_code", "municipality_code", "month"]
+    )
+    raw = spark.createDataFrame(
+        [(r.month, r.cell_id, float(r.ndvi), float(r.ndmi)) for r in tidy.itertuples()],
+        schema="month string, cell_id string, ndvi double, ndmi double",
+    )
+    result = (
+        aggregate_municipal(
+            raw, spark.createDataFrame(pd.DataFrame(cells.drop(columns="geometry")))
+        )
+        .toPandas()
+        .sort_values(["province_code", "municipality_code", "month"])
+    )
+    pd.testing.assert_frame_equal(
+        result.reset_index(drop=True), expected.reset_index(drop=True), check_dtype=False
+    )

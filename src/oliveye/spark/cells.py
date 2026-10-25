@@ -6,8 +6,8 @@ municipalities, 2016-10 to 2026-09). This module does, at that scale, exactly wh
 
     mean index = Σ (index × olive ha) / Σ olive ha, over the cells with a valid value that month
 
-Months where every pixel of a cell was masked (clouds) carry nulls and are left out of the
-weighted mean; `valid_cells` says how many cells contributed, so thin months stay visible.
+Months where every pixel of a cell was masked (clouds) carry nulls (or NaN) and are left out of
+the weighted mean; `valid_cells` says how many cells contributed, so thin months stay visible.
 
 Spark concepts used (for readers new to it):
 * a *DataFrame* is a distributed table; transformations are lazy and only run on an action
@@ -62,7 +62,14 @@ def aggregate_municipal(cells: DataFrame, metadata: DataFrame) -> DataFrame:
         cells: `month`, `cell_id`, `ndvi`, `ndmi` (nulls where the cell was masked).
         metadata: `cell_id`, `province_code`, `municipality_code`, `olive_ha` (one row per cell).
     """
-    joined = cells.join(
+    # Spark keeps a literal NaN as a number; pandas treats it as missing. Make NaN a null first,
+    # so a NaN cell is left out of the mean (and of valid_cells) exactly as in pandas.
+    clean = cells.select(
+        "month",
+        "cell_id",
+        *[F.when(F.isnan(F.col(c)), None).otherwise(F.col(c)).alias(c) for c in ("ndvi", "ndmi")],
+    )
+    joined = clean.join(
         F.broadcast(metadata.select("cell_id", *KEYS, "olive_ha")), on="cell_id", how="inner"
     )
 
