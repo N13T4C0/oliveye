@@ -57,7 +57,8 @@ def database_url(env: Mapping[str, str] | None = None) -> str:
         port=int(env.get("POSTGRES_PORT", "5432")),
         database=env.get("POSTGRES_DB", "oliveye"),
     )
-    return url.render_as_string(hide_password=False)
+    rendered: str = url.render_as_string(hide_password=False)
+    return rendered
 
 
 def apply_schema(connection: Connection, schema_dir: Path = SCHEMA_DIR) -> None:
