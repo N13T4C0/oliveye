@@ -156,7 +156,13 @@ export function Workbench({
           onFeatures={onFeatures}
           onSelect={select}
         />
-        <Legend lang={lang} campaign={campaign} index={index} breaks={breaks} />
+        <Legend
+          lang={lang}
+          campaign={campaign}
+          index={index}
+          breaks={breaks}
+          compact={selected !== null}
+        />
         <SeriesPanel
           lang={lang}
           campaign={campaign}

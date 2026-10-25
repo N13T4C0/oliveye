@@ -93,9 +93,6 @@ export function Verdict({ lang, summary, forecast }: Props) {
                 ))}
               </tbody>
             </table>
-            <p className={styles.note}>
-              {t(lang, "forecastNote")} · {t(lang, "aforoNote")}
-            </p>
           </figure>
 
           <figure className={styles.tile}>
@@ -118,18 +115,18 @@ export function Verdict({ lang, summary, forecast }: Props) {
                 </div>
               ))}
             </dl>
-            <p className={styles.note}>
-              {ridge
-                ? t(lang, "aforoCloser", {
-                    n: ridge.campaigns - ridge.campaign_wins_vs_aforo,
-                    total: ridge.campaigns,
-                  })
-                : null}
-              {" · "}
-              {t(lang, "errorNote")}
-            </p>
           </figure>
         </div>
+        <p className={styles.caption}>
+          {t(lang, "forecastNote")} · {t(lang, "aforoNote")} ·{" "}
+          {ridge
+            ? t(lang, "aforoCloser", {
+                n: ridge.campaigns - ridge.campaign_wins_vs_aforo,
+                total: ridge.campaigns,
+              })
+            : null}{" "}
+          · {t(lang, "errorNote")}
+        </p>
       </div>
     </section>
   );

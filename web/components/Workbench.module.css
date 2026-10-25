@@ -1,7 +1,7 @@
 .workbench {
   display: grid;
   grid-template-columns: 320px minmax(0, 1fr);
-  height: max(560px, calc(100vh - var(--bar-height) - 276px));
+  height: max(560px, calc(100vh - var(--bar-height)));
   border-bottom: 1px solid var(--rule);
   scroll-margin-top: var(--bar-height);
 }
