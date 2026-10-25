@@ -73,7 +73,7 @@
 }
 
 .markSelected {
-  background: rgba(159, 232, 112, 0.45);
+  background: rgba(159, 232, 112, 0.3);
   border-radius: 3px;
   inline-size: 14px;
 }

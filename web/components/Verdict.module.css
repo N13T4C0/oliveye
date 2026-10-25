@@ -173,7 +173,7 @@
 }
 
 .fillAforo {
-  background: repeating-linear-gradient(-45deg, var(--signal) 0 5px, #2c6e96 5px 8px);
+  background: repeating-linear-gradient(-45deg, var(--signal) 0 5px, var(--signal-soft) 5px 8px);
 }
 
 @media (max-width: 1080px) {

@@ -1,0 +1,673 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-25T09:58:57+00:00",
+  "title": "Design System: OlivEye",
+  "extensions": {
+    "colorMeta": {
+      "ink": {
+        "role": "primary",
+        "displayName": "Forest Ink",
+        "canonical": "#163300",
+        "tonalRamp": [
+          "#040f01",
+          "#1a2a10",
+          "#334927",
+          "#4f6b3f",
+          "#6d8e5b",
+          "#92b082",
+          "#b8d3ab",
+          "#e1f7d5"
+        ]
+      },
+      "lime": {
+        "role": "primary",
+        "displayName": "Fresh Lime",
+        "canonical": "#9fe870",
+        "tonalRamp": [
+          "#011000",
+          "#122d00",
+          "#274d04",
+          "#3d710c",
+          "#539714",
+          "#7db956",
+          "#a7db88",
+          "#d2feba"
+        ]
+      },
+      "spruce": {
+        "role": "secondary",
+        "displayName": "Spruce",
+        "canonical": "#054d28",
+        "tonalRamp": [
+          "#001004",
+          "#0a2d18",
+          "#214c31",
+          "#3a6e4c",
+          "#549269",
+          "#7eb48f",
+          "#a9d6b6",
+          "#d4fade"
+        ]
+      },
+      "signal": {
+        "role": "secondary",
+        "displayName": "Signal Blue",
+        "canonical": "#0b4c72",
+        "tonalRamp": [
+          "#000d1b",
+          "#07283d",
+          "#1e4661",
+          "#356689",
+          "#4f89b2",
+          "#7aabd0",
+          "#a5cfef",
+          "#e1f1fe"
+        ]
+      },
+      "ink-strong": {
+        "role": "neutral",
+        "displayName": "Ink Black",
+        "canonical": "#0e0f0c",
+        "tonalRamp": [
+          "#0b0b0a",
+          "#252523",
+          "#414240",
+          "#61625e",
+          "#81837f",
+          "#a4a6a2",
+          "#c8cac6",
+          "#eeefec"
+        ]
+      },
+      "fog": {
+        "role": "neutral",
+        "displayName": "Fog",
+        "canonical": "#e8ebe6",
+        "tonalRamp": [
+          "#0b0b0a",
+          "#242523",
+          "#414340",
+          "#60625e",
+          "#81837f",
+          "#a3a6a2",
+          "#c8cac6",
+          "#edefec"
+        ]
+      },
+      "mist": {
+        "role": "neutral",
+        "displayName": "Mist",
+        "canonical": "#e2f6d5",
+        "tonalRamp": [
+          "#070d04",
+          "#1f2819",
+          "#3b4633",
+          "#58674e",
+          "#77896b",
+          "#9bab91",
+          "#c0ceb7",
+          "#e7f3e0"
+        ]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Paper",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#252525",
+          "#424242",
+          "#616161",
+          "#828282",
+          "#a5a5a5",
+          "#c9c9c9",
+          "#eeeeee"
+        ]
+      },
+      "body": {
+        "role": "neutral",
+        "displayName": "Body Grey",
+        "canonical": "#454745",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242524",
+          "#414241",
+          "#606260",
+          "#818381",
+          "#a4a6a4",
+          "#c8cac8",
+          "#edefed"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Muted Grey",
+        "canonical": "#6a6c6a",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242524",
+          "#414241",
+          "#606260",
+          "#818381",
+          "#a4a5a4",
+          "#c8cac8",
+          "#edefed"
+        ]
+      },
+      "hairline": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "#868685",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#252525",
+          "#424241",
+          "#616160",
+          "#828281",
+          "#a5a5a4",
+          "#c9c9c8",
+          "#eeeeee"
+        ]
+      },
+      "rule": {
+        "role": "neutral",
+        "displayName": "Rule",
+        "canonical": "#d6dad3",
+        "tonalRamp": [
+          "#0a0c09",
+          "#242623",
+          "#40433f",
+          "#5f625d",
+          "#80847d",
+          "#a3a6a0",
+          "#c7cac5",
+          "#edefeb"
+        ]
+      },
+      "on-ink": {
+        "role": "neutral",
+        "displayName": "Mist on Ink",
+        "canonical": "#e2f6d5",
+        "tonalRamp": [
+          "#070d04",
+          "#1f2819",
+          "#3b4633",
+          "#58674e",
+          "#77896b",
+          "#9bab91",
+          "#c0ceb7",
+          "#e7f3e0"
+        ]
+      },
+      "on-ink-muted": {
+        "role": "neutral",
+        "displayName": "Lichen",
+        "canonical": "#b8d3a6",
+        "tonalRamp": [
+          "#060e02",
+          "#1d2914",
+          "#37482c",
+          "#546946",
+          "#738b62",
+          "#97ad88",
+          "#bdd1b0",
+          "#e4f5da"
+        ]
+      },
+      "map-ground": {
+        "role": "neutral",
+        "displayName": "Map Ground",
+        "canonical": "#f2f3ef",
+        "tonalRamp": [
+          "#0b0b0a",
+          "#252523",
+          "#424240",
+          "#61625f",
+          "#82837f",
+          "#a5a5a2",
+          "#c9c9c7",
+          "#eeefec"
+        ]
+      },
+      "alarm": {
+        "role": "tertiary",
+        "displayName": "Alarm (reserved)",
+        "canonical": "#cb272f",
+        "tonalRamp": [
+          "#220000",
+          "#4e0005",
+          "#7e0914",
+          "#ae252a",
+          "#e04041",
+          "#fe736d",
+          "#fdb3ad",
+          "#fee9e6"
+        ]
+      },
+      "ndvi-1": {
+        "role": "data",
+        "displayName": "NDVI class 1 of 6",
+        "canonical": "#f4fbef",
+        "tonalRamp": [
+          "#163300",
+          "#054d28",
+          "#4f9a2f",
+          "#9fe870",
+          "#e2f6d5",
+          "#f4fbef"
+        ],
+        "note": "Sequential NDVI ramp from web/lib/scale.ts; the ramp itself is the tonal scale."
+      },
+      "ndvi-2": {
+        "role": "data",
+        "displayName": "NDVI class 2 of 6",
+        "canonical": "#e2f6d5",
+        "tonalRamp": [
+          "#163300",
+          "#054d28",
+          "#4f9a2f",
+          "#9fe870",
+          "#e2f6d5",
+          "#f4fbef"
+        ],
+        "note": "Sequential NDVI ramp from web/lib/scale.ts; the ramp itself is the tonal scale."
+      },
+      "ndvi-3": {
+        "role": "data",
+        "displayName": "NDVI class 3 of 6",
+        "canonical": "#9fe870",
+        "tonalRamp": [
+          "#163300",
+          "#054d28",
+          "#4f9a2f",
+          "#9fe870",
+          "#e2f6d5",
+          "#f4fbef"
+        ],
+        "note": "Sequential NDVI ramp from web/lib/scale.ts; the ramp itself is the tonal scale."
+      },
+      "ndvi-4": {
+        "role": "data",
+        "displayName": "NDVI class 4 of 6",
+        "canonical": "#4f9a2f",
+        "tonalRamp": [
+          "#163300",
+          "#054d28",
+          "#4f9a2f",
+          "#9fe870",
+          "#e2f6d5",
+          "#f4fbef"
+        ],
+        "note": "Sequential NDVI ramp from web/lib/scale.ts; the ramp itself is the tonal scale."
+      },
+      "ndvi-5": {
+        "role": "data",
+        "displayName": "NDVI class 5 of 6",
+        "canonical": "#054d28",
+        "tonalRamp": [
+          "#163300",
+          "#054d28",
+          "#4f9a2f",
+          "#9fe870",
+          "#e2f6d5",
+          "#f4fbef"
+        ],
+        "note": "Sequential NDVI ramp from web/lib/scale.ts; the ramp itself is the tonal scale."
+      },
+      "ndvi-6": {
+        "role": "data",
+        "displayName": "NDVI class 6 of 6",
+        "canonical": "#163300",
+        "tonalRamp": [
+          "#163300",
+          "#054d28",
+          "#4f9a2f",
+          "#9fe870",
+          "#e2f6d5",
+          "#f4fbef"
+        ],
+        "note": "Sequential NDVI ramp from web/lib/scale.ts; the ramp itself is the tonal scale."
+      },
+      "ndmi-1": {
+        "role": "data",
+        "displayName": "NDMI class 1 of 6",
+        "canonical": "#eef5f9",
+        "tonalRamp": [
+          "#0b4c72",
+          "#3d82ad",
+          "#6aa2c6",
+          "#9cc3da",
+          "#c6dceb",
+          "#eef5f9"
+        ],
+        "note": "Sequential NDMI ramp from web/lib/scale.ts (expanded from 4 to 6 steps in the build)."
+      },
+      "ndmi-2": {
+        "role": "data",
+        "displayName": "NDMI class 2 of 6",
+        "canonical": "#c6dceb",
+        "tonalRamp": [
+          "#0b4c72",
+          "#3d82ad",
+          "#6aa2c6",
+          "#9cc3da",
+          "#c6dceb",
+          "#eef5f9"
+        ],
+        "note": "Sequential NDMI ramp from web/lib/scale.ts (expanded from 4 to 6 steps in the build)."
+      },
+      "ndmi-3": {
+        "role": "data",
+        "displayName": "NDMI class 3 of 6",
+        "canonical": "#9cc3da",
+        "tonalRamp": [
+          "#0b4c72",
+          "#3d82ad",
+          "#6aa2c6",
+          "#9cc3da",
+          "#c6dceb",
+          "#eef5f9"
+        ],
+        "note": "Sequential NDMI ramp from web/lib/scale.ts (expanded from 4 to 6 steps in the build)."
+      },
+      "ndmi-4": {
+        "role": "data",
+        "displayName": "NDMI class 4 of 6",
+        "canonical": "#6aa2c6",
+        "tonalRamp": [
+          "#0b4c72",
+          "#3d82ad",
+          "#6aa2c6",
+          "#9cc3da",
+          "#c6dceb",
+          "#eef5f9"
+        ],
+        "note": "Sequential NDMI ramp from web/lib/scale.ts (expanded from 4 to 6 steps in the build)."
+      },
+      "ndmi-5": {
+        "role": "data",
+        "displayName": "NDMI class 5 of 6",
+        "canonical": "#3d82ad",
+        "tonalRamp": [
+          "#0b4c72",
+          "#3d82ad",
+          "#6aa2c6",
+          "#9cc3da",
+          "#c6dceb",
+          "#eef5f9"
+        ],
+        "note": "Sequential NDMI ramp from web/lib/scale.ts (expanded from 4 to 6 steps in the build)."
+      },
+      "ndmi-6": {
+        "role": "data",
+        "displayName": "NDMI class 6 of 6",
+        "canonical": "#0b4c72",
+        "tonalRamp": [
+          "#0b4c72",
+          "#3d82ad",
+          "#6aa2c6",
+          "#9cc3da",
+          "#c6dceb",
+          "#eef5f9"
+        ],
+        "note": "Sequential NDMI ramp from web/lib/scale.ts (expanded from 4 to 6 steps in the build)."
+      }
+    },
+    "typographyMeta": {
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "The verdict question; max 22ch."
+      },
+      "section-title": {
+        "displayName": "Section title",
+        "purpose": "Page sections (province production)."
+      },
+      "wordmark": {
+        "displayName": "Wordmark",
+        "purpose": "\"OlivEye\" in the top bar."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Panel, legend, chart and callout titles (15-20px); series drawer 18px."
+      },
+      "kpi-value": {
+        "displayName": "KPI value",
+        "purpose": "Forecast and aforo tonnes, tabular; error % at 18px."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Reading text; verdict detail 15px max 58ch; leads 17px max 68ch."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Control faces, list meta, tile titles, table row heads."
+      },
+      "caption": {
+        "displayName": "Caption",
+        "purpose": "Sources, notes, ranges, legend help (12-13px, muted)."
+      },
+      "axis": {
+        "displayName": "Axis",
+        "purpose": "Chart ticks and legend scale ticks (muted)."
+      }
+    },
+    "shadows": [
+      {
+        "name": "float",
+        "value": "0 8px 24px rgba(14, 15, 12, 0.14), 0 1px 3px rgba(14, 15, 12, 0.08)",
+        "purpose": "Only for panels over the map: legend, series drawer and hint, tooltip, MapLibre controls."
+      },
+      {
+        "name": "swatch-edge",
+        "value": "inset 0 0 0 1px rgba(14, 15, 12, 0.18)",
+        "purpose": "Keeps pale ramp swatches visible on white (0.12 on legend swatches)."
+      },
+      {
+        "name": "row-selected",
+        "value": "inset 0 0 0 1.5px #054d28",
+        "purpose": "Selected municipality row in the list."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Default easing for every state transition."
+      },
+      {
+        "name": "state",
+        "value": "0.2s",
+        "purpose": "Segmented control faces, skip link."
+      },
+      {
+        "name": "row",
+        "value": "0.15s",
+        "purpose": "List row hover background."
+      },
+      {
+        "name": "rise",
+        "value": "0.35s translateY(12px) + opacity 0.6 -> 1",
+        "purpose": "Series drawer entrance."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "transition/animation 0.01ms; scroll-behavior auto",
+        "purpose": "Honours prefers-reduced-motion."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "phone",
+        "value": "640px",
+        "purpose": "Tiles stack, floating panels tighten, top bar becomes static, legend help hides."
+      },
+      {
+        "name": "tablet",
+        "value": "860px",
+        "purpose": "Workbench stacks (list 220px over 78vh map), province charts one column."
+      },
+      {
+        "name": "laptop",
+        "value": "1080px",
+        "purpose": "Verdict band stacks."
+      }
+    ],
+    "dataEncoding": {
+      "mapClasses": "6 quantile classes computed once over all campaigns (same colour = same value every year); no-data = fog #e8ebe6.",
+      "mapFallback": "Plain #f2f3ef background when the Positron basemap cannot load.",
+      "series": {
+        "oliveye": "spruce #054d28 solid 2.5px with dots",
+        "aforo": "signal #0b4c72 dashed 6 4 with dots",
+        "real": "ink-strong #0e0f0c dots 4.5px with white ring on a 1px line",
+        "forecast": "spruce diamond with x/÷2 error bar",
+        "selectedCampaign": "lime #9fe870 band at 30% opacity, with its own legend entry"
+      },
+      "errorBars": {
+        "oliveye": "spruce solid",
+        "baseline": "hairline grey #868685 (province mean)",
+        "aforo": "signal with diagonal hatch: repeating-linear-gradient(-45deg, #0b4c72 0 5px, #2c6e96 5px 8px)"
+      },
+      "diverging": "planned: under #0b4c72 <- fog #e8ebe6 -> over #cb272f (not shipped)"
+    },
+    "themes": {
+      "light": "shipped",
+      "dark": "planned, not shipped: canvas #0e0f0c, surfaces #163300, text #e2f6d5, lime unchanged"
+    }
+  },
+  "components": [
+    {
+      "name": "Top Bar",
+      "kind": "nav",
+      "refersTo": "top-bar",
+      "description": "Forest-ink bar, sticky on desktop, static at 640px and below; wordmark left, controls right.",
+      "html": "<header class=\"ds-bar\"><a class=\"ds-brand\" href=\"#\"><svg class=\"ds-mark\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><ellipse cx=\"12\" cy=\"12\" rx=\"10.5\" ry=\"6.5\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\"/><ellipse cx=\"12\" cy=\"12\" rx=\"3.2\" ry=\"4.4\" fill=\"#9fe870\" transform=\"rotate(-28 12 12)\"/></svg>OlivEye</a><span class=\"ds-bar-label\">Campaña</span></header>",
+      "css": ".ds-bar { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 56px; padding: 8px 24px; background: var(--ink, #163300); color: var(--on-ink, #e2f6d5); font-family: 'Inter Variable', Inter, system-ui, sans-serif; } .ds-brand { display: inline-flex; align-items: center; gap: 8px; color: #fff; font-weight: 800; font-size: 20px; letter-spacing: -0.03em; text-decoration: none; } .ds-brand:focus-visible { outline: 2px solid #fff; outline-offset: 2px; border-radius: 4px; } .ds-mark { width: 26px; height: 26px; color: var(--on-ink, #e2f6d5); } .ds-bar-label { font-size: 14px; color: var(--on-ink-muted, #b8d3a6); }"
+    },
+    {
+      "name": "Campaign Selector",
+      "kind": "input",
+      "refersTo": "campaign-select",
+      "description": "Lime pill dropdown for the active campaign: the one lime element per view. A dropdown because ten campaigns do not fit a pill row on mobile.",
+      "html": "<div class=\"ds-ink-ground\"><select class=\"ds-campaign\"><option>2026/27</option><option>2025/26</option><option>2017/18</option></select></div>",
+      "css": ".ds-ink-ground { padding: 12px; background: #163300; display: inline-block; } .ds-campaign { appearance: none; border: 0; border-radius: 9999px; background: var(--lime, #9fe870) url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23163300' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E\") no-repeat right 14px center; color: var(--ink, #163300); font: 700 16px/1.5 'Inter Variable', Inter, system-ui, sans-serif; font-variant-numeric: tabular-nums; padding: 6px 36px 6px 16px; cursor: pointer; } .ds-campaign:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }"
+    },
+    {
+      "name": "Segmented Control (on ink)",
+      "kind": "chip",
+      "refersTo": "segmented-ink-checked",
+      "description": "Pill radio group on the forest-ink bar: NDVI|NDMI and ES|EN.",
+      "html": "<div class=\"ds-ink-ground\"><fieldset class=\"ds-seg ds-seg-ink\"><label><input type=\"radio\" name=\"ds-idx\" checked><span>NDVI</span></label><label><input type=\"radio\" name=\"ds-idx\"><span>NDMI</span></label></fieldset></div>",
+      "css": ".ds-ink-ground { padding: 12px; background: #163300; display: inline-block; } .ds-seg { display: inline-flex; margin: 0; padding: 3px; border: 1px solid; border-radius: 9999px; font-family: 'Inter Variable', Inter, system-ui, sans-serif; } .ds-seg label { position: relative; display: inline-flex; } .ds-seg input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; } .ds-seg span { padding: 4px 14px; border-radius: 9999px; font-size: 14px; font-weight: 600; line-height: 1.5; transition: background-color 0.2s cubic-bezier(0.16,1,0.3,1), color 0.2s cubic-bezier(0.16,1,0.3,1); } .ds-seg input:focus-visible + span { outline: 2px solid currentColor; outline-offset: 1px; } .ds-seg-ink { border-color: rgba(226,246,213,0.35); } .ds-seg-ink span { color: #e2f6d5; } .ds-seg-ink input:hover + span { background: rgba(226,246,213,0.12); } .ds-seg-ink input:checked + span { background: #fff; color: #163300; }"
+    },
+    {
+      "name": "Segmented Control (on paper)",
+      "kind": "chip",
+      "refersTo": "segmented-paper-checked",
+      "description": "Pill radio group on white or fog: list sort (index | A-Z).",
+      "html": "<fieldset class=\"ds-seg ds-seg-paper\"><label><input type=\"radio\" name=\"ds-sort\" checked><span>NDVI</span></label><label><input type=\"radio\" name=\"ds-sort\"><span>A–Z</span></label></fieldset>",
+      "css": ".ds-seg { display: inline-flex; margin: 0; padding: 3px; border: 1px solid; border-radius: 9999px; font-family: 'Inter Variable', Inter, system-ui, sans-serif; } .ds-seg label { position: relative; display: inline-flex; } .ds-seg input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; } .ds-seg span { padding: 4px 14px; border-radius: 9999px; font-size: 14px; font-weight: 600; line-height: 1.5; transition: background-color 0.2s cubic-bezier(0.16,1,0.3,1), color 0.2s cubic-bezier(0.16,1,0.3,1); } .ds-seg input:focus-visible + span { outline: 2px solid currentColor; outline-offset: 1px; } .ds-seg-paper { border-color: var(--rule, #d6dad3); background: #fff; } .ds-seg-paper span { color: var(--body, #454745); } .ds-seg-paper input:hover + span { background: var(--fog, #e8ebe6); } .ds-seg-paper input:checked + span { background: var(--ink, #163300); color: #fff; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Outlined ink pill, e.g. the show-table toggle. There is no filled primary button: lime fill is spent on the campaign selector.",
+      "html": "<button class=\"ds-btn-secondary\">Ver tabla</button>",
+      "css": ".ds-btn-secondary { padding: 7px 18px; border: 1px solid var(--ink, #163300); border-radius: 9999px; background: #fff; color: var(--ink, #163300); font: 600 14px/1.5 'Inter Variable', Inter, system-ui, sans-serif; cursor: pointer; } .ds-btn-secondary:hover { background: var(--fog, #e8ebe6); } .ds-btn-secondary:focus-visible { outline: 2px solid var(--spruce, #054d28); outline-offset: 2px; }"
+    },
+    {
+      "name": "Search Input",
+      "kind": "input",
+      "refersTo": "input-search",
+      "description": "Municipality search in the fog list panel.",
+      "html": "<label class=\"ds-search\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><circle cx=\"11\" cy=\"11\" r=\"6.5\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\"/><path d=\"M16 16l4.5 4.5\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\"/></svg><input placeholder=\"Buscar municipio\"></label>",
+      "css": ".ds-search { position: relative; display: block; max-width: 288px; } .ds-search svg { position: absolute; left: 11px; top: 50%; width: 18px; height: 18px; transform: translateY(-50%); color: var(--muted, #6a6c6a); } .ds-search input { width: 100%; box-sizing: border-box; border: 1px solid var(--hairline, #868685); border-radius: 10px; background: #fff; padding: 9px 12px 9px 36px; font: 400 15px/1.5 'Inter Variable', Inter, system-ui, sans-serif; color: var(--body, #454745); } .ds-search input::placeholder { color: var(--muted, #6a6c6a); } .ds-search input:focus-visible { outline: 2px solid var(--spruce, #054d28); outline-offset: 0; border-color: var(--spruce, #054d28); }"
+    },
+    {
+      "name": "Error Bars Tile",
+      "kind": "card",
+      "refersTo": "kpi-tile",
+      "description": "Verdict tile comparing errors: OlivEye spruce, province-mean baseline hairline grey, aforo hatched signal blue.",
+      "html": "<figure class=\"ds-tile\"><figcaption>Error medio (validación dejando una campaña fuera)</figcaption><div class=\"ds-bar-row\"><span class=\"ds-bar-label\">OlivEye</span><span class=\"ds-track\"><span class=\"ds-fill ds-model\" style=\"inline-size:100%\"></span></span><span class=\"ds-v\">44 %</span></div><div class=\"ds-bar-row\"><span class=\"ds-bar-label\">Media provincial</span><span class=\"ds-track\"><span class=\"ds-fill ds-base\" style=\"inline-size:0%\"></span></span><span class=\"ds-v ds-v-base\">—</span></div><div class=\"ds-bar-row\"><span class=\"ds-bar-label\">Aforo oficial</span><span class=\"ds-track\"><span class=\"ds-fill ds-aforo\" style=\"inline-size:27%\"></span></span><span class=\"ds-v ds-v-aforo\">12 %</span></div></figure>",
+      "css": ".ds-tile { margin: 0; max-width: 420px; padding: 12px 16px 10px; background: var(--fog, #e8ebe6); border-radius: 10px; display: grid; gap: 8px; font-family: 'Inter Variable', Inter, system-ui, sans-serif; } .ds-tile figcaption { font-size: 14px; font-weight: 600; color: var(--ink, #163300); } .ds-bar-row { display: grid; grid-template-columns: 9.5em 1fr 4.6em; align-items: center; gap: 10px; } .ds-bar-label { font-size: 14px; font-weight: 600; color: var(--body, #454745); } .ds-track { block-size: 12px; background: #fff; border-radius: 9999px; overflow: hidden; } .ds-fill { display: block; block-size: 100%; border-radius: 9999px; } .ds-model { background: var(--spruce, #054d28); } .ds-base { background: var(--hairline, #868685); } .ds-aforo { background: repeating-linear-gradient(-45deg, #0b4c72 0 5px, #2c6e96 5px 8px); } .ds-v { text-align: right; font-size: 18px; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; color: var(--spruce, #054d28); } .ds-v-base { color: var(--body, #454745); } .ds-v-aforo { color: var(--signal, #0b4c72); }"
+    },
+    {
+      "name": "Map Legend",
+      "kind": "custom",
+      "refersTo": "floating-panel",
+      "description": "Floating 28px panel over the map: six-class ramp, ticks, end labels and the fog no-data swatch.",
+      "html": "<div class=\"ds-legend\"><strong>NDVI de primavera</strong><div class=\"ds-sw\"><span style=\"background:#f4fbef\"></span><span style=\"background:#e2f6d5\"></span><span style=\"background:#9fe870\"></span><span style=\"background:#4f9a2f\"></span><span style=\"background:#054d28\"></span><span style=\"background:#163300\"></span></div><div class=\"ds-ends\"><span>menos vigor</span><span>más vigor</span></div><div class=\"ds-nodata\"><span></span>Sin datos</div></div>",
+      "css": ".ds-legend { width: 300px; padding: 16px 18px; border-radius: 28px; background: #fff; box-shadow: 0 8px 24px rgba(14,15,12,0.14), 0 1px 3px rgba(14,15,12,0.08); display: grid; gap: 8px; font-family: 'Inter Variable', Inter, system-ui, sans-serif; } .ds-legend strong { font-size: 15px; font-weight: 700; color: #0e0f0c; } .ds-sw { display: grid; grid-template-columns: repeat(6, 1fr); gap: 2px; block-size: 12px; } .ds-sw span { border-radius: 3px; box-shadow: inset 0 0 0 1px rgba(14,15,12,0.12); } .ds-ends { display: flex; justify-content: space-between; font-size: 11px; color: #6a6c6a; } .ds-nodata { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #6a6c6a; } .ds-nodata span { inline-size: 12px; block-size: 12px; border-radius: 3px; background: #e8ebe6; box-shadow: inset 0 0 0 1px rgba(14,15,12,0.18); }"
+    },
+    {
+      "name": "Municipality Row",
+      "kind": "custom",
+      "refersTo": "list-panel",
+      "description": "List row in the fog panel: swatch, name with province, tabular index value; selected row gets a spruce inset outline.",
+      "html": "<div class=\"ds-list\"><button class=\"ds-row\"><span class=\"ds-swatch\" style=\"background:#4f9a2f\"></span><span class=\"ds-name\">Úbeda <small>Jaén</small></span><span class=\"ds-val\">0,52</span></button><button class=\"ds-row\" aria-pressed=\"true\"><span class=\"ds-swatch\" style=\"background:#054d28\"></span><span class=\"ds-name\">Baeza <small>Jaén</small></span><span class=\"ds-val\">0,58</span></button></div>",
+      "css": ".ds-list { width: 304px; padding: 6px 8px; background: #e8ebe6; font-family: 'Inter Variable', Inter, system-ui, sans-serif; } .ds-row { width: 100%; display: grid; grid-template-columns: 14px minmax(0,1fr) auto; align-items: center; gap: 10px; padding: 7px 8px; border: 0; border-radius: 8px; background: transparent; text-align: left; cursor: pointer; font: inherit; transition: background-color 0.15s cubic-bezier(0.16,1,0.3,1); } .ds-row:hover { background: rgba(255,255,255,0.7); } .ds-row:focus-visible { outline: 2px solid #054d28; outline-offset: 2px; } .ds-row[aria-pressed=\"true\"] { background: #fff; box-shadow: inset 0 0 0 1.5px #054d28; } .ds-swatch { width: 14px; height: 14px; border-radius: 4px; box-shadow: inset 0 0 0 1px rgba(14,15,12,0.18); } .ds-name { font-size: 15px; font-weight: 500; color: #0e0f0c; } .ds-name small { font-size: 12px; font-weight: 400; color: #6a6c6a; } .ds-val { font-size: 14px; color: #454745; font-variant-numeric: tabular-nums; }"
+    },
+    {
+      "name": "Method Callout",
+      "kind": "card",
+      "refersTo": "method-callout",
+      "description": "Mist card explaining leave-one-campaign-out in plain words.",
+      "html": "<aside class=\"ds-callout\"><strong>Cómo se valida</strong><p>Cada campaña se predice con un modelo entrenado sin ella. Así el error es el que tendría una predicción real.</p></aside>",
+      "css": ".ds-callout { display: grid; gap: 12px; max-width: 76ch; padding: 24px 28px; border-radius: 10px; background: var(--mist, #e2f6d5); color: var(--ink, #163300); font: 400 16px/1.6 'Inter Variable', Inter, system-ui, sans-serif; } .ds-callout strong { font-size: 20px; font-weight: 700; } .ds-callout p { margin: 0; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Moss Workbench",
+    "overview": "A forest-ink bar, a white canvas and fog work panels: the page answers first, then hands the visitor a working map and charts to check the answer. The product mode is **Operate / Read**, not Persuade: a map, time series and a prediction-vs-aforo comparison that people read carefully. Precision and restraint over spectacle. One honest sentence leads the page; everything else is data.\n\nThe world is the moss palette of the reference, made quieter. Surfaces are flat and separated by hairlines; the only lift belongs to panels that float over the map. Lime is scarce on purpose: it marks the one active choice (the campaign) and the campaign's place in every chart. Inter carries everything, with tabular numbers wherever a value can be compared.",
+    "keyCharacteristics": [
+      "Verdict band first (question, answer, forecast vs aforo, error vs baseline), workbench second.",
+      "Forest-ink top bar; lime only for the active campaign and its highlight.",
+      "Flat white and fog surfaces, 1px hairline rules, one floating shadow.",
+      "Single-hue sequential ramps (moss for NDVI, water blue for NDMI), never a rainbow.",
+      "Colour never carries meaning alone: line style, marker, hatch or label always backs it up.",
+      "Light theme only for now."
+    ],
+    "rules": [
+      {
+        "name": "The One Lime Rule",
+        "body": "Lime marks one thing per view: the active campaign. The selector is lime, and the same campaign is highlighted in lime (30 % opacity) in the province chart, with its own legend entry. No other control or text is lime.",
+        "section": "colors"
+      },
+      {
+        "name": "The Official Blue Rule",
+        "body": "Signal blue belongs to the Junta's aforo and to links. OlivEye's own numbers are spruce; nothing of ours is ever blue.",
+        "section": "colors"
+      },
+      {
+        "name": "The Same Colour, Same Value Rule",
+        "body": "Map classes are quantile breaks computed once over **all campaigns**, so a colour means the same index value in every year. Missing data is always fog.",
+        "section": "colors"
+      },
+      {
+        "name": "The Tabular Rule",
+        "body": "Any number that sits next to another number uses tabular figures and carries its unit (\"392 kt\", \"44 %\").",
+        "section": "typography"
+      },
+      {
+        "name": "The Only Floaters Rule",
+        "body": "Shadows belong to panels that sit over the map. Everything in the page flow is flat. No gradients, no glassmorphism, no glows.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** keep lime to the active campaign and its highlight (One Lime Rule).",
+      "**Do** pair every colour encoding with a line style, marker, hatch or label.",
+      "**Do** compute map breaks over all campaigns and paint missing data fog.",
+      "**Do** show every metric with its baseline and validation scheme.",
+      "**Do** use tabular numbers with units for anything comparable.",
+      "**Do** state source and date under every chart."
+    ],
+    "donts": [
+      "**Don't** use lime for body text or for more than one thing per view.",
+      "**Don't** colour OlivEye's own numbers signal blue.",
+      "**Don't** use rainbow/jet colour maps for NDVI or NDMI.",
+      "**Don't** add shadows to in-flow surfaces, or gradients, glassmorphism or glows.",
+      "**Don't** make the top bar sticky on phones."
+    ]
+  }
+}

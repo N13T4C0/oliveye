@@ -95,7 +95,7 @@
   inline-size: 14px;
   block-size: 10px;
   border-radius: 3px;
-  background: rgba(159, 232, 112, 0.45);
+  background: rgba(159, 232, 112, 0.3);
 }
 
 @media (max-width: 640px) {

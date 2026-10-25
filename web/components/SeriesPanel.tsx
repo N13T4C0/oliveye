@@ -119,7 +119,7 @@ export function SeriesPanel({ lang, campaign, index, municipality, onClose }: Pr
                 x1={window.start}
                 x2={window.end}
                 fill="#9fe870"
-                fillOpacity={0.22}
+                fillOpacity={0.3}
                 stroke="none"
                 ifOverflow="hidden"
               />
