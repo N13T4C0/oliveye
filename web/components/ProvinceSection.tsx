@@ -15,6 +15,8 @@ import {
 
 import { provinceChartRows, type ProvinceChartRow } from "@/lib/campaigns";
 import { t } from "@/lib/i18n";
+import { formatMillionLitres, tonnesToLitres } from "@/lib/farm";
+import type { Mode } from "@/lib/mode";
 import { formatTonnes, type Lang } from "@/lib/scale";
 import { chartColours, useTheme } from "@/lib/theme";
 import type { Forecast, ProductionPoint, ProvinceName } from "@/lib/types";
@@ -24,15 +26,66 @@ import styles from "./ProvinceSection.module.css";
 
 const PROVINCES: ProvinceName[] = ["Jaén", "Granada"];
 
+/** How quantities are shown: tonnes (technical view) or million litres (simple view). */
+interface Units {
+  technical: boolean;
+  convert: (tonnes: number) => number;
+  /** Axis ticks and table cells: "392 kt" or "628". */
+  short: (value: number | null) => string;
+  /** Tooltips: "392.300 t" or "628 millones de litros". */
+  full: (value: number | null) => string;
+  /** Table header suffix. */
+  header: string;
+}
+
+function unitsFor(mode: Mode, lang: Lang, density: number | undefined): Units {
+  if (mode === "technical") {
+    return {
+      technical: true,
+      convert: (tonnes) => tonnes,
+      short: (v) => formatTonnes(v, lang, true),
+      full: (v) => formatTonnes(v, lang),
+      header: "(t)",
+    };
+  }
+  const millions = new Intl.NumberFormat(lang === "es" ? "es-ES" : "en-GB", {
+    maximumFractionDigits: 0,
+  });
+  return {
+    technical: false,
+    convert: (tonnes) => tonnesToLitres(tonnes, density),
+    short: (v) => (v === null ? "—" : millions.format(v / 1e6)),
+    full: (v) => formatMillionLitres(v, lang),
+    header: lang === "es" ? "(millones de litros)" : "(million litres)",
+  };
+}
+
+function convertRow(row: ProvinceChartRow, convert: (t: number) => number): ProvinceChartRow {
+  const c = (v: number | null) => (v === null ? null : convert(v));
+  return {
+    ...row,
+    real: c(row.real),
+    aforo: c(row.aforo),
+    oliveye: c(row.oliveye),
+    forecast: c(row.forecast),
+    band: row.band ? [convert(row.band[0]), convert(row.band[1])] : null,
+  };
+}
+
 interface Props {
   lang: Lang;
   campaign: string;
   production: Record<ProvinceName, ProductionPoint[]>;
   forecast: Forecast;
+  mode: Mode;
+  /** Oil density (kg/L) published with the reference price; a standard value otherwise. */
+  density?: number;
 }
 
 /** Real production, aforo and OlivEye per campaign, one panel per province (own y-axis). */
-export function ProvinceSection({ lang, campaign, production, forecast }: Props) {
+export function ProvinceSection({ lang, campaign, production, forecast, mode, density }: Props) {
+  const units = unitsFor(mode, lang, density);
+  const simple = mode === "simple";
   const [showTable, setShowTable] = useState(false);
 
   return (
@@ -40,9 +93,9 @@ export function ProvinceSection({ lang, campaign, production, forecast }: Props)
       <div className={layout.inner}>
         <header className={layout.head}>
           <h2 id="provinces-title" className={layout.title}>
-            {t(lang, "provincesTitle")}
+            {t(lang, simple ? "provincesTitleSimple" : "provincesTitle")}
           </h2>
-          <p className={layout.lead}>{t(lang, "provincesLead")}</p>
+          <p className={layout.lead}>{t(lang, simple ? "provincesLeadSimple" : "provincesLead")}</p>
         </header>
 
         <ul className={layout.key} aria-label={lang === "es" ? "Leyenda" : "Legend"}>
@@ -56,11 +109,13 @@ export function ProvinceSection({ lang, campaign, production, forecast }: Props)
           </li>
           <li>
             <span className={`${layout.mark} ${styles.markModel}`} aria-hidden="true" />
-            {t(lang, "oliveye")}
+            {t(lang, simple ? "satelliteShort" : "oliveye")}
           </li>
           <li>
             <span className={`${layout.mark} ${styles.markForecast}`} aria-hidden="true" />
-            {t(lang, "forecast")} · {t(lang, "interval")}
+            {simple
+              ? t(lang, "satelliteForecast")
+              : `${t(lang, "forecast")} · ${t(lang, "interval")}`}
           </li>
           <li>
             <span className={`${layout.mark} ${styles.markSelected}`} aria-hidden="true" />
@@ -74,7 +129,7 @@ export function ProvinceSection({ lang, campaign, production, forecast }: Props)
             const rows = provinceChartRows(
               production[province],
               row ? { campaign: forecast.campaign, ...row } : undefined,
-            );
+            ).map((r) => convertRow(r, units.convert));
             return (
               <ProvincePanel
                 key={province}
@@ -82,6 +137,7 @@ export function ProvinceSection({ lang, campaign, production, forecast }: Props)
                 province={province}
                 campaign={campaign}
                 rows={rows}
+                units={units}
               />
             );
           })}
@@ -100,7 +156,9 @@ export function ProvinceSection({ lang, campaign, production, forecast }: Props)
         >
           {t(lang, showTable ? "hideTable" : "showTable")}
         </button>
-        {showTable && <ProductionTable lang={lang} production={production} forecast={forecast} />}
+        {showTable && (
+          <ProductionTable lang={lang} production={production} forecast={forecast} units={units} />
+        )}
       </div>
     </section>
   );
@@ -111,11 +169,13 @@ function ProvincePanel({
   province,
   campaign,
   rows,
+  units,
 }: {
   lang: Lang;
   province: ProvinceName;
   campaign: string;
   rows: ProvinceChartRow[];
+  units: Units;
 }) {
   // ErrorBar expects distances from the point, not absolute limits.
   const data = rows.map((r) => ({
@@ -159,13 +219,13 @@ function ProvincePanel({
             axisLine={false}
             width={56}
             tick={{ fontSize: 11, fill: c.tick }}
-            tickFormatter={(v: number) => formatTonnes(v, lang, true)}
+            tickFormatter={(v: number) => units.short(v)}
             domain={[0, "auto"]}
           />
           <Tooltip
             contentStyle={c.tooltip}
             formatter={(value, name) => [
-              typeof value === "number" ? formatTonnes(value, lang) : "—",
+              typeof value === "number" ? units.full(value) : "—",
               String(name),
             ]}
           />
@@ -180,7 +240,7 @@ function ProvincePanel({
             isAnimationActive={false}
           />
           <Line
-            name={t(lang, "oliveye")}
+            name={t(lang, units.technical ? "oliveye" : "satelliteShort")}
             dataKey="oliveye"
             stroke={c.oliveye}
             strokeWidth={2.5}
@@ -220,11 +280,21 @@ function ProductionTable({
   lang,
   production,
   forecast,
+  units,
 }: {
   lang: Lang;
   production: Record<ProvinceName, ProductionPoint[]>;
   forecast: Forecast;
+  units: Units;
 }) {
+  // Full precision in the technical view (tonnes); short millions of litres in the simple one.
+  const cell = (tonnes: number | null) =>
+    tonnes === null
+      ? "—"
+      : units.technical
+        ? units.full(tonnes)
+        : units.short(units.convert(tonnes));
+  const range = (tonnes: number) => units.short(units.convert(tonnes));
   return (
     <div className={layout.tableWrap}>
       <table className={layout.table}>
@@ -233,9 +303,15 @@ function ProductionTable({
           <tr>
             <th scope="col">{lang === "es" ? "Provincia" : "Province"}</th>
             <th scope="col">{t(lang, "campaign")}</th>
-            <th scope="col">{t(lang, "real")} (t)</th>
-            <th scope="col">{t(lang, "aforo")} (t)</th>
-            <th scope="col">{t(lang, "oliveye")} (t)</th>
+            <th scope="col">
+              {t(lang, "real")} {units.header}
+            </th>
+            <th scope="col">
+              {t(lang, "aforo")} {units.header}
+            </th>
+            <th scope="col">
+              {t(lang, "oliveye")} {units.header}
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -249,12 +325,12 @@ function ProductionTable({
                 <tr key={`${province}-${p.campaign}`}>
                   <th scope="row">{province}</th>
                   <td className="num">{p.campaign}</td>
-                  <td className="num">{formatTonnes(p.oil_final_t, lang)}</td>
-                  <td className="num">{formatTonnes(p.oil_aforo_t, lang)}</td>
+                  <td className="num">{cell(p.oil_final_t)}</td>
+                  <td className="num">{cell(p.oil_aforo_t)}</td>
                   <td className="num">
                     {f
-                      ? `${formatTonnes(f.pred_t, lang)} (${formatTonnes(f.low_t, lang, true)}–${formatTonnes(f.high_t, lang, true)})`
-                      : formatTonnes(p.pred_t, lang)}
+                      ? `${cell(f.pred_t)} (${range(f.low_t)}–${range(f.high_t)})`
+                      : cell(p.pred_t)}
                   </td>
                 </tr>
               );

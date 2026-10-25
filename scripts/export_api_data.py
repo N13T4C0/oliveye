@@ -20,6 +20,7 @@ import pandas as pd
 from oliveye.models.features import campaign_features
 from oliveye.models.sources import load_aforo, load_monthly, load_weights
 from oliveye.pipeline.olive_grid import municipality_footprints
+from oliveye.pipeline.prices import price_payload
 from oliveye.pipeline.production import final_production_series, target_series
 from oliveye.pipeline.publish import display_name, map_features, records
 
@@ -60,6 +61,7 @@ def main() -> None:
     args = parser.parse_args()
     args.out.mkdir(parents=True, exist_ok=True)
 
+    _write(args.out / "prices.json", price_payload(args.sources_dir / "oil_prices.csv"))
     names = municipality_names(args.results_dir, args.sources_dir)
     monthly = load_monthly(args.results_dir)  # outliers re-flagged causally
     weights = load_weights(args.results_dir)

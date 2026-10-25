@@ -28,6 +28,7 @@ uv run python scripts/export_api_data.py --results-dir ../oliveye-results \
 | `GET /provinces/{province}/production` | final production (and how it was obtained), aforo and model prediction per campaign |
 | `GET /models/summary` | leave-one-campaign-out scores on like-for-like rows |
 | `GET /models/errors` | OlivEye vs aforo signed % error per province and campaign |
+| `GET /prices/reference` | dated Poolred origin price per oil category (EUR/kg), for an approximate harvest value |
 | `GET /forecast` | dated 2026/27 forecast with its 80 % interval |
 | `GET /map/municipalities` | GeoJSON (EPSG:4326): measured olive area per municipality with seasonal indices per campaign |
 

@@ -374,6 +374,14 @@ flow is flat. No gradients, no glassmorphism, no glows.
 - Spanish first, English toggle. Plain words: "producción estimada", "aforo oficial".
 - Always state the source and date under charts ("Fuente: Junta de Andalucía, aforo 2026/27").
 
+## Views
+
+- **Simple (default):** plain words, no index names. Map and list show each municipality compared
+  with its own other campaigns in five classes (z-score breaks ±0.5, ±1.5), with diverging,
+  colour-blind-safe ramps (`ANOMALY_RAMPS` in `web/lib/farm.ts`: BrBG for greenness, RdBu for
+  thirst). Quantities in million litres, kg/ha and a euro range at a dated Poolred price.
+- **Technical:** the original NDVI/NDMI ramps, tonnes, MAPE and the per-campaign error section.
+
 ## Themes
 
 - **Light:** default when the system asks for it (`color-scheme: light`).

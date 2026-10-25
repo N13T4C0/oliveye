@@ -2,6 +2,7 @@
 
 import { INDEX_CAMPAIGNS, type Campaign } from "@/lib/campaigns";
 import { t } from "@/lib/i18n";
+import type { Mode } from "@/lib/mode";
 import type { Lang } from "@/lib/scale";
 import type { Theme } from "@/lib/theme";
 import type { IndexKey } from "@/lib/types";
@@ -14,6 +15,8 @@ interface Props {
   campaign: Campaign;
   index: IndexKey;
   theme: Theme;
+  mode: Mode;
+  onMode: (mode: Mode) => void;
   onLang: (lang: Lang) => void;
   onTheme: (theme: Theme) => void;
   onCampaign: (campaign: Campaign) => void;
@@ -25,6 +28,8 @@ export function TopBar({
   campaign,
   index,
   theme,
+  mode,
+  onMode,
   onLang,
   onTheme,
   onCampaign,
@@ -77,8 +82,24 @@ export function TopBar({
             onChange={onIndex}
             tone="ink"
             options={[
-              { value: "ndvi_spring", label: t(lang, "ndviShort") },
-              { value: "ndmi_summer", label: t(lang, "ndmiShort") },
+              {
+                value: "ndvi_spring",
+                label: t(lang, mode === "simple" ? "greenness" : "ndviShort"),
+              },
+              {
+                value: "ndmi_summer",
+                label: t(lang, mode === "simple" ? "thirst" : "ndmiShort"),
+              },
+            ]}
+          />
+          <Segmented
+            label={t(lang, "modeLabel")}
+            value={mode}
+            onChange={onMode}
+            tone="ink"
+            options={[
+              { value: "simple", label: t(lang, "modeSimple") },
+              { value: "technical", label: t(lang, "modeTechnical") },
             ]}
           />
           <Segmented

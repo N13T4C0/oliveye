@@ -67,9 +67,23 @@ export interface MunicipalityProperties {
 
 export type IndexKey = "ndvi_spring" | "ndmi_summer";
 
+/** Dated Poolred origin price per oil category (GET /prices/reference). */
+export interface ReferencePrice {
+  week_start: string;
+  week_end: string;
+  eur_per_kg: Record<string, number>;
+  low_eur_per_kg: number;
+  high_eur_per_kg: number;
+  source: string;
+  source_url: string;
+  oil_density_kg_per_l: number;
+}
+
 export interface PageData {
   municipalities: Municipality[];
   production: Record<ProvinceName, ProductionPoint[]>;
   summary: ModelScore[];
   forecast: Forecast;
+  /** Null when the API has no price yet: the page then shows litres only. */
+  price: ReferencePrice | null;
 }

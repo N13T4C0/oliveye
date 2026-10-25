@@ -71,6 +71,17 @@ class CampaignError(BaseModel):
     target_method: str | None
 
 
+class ReferencePrice(BaseModel):
+    week_start: str
+    week_end: str
+    eur_per_kg: dict[str, float]
+    low_eur_per_kg: float
+    high_eur_per_kg: float
+    source: str
+    source_url: str
+    oil_density_kg_per_l: float
+
+
 class ForecastRow(BaseModel):
     province: str
     pred_t: float
@@ -140,6 +151,8 @@ def create_app(data_dir: Path) -> FastAPI:
     summary: list[dict[str, Any]] = _load(data_dir / "summary.json")
     forecast: dict[str, Any] = _load(data_dir / "forecast.json")
     olive_map: dict[str, Any] = _load(data_dir / "map.geojson")
+    prices_path = data_dir / "prices.json"
+    prices: dict[str, Any] | None = _load(prices_path) if prices_path.exists() else None
 
     app = FastAPI(
         title="OlivEye API",
@@ -197,6 +210,13 @@ def create_app(data_dir: Path) -> FastAPI:
     def model_errors() -> list[dict[str, Any]]:
         """OlivEye vs aforo error per province and campaign (leave-one-campaign-out estimates)."""
         return errors
+
+    @app.get("/prices/reference", response_model=ReferencePrice)
+    def reference_price() -> dict[str, Any]:
+        """Dated Poolred origin price per oil category (EUR/kg), for an approximate value."""
+        if prices is None:
+            raise HTTPException(status_code=404, detail="No reference price published")
+        return prices
 
     @app.get("/forecast", response_model=Forecast)
     def dated_forecast() -> dict[str, Any]:

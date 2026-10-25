@@ -3,8 +3,17 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 
 import { listRows, matchesSearch, sortRows, type Campaign, type SortMode } from "@/lib/campaigns";
+import { ANOMALY_RAMPS, anomalyOf, type Anomaly } from "@/lib/farm";
 import { t } from "@/lib/i18n";
-import { colourOf, formatIndex, quantileBreaks, rampOf, type Lang } from "@/lib/scale";
+import type { Mode } from "@/lib/mode";
+import {
+  colourOf,
+  formatIndex,
+  formatSignedPercent,
+  quantileBreaks,
+  rampOf,
+  type Lang,
+} from "@/lib/scale";
 import { PALETTES, useTheme } from "@/lib/theme";
 import type { IndexKey, MunicipalityProperties } from "@/lib/types";
 
@@ -20,6 +29,7 @@ interface Props {
   lang: Lang;
   campaign: Campaign;
   index: IndexKey;
+  mode: Mode;
   features: MunicipalityProperties[];
   selected: MunicipalityProperties | null;
   onFeatures: (features: MunicipalityProperties[]) => void;
@@ -30,6 +40,7 @@ export function Workbench({
   lang,
   campaign,
   index,
+  mode,
   features,
   selected,
   onFeatures,
@@ -54,10 +65,46 @@ export function Workbench({
     [features, index],
   );
 
+  const simple = mode === "simple";
+  // Simple view: each municipality against its own other campaigns.
+  const anomalies = useMemo(
+    () =>
+      new Map<string, Anomaly | null>(
+        features.map((f) => [
+          `${f.province_code}-${f.municipality_code}`,
+          anomalyOf(f, index, campaign),
+        ]),
+      ),
+    [features, index, campaign],
+  );
+
   const rows = useMemo(() => {
-    const all = listRows(features, index, campaign).filter((r) => matchesSearch(r.name, query));
+    let all = listRows(features, index, campaign).filter((r) => matchesSearch(r.name, query));
+    if (simple) {
+      // Greenness: by the % shown in the list, greenest first. Thirst: by how unusual it is,
+      // thirstiest first (a low NDMI means more thirst).
+      all = all.map((r) => {
+        const anomaly = anomalies.get(r.id);
+        const value = !anomaly ? null : index === "ndvi_spring" ? anomaly.pct : -anomaly.z;
+        return { ...r, value };
+      });
+    }
     return sortRows(all, sort, lang);
-  }, [features, index, campaign, query, sort, lang]);
+  }, [features, index, campaign, query, sort, lang, simple, anomalies]);
+
+  const swatch = (id: string, value: number | null): string => {
+    if (!simple) return colourOf(value, breaks, ramp, noData);
+    const anomaly = anomalies.get(id);
+    return anomaly ? ANOMALY_RAMPS[index][anomaly.cls] : noData;
+  };
+  const display = (id: string, value: number | null): string => {
+    if (!simple) return formatIndex(value, lang);
+    const anomaly = anomalies.get(id);
+    if (!anomaly) return "—";
+    return index === "ndvi_spring"
+      ? formatSignedPercent(anomaly.pct, lang)
+      : t(lang, `tShort${anomaly.cls}` as const);
+  };
 
   const mapArea = useRef<HTMLDivElement>(null);
   // After a selection, scroll just enough for the series drawer (at the map's bottom) to show.
@@ -111,7 +158,14 @@ export function Workbench({
               value={sort}
               onChange={setSort}
               options={[
-                { value: "value", label: index === "ndvi_spring" ? "NDVI" : "NDMI" },
+                {
+                  value: "value",
+                  label: simple
+                    ? t(lang, index === "ndvi_spring" ? "greenness" : "thirst")
+                    : index === "ndvi_spring"
+                      ? "NDVI"
+                      : "NDMI",
+                },
                 { value: "name", label: "A–Z" },
               ]}
             />
@@ -133,7 +187,7 @@ export function Workbench({
                 >
                   <span
                     className={styles.swatch}
-                    style={{ background: colourOf(row.value, breaks, ramp, noData) }}
+                    style={{ background: swatch(row.id, row.value) }}
                     aria-hidden="true"
                   />
                   <span className={styles.name}>
@@ -142,7 +196,7 @@ export function Workbench({
                       {row.provinceCode === "23" ? "Jaén" : "Granada"}
                     </span>
                   </span>
-                  <span className={`${styles.value} num`}>{formatIndex(row.value, lang)}</span>
+                  <span className={`${styles.value} num`}>{display(row.id, row.value)}</span>
                 </button>
               </li>
             ))
@@ -155,6 +209,7 @@ export function Workbench({
           lang={lang}
           campaign={campaign}
           index={index}
+          mode={mode}
           breaks={breaks}
           selectedId={selectedId}
           onFeatures={onFeatures}
@@ -164,6 +219,7 @@ export function Workbench({
           lang={lang}
           campaign={campaign}
           index={index}
+          mode={mode}
           breaks={breaks}
           compact={selected !== null}
         />
@@ -171,6 +227,7 @@ export function Workbench({
           lang={lang}
           campaign={campaign}
           index={index}
+          mode={mode}
           municipality={selected}
           onClose={() => onSelect(null)}
         />

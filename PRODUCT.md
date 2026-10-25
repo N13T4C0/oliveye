@@ -20,6 +20,11 @@ Two audiences, served equally (author's answer):
 - **Olive sector** — farmers, cooperatives and agricultural technicians in Jaén and Granada who
   want to look up their municipality's olive grove signal and the campaign forecast.
 
+Two views (2026-10-25, author's decision): **simple** by default, in growers' words (litres,
+kilos per hectare, a dated euro value, "greener / thirstier than usual in your municipality"),
+and **technical** behind a toggle (NDVI, NDMI, MAPE, per-campaign errors). The official aforo is
+the headline figure in the simple view; the satellite estimate is labelled experimental.
+
 Desktop first, but the link is shared from a CV/LinkedIn, so it must work well on mobile.
 
 ## Product Purpose

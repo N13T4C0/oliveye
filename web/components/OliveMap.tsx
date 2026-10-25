@@ -5,8 +5,10 @@ import { useEffect, useRef, useState } from "react";
 
 import { MAP_URL } from "@/lib/api";
 import { INDEX_CAMPAIGNS, indexProperty } from "@/lib/campaigns";
+import { ANOMALY_RAMPS, anomalyOf } from "@/lib/farm";
 import { t } from "@/lib/i18n";
-import { formatIndex, rampOf, type Lang } from "@/lib/scale";
+import type { Mode } from "@/lib/mode";
+import { formatIndex, formatSignedPercent, rampOf, type Lang } from "@/lib/scale";
 import { PALETTES, useTheme, type Theme } from "@/lib/theme";
 import type { IndexKey, MunicipalityProperties } from "@/lib/types";
 
@@ -28,6 +30,7 @@ interface Props {
   lang: Lang;
   campaign: string;
   index: IndexKey;
+  mode: Mode;
   breaks: number[];
   selectedId: string | null;
   onFeatures: (features: MunicipalityProperties[]) => void;
@@ -48,13 +51,31 @@ interface Feature {
   geometry: { type: "Polygon" | "MultiPolygon"; coordinates: Position[][] | Position[][][] };
 }
 
-/** Paint expression: the class colour of the chosen index and campaign, grey when missing. */
+/** Flat property with the "compared with usual" class (0-4) of an index and campaign. */
+function anomalyProperty(index: IndexKey, campaign: string): string {
+  return `anomaly|${indexProperty(index, campaign)}`;
+}
+
+/**
+ * Paint expression, grey when missing. Technical view: the class colour of the raw index value.
+ * Simple view: the diverging colour of the campaign compared with the municipality's usual.
+ */
 function fillColour(
   index: IndexKey,
   campaign: string,
   breaks: number[],
   theme: Theme,
+  mode: Mode,
 ): ExpressionSpecification {
+  if (mode === "simple") {
+    const ramp = ANOMALY_RAMPS[index];
+    return [
+      "match",
+      ["get", anomalyProperty(index, campaign)],
+      ...ramp.flatMap((colour, cls) => [cls, colour]),
+      PALETTES[theme].noData,
+    ] as unknown as ExpressionSpecification;
+  }
   const key = indexProperty(index, campaign);
   const ramp = rampOf(index, theme === "dark");
   const noData = PALETTES[theme].noData;
@@ -87,6 +108,7 @@ export function OliveMap({
   lang,
   campaign,
   index,
+  mode,
   breaks,
   selectedId,
   onFeatures,
@@ -101,13 +123,13 @@ export function OliveMap({
   const [hover, setHover] = useState<Hover | null>(null);
   const [theme] = useTheme();
   // Latest view settings, read when a (new) basemap style finishes loading.
-  const view = useRef({ index, campaign, breaks, selectedId, theme });
+  const view = useRef({ index, campaign, breaks, selectedId, theme, mode });
   const styleTheme = useRef<Theme>(theme);
   const fellBack = useRef(false);
 
   useEffect(() => {
     onSelectRef.current = onSelect;
-    view.current = { index, campaign, breaks, selectedId, theme };
+    view.current = { index, campaign, breaks, selectedId, theme, mode };
   });
 
   // Create the map once, load the measured olive area, flatten its indices for paint expressions.
@@ -130,7 +152,10 @@ export function OliveMap({
           const id = `${p.province_code}-${p.municipality_code}`;
           p.id = id;
           for (const c of INDEX_CAMPAIGNS)
-            for (const k of INDEX_KEYS) p[indexProperty(k, c)] = p.indices[c]?.[k] ?? null;
+            for (const k of INDEX_KEYS) {
+              p[indexProperty(k, c)] = p.indices[c]?.[k] ?? null;
+              p[anomalyProperty(k, c)] = anomalyOf(p, k, c)?.cls ?? null;
+            }
           featuresRef.current.set(id, feature);
         }
         onFeatures(collection.features.map((f) => f.properties));
@@ -196,6 +221,7 @@ export function OliveMap({
                 current.campaign,
                 current.breaks,
                 styleTheme.current,
+                current.mode,
               ),
               "fill-opacity": ["case", ["boolean", ["feature-state", "hover"], false], 1, 0.88],
             },
@@ -261,8 +287,12 @@ export function OliveMap({
     const map = mapRef.current;
     // During a theme switch the old layers are about to be replaced: style.load paints the new ones.
     if (!ready || !map || !map.getLayer("olive-fill") || styleTheme.current !== theme) return;
-    map.setPaintProperty("olive-fill", "fill-color", fillColour(index, campaign, breaks, theme));
-  }, [ready, index, campaign, breaks, theme]);
+    map.setPaintProperty(
+      "olive-fill",
+      "fill-color",
+      fillColour(index, campaign, breaks, theme, mode),
+    );
+  }, [ready, index, campaign, breaks, theme, mode]);
 
   // Theme switch: swap the basemap; "style.load" adds the olive layers back in the new colours.
   useEffect(() => {
@@ -290,6 +320,14 @@ export function OliveMap({
 
   const hovered = hover?.properties;
   const hoveredValue = hovered ? (hovered.indices[campaign]?.[index] ?? null) : null;
+  const hoveredAnomaly = hovered ? anomalyOf(hovered, index, campaign) : null;
+  const simpleLabel = (): string => {
+    if (!hoveredAnomaly) return t(lang, hoveredValue === null ? "noData" : "notEnoughHistory");
+    const label = t(lang, `${index === "ndvi_spring" ? "g" : "t"}${hoveredAnomaly.cls}` as const);
+    return index === "ndvi_spring"
+      ? `${label} (${formatSignedPercent(hoveredAnomaly.pct, lang)})`
+      : label;
+  };
 
   return (
     <div className={styles.wrap}>
@@ -303,10 +341,17 @@ export function OliveMap({
       {hover && hovered && (
         <div className={styles.tooltip} style={{ left: hover.x, top: hover.y }} role="presentation">
           <strong>{hovered.name}</strong>
-          <span className="num">
-            {index === "ndvi_spring" ? "NDVI" : "NDMI"} {campaign}:{" "}
-            {hoveredValue === null ? t(lang, "noData") : formatIndex(hoveredValue, lang)}
-          </span>
+          {mode === "simple" ? (
+            <span>
+              {t(lang, index === "ndvi_spring" ? "greenness" : "thirst")} {campaign}:{" "}
+              {simpleLabel()}
+            </span>
+          ) : (
+            <span className="num">
+              {index === "ndvi_spring" ? "NDVI" : "NDMI"} {campaign}:{" "}
+              {hoveredValue === null ? t(lang, "noData") : formatIndex(hoveredValue, lang)}
+            </span>
+          )}
         </div>
       )}
     </div>

@@ -202,3 +202,16 @@ def test_campaign_errors_sign_and_closer(client: TestClient) -> None:
     assert row["error_pct"] == pytest.approx(expected, abs=0.01)
     if row["like_for_like"]:
         assert row["closer"] in {"oliveye", "aforo", "tie"}
+
+
+def test_reference_price_from_published_data() -> None:
+    data = Path(__file__).resolve().parents[1] / "api" / "data"
+    price = TestClient(create_app(data)).get("/prices/reference").json()
+    assert (
+        price["low_eur_per_kg"] <= price["eur_per_kg"]["virgen_extra"] == price["high_eur_per_kg"]
+    )
+    assert price["source_url"].startswith("https://")
+
+
+def test_reference_price_missing_is_404(client: TestClient) -> None:
+    assert client.get("/prices/reference").status_code == 404

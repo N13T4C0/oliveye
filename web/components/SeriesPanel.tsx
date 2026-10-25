@@ -4,7 +4,9 @@ import { useEffect, useState } from "react";
 import { CartesianGrid, Line, LineChart, ReferenceArea, Tooltip, XAxis, YAxis } from "recharts";
 
 import { getMunicipalitySeries } from "@/lib/api";
+import { anomalyOf, SMALL_SAMPLE_CELLS } from "@/lib/farm";
 import { t } from "@/lib/i18n";
+import type { Mode } from "@/lib/mode";
 import { campaignWindow, formatIndex, type Lang } from "@/lib/scale";
 import { chartColours, useTheme } from "@/lib/theme";
 import type { IndexKey, MonthlyIndex, MunicipalityProperties } from "@/lib/types";
@@ -15,6 +17,7 @@ interface Props {
   lang: Lang;
   campaign: string;
   index: IndexKey;
+  mode: Mode;
   municipality: MunicipalityProperties | null;
   onClose: () => void;
 }
@@ -22,7 +25,7 @@ interface Props {
 type Result = MonthlyIndex[] | "error";
 
 /** Bottom drawer over the map: ten years of monthly NDVI or NDMI for one municipality. */
-export function SeriesPanel({ lang, campaign, index, municipality, onClose }: Props) {
+export function SeriesPanel({ lang, campaign, index, mode, municipality, onClose }: Props) {
   // Results per municipality: fetched once, then reused when the visitor comes back to it.
   const [results, setResults] = useState<Record<string, Result>>({});
   const [theme] = useTheme();
@@ -65,6 +68,8 @@ export function SeriesPanel({ lang, campaign, index, municipality, onClose }: Pr
   const data =
     state.status === "ready" ? state.series.map((p) => ({ month: p.month, value: p[key] })) : [];
   const hasWindow = data.some((d) => d.month >= window.start && d.month <= window.end);
+  const simple = mode === "simple";
+  const sentence = simple ? plainSentence(municipality, index, campaign, lang) : null;
 
   return (
     <section
@@ -75,8 +80,10 @@ export function SeriesPanel({ lang, campaign, index, municipality, onClose }: Pr
         <div>
           <h2 className={styles.title}>{municipality.name}</h2>
           <p className={styles.sub}>
-            {index === "ndvi_spring" ? "NDVI" : "NDMI"} ·{" "}
-            {lang === "es" ? "mediana mensual" : "monthly median"} ·{" "}
+            {simple
+              ? t(lang, index === "ndvi_spring" ? "monthlyGreenness" : "monthlyThirst")
+              : `${index === "ndvi_spring" ? "NDVI" : "NDMI"} · ${lang === "es" ? "mediana mensual" : "monthly median"}`}{" "}
+            ·{" "}
             <span className="num">
               {new Intl.NumberFormat(lang === "es" ? "es-ES" : "en-GB").format(
                 Math.round(municipality.olive_ha),
@@ -102,6 +109,12 @@ export function SeriesPanel({ lang, campaign, index, municipality, onClose }: Pr
         </button>
       </header>
 
+      {sentence && <p className={styles.sentence}>{sentence}</p>}
+      {simple && municipality.cells < SMALL_SAMPLE_CELLS && (
+        <p className={styles.caveat}>
+          {t(lang, "smallSample", { ha: Math.round(municipality.olive_ha) })}
+        </p>
+      )}
       {state.status === "loading" && <p className={styles.status}>{t(lang, "seriesLoading")}</p>}
       {state.status === "error" && (
         <p className={styles.status} role="alert">
@@ -138,8 +151,8 @@ export function SeriesPanel({ lang, campaign, index, municipality, onClose }: Pr
             <YAxis
               tickLine={false}
               axisLine={false}
-              width={44}
-              tick={{ fontSize: 11, fill: c.tick }}
+              width={simple ? 8 : 44}
+              tick={simple ? false : { fontSize: 11, fill: c.tick }}
               tickFormatter={(v: number) => formatIndex(v, lang)}
               domain={["auto", "auto"]}
             />
@@ -171,4 +184,30 @@ export function SeriesPanel({ lang, campaign, index, municipality, onClose }: Pr
       )}
     </section>
   );
+}
+
+/** "En la primavera de la campaña 2026/27, el olivar de Martos ha estado un 8 % menos verde…" */
+function plainSentence(
+  municipality: MunicipalityProperties,
+  index: IndexKey,
+  campaign: string,
+  lang: Lang,
+): string | null {
+  const anomaly = anomalyOf(municipality, index, campaign);
+  if (!anomaly) return null;
+  const name = municipality.name;
+  if (index === "ndvi_spring") {
+    const pct = `${new Intl.NumberFormat(lang === "es" ? "es-ES" : "en-GB", {
+      maximumFractionDigits: 0,
+    }).format(Math.abs(anomaly.pct))}\u00a0%`;
+    return t(lang, "greennessSentence", {
+      campaign,
+      name,
+      pct,
+      dir: t(lang, anomaly.pct >= 0 ? "more" : "less"),
+    });
+  }
+  const label =
+    anomaly.cls === 2 ? t(lang, "thirstUsual") : t(lang, `t${anomaly.cls}` as const).toLowerCase();
+  return t(lang, "thirstSentence", { campaign, name, label });
 }

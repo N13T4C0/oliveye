@@ -11,6 +11,7 @@ import type {
   PageData,
   ProductionPoint,
   ProvinceName,
+  ReferencePrice,
 } from "./types";
 
 export const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000").replace(
@@ -38,7 +39,9 @@ export async function getPageData(): Promise<PageData> {
     getJson<Forecast>("/forecast", cached),
   ]);
   const production: Record<ProvinceName, ProductionPoint[]> = { Jaén: jaen, Granada: granada };
-  return { municipalities, production, summary, forecast };
+  // Optional: without a published price the page shows litres and kg/ha only.
+  const price = await getJson<ReferencePrice>("/prices/reference", cached).catch(() => null);
+  return { municipalities, production, summary, forecast, price };
 }
 
 export const MAP_URL = `${API_URL}/map/municipalities`;

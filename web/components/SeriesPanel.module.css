@@ -115,3 +115,17 @@
     border-radius: 14px;
   }
 }
+
+.sentence {
+  margin: 4px 0 6px;
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--ink-strong);
+}
+
+.caveat {
+  margin: 0 0 6px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--muted);
+}

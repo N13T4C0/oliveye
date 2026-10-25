@@ -20,6 +20,22 @@
   color: var(--ink);
 }
 
+.linkButton {
+  justify-self: start;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--signal);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.linkButton:hover {
+  text-decoration-thickness: 2px;
+}
+
 .footer {
   background: var(--brand);
   color: var(--on-ink);
