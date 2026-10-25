@@ -118,3 +118,5 @@ parked in "Pending for the author" and the work moves on.
 - 04:00 CET Check-in 11. Batch 76/85 (Jaén 38), 0 errors. Slower (larger Jaén municipalities,
   ~5/h); generation 1 stops taking jobs ~04:40 and `continue` starts generation 2. Full data now
   expected ~05:30–06:00 CET, leaving time for the final run + model-qa before the 07:25 wrap-up.
+- 04:40 CET Check-in 12. Batch 82/85 (Granada 38/38, Jaén 44/48), 0 errors. The last 3 run in
+  generation 2 after the current run ends; full data expected ~05:15–05:30 CET.
