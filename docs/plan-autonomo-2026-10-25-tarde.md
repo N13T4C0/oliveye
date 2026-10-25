@@ -36,3 +36,5 @@ The author is out. Anything needing a decision is parked under "Pending for the 
   "derived final". Full-data parity rerun unchanged (3e-15, 0 unmatched). Merged into main.
 - 16:51 TODO.md updated (repo + project doc): phase 2 Spark ETL and notebooks 02/03 checked; PostGIS
   loader left open. Remote branch `phase2-spark` could not be deleted (proxy) — parked for the author.
+- 17:21 Check-in 1: blocks A and B already closed. Health check on `main`: ruff + mypy clean,
+  133 tests pass (incl. Spark); GitHub CI green on `be820c2` (jobs quality, web, spark). Only C left.
