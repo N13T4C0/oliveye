@@ -61,7 +61,14 @@ Updated at the end of each phase.
 - [x] Result figures (`models/plots.py`) + `04_model_results.ipynb`; local MLflow (`--extra tracking`)
 - [x] FastAPI read-only service over the results (Phase 4 groundwork, not deployed)
 - [x] XGBoost negative test documented (ADR 0004)
-- [ ] Final training on all 85 municipalities → `model-qa` + auditor → `docs/results/`
+- [x] Final training on all 86 municipalities → `model-qa` + auditor → `docs/results/` (2026-10-25)
+  - LOCO, 15 like-for-like rows / 9 campaigns: Ridge 44.1 %, last campaign 44.0 %, province mean 45.4 %,
+    aforo 11.9 % (3.7×, CI 1.3–7.6×; aforo closer in 6/9, p = 0.055). The model reduces to the province mean.
+  - Fixes from the reviews: target origin labelled (`target_method`), causal outlier filter, aforo timing
+    (October, field counts), 2020/21 aforo source verified in the Junta PDF
+- [ ] Ideas to make the model useful (next session, decide with the author): more campaigns via
+  Landsat (pre-2015), municipal or comarca-level targets if a source exists, or reframe as
+  "early signal in August" vs the October aforo
 - [ ] **Author:** review `docs/results/README-draft.md`, choose the README headline
 - [ ] **Author:** confirm publishing the dated 2026/27 forecast next to the aforo
 
@@ -80,10 +87,11 @@ Updated at the end of each phase.
   - First attempt failed with HTTP 413 (3 MB outline, 0 credits) → switched to 250 m olive-dominant grid (ADR 0001 addendum)
 - [x] Martos 2024/25 (12 months) = 6 credits; Martos 2016/17–2025/26 (120 months) = 23 credits, 16 min
   → one job per municipality with its whole history (cap 120 months)
-- [~] **Running**: 2016/17–2025/26 indices for the 86 municipalities with 80 % of the olive area
-  (Jaén 48, Granada 38), two parallel CI workers, hard budget 3,100 credits (estimate 560–810)
+- [x] 2016/17–2025/26 indices for the 86 municipalities with 80 % of the olive area
+  (Jaén 48, Granada 38): finished 2026-10-25 04:13 UTC, 86 ok, 0 errors, **1,492 credits**
+  (estimate was 560–810: Jaén municipalities are larger; budget 3,100); 80.1 % / 80.6 % of olive area
   - 25 fragmented municipalities (mostly Granada) have < 60 % coverage at 80 % purity (≥ 22 cells each)
-- [ ] Check the batch finished; re-queue anything with status error after reading its log
+- [x] Check the batch finished; nothing to re-queue (0 errors)
 - [ ] Extrapolate cost to a full campaign and to all municipalities of Jaén + Granada
 - [ ] `02_sigpac_olive_parcels.ipynb`: load SIGPAC, filter olive uses, areas per municipality/province, map
 - [ ] `03_production_history.ipynb`: production and aforo per province and campaign since 2015

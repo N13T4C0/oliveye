@@ -139,3 +139,5 @@ parked in "Pending for the author" and the work moves on.
 - 05:57 CET Check-in 14. CI green on the results commit. API data re-exported from the final run
   (data/processed/api, git-ignored) and smoke-tested (/health, /municipalities, /models/summary,
   /provinces/{p}/production). Only block E (wrap-up, 07:25) remains.
+- 06:42 CET Check-in 15 (wrap-up prep). Repo TODO updated with the final numbers; project TODO
+  synced. The author's PC is not connected: the local folder needs a `git pull` (parked).
