@@ -103,3 +103,7 @@ parked in "Pending for the author" and the work moves on.
 - 02:18 Check-in 7. Batch 55/85 (Jaén 17), 0 errors. Worker 0 reaches its 3-h start deadline
   now; after its current job the run ends and `continue` should start generation 1 (to verify
   at check-in 8).
+- 02:58 Check-in 8. Generation 1 re-dispatched by `continue` at 02:39 with both workers; batch
+  58/85 (Jaén 20), 0 errors; full data expected ~04:50 (after the DST change). Wrap-up prep:
+  repo TODO updated; notebook 01 ruff errors fixed (a markdown cell stored as code); CI and
+  ruff now cover the whole repo except third-party `.claude/` files. 116 tests pass.

@@ -50,11 +50,20 @@ Updated at the end of each phase.
 - [x] `oliveye.models.features`: seasonal NDVI/NDMI per campaign, data cut at August (aforo time)
 - [x] Climate: Open-Meteo ERA5 daily weather for the 86 municipalities (30 ERA5 cells, 2016–2026)
 - [ ] RIA stations: the web service returns an HTML page to GitHub runners (bot protection?) — retry later or from the author's PC
-- [ ] Feature table per province × campaign (indices + climate + lagged production for alternate bearing)
-- [ ] Baselines (last campaign, 5-year mean, aforo) and Ridge with leave-one-campaign-out
+- [x] Feature table per province × campaign (`models/dataset.py`: indices + climate + lagged production)
+- [x] Baselines (last campaign, 5-year mean, province mean, aforo) and Ridge with leave-one-campaign-out
 - [x] `/grill-me` session with the author → ADR 0003 (17 decisions)
-- [ ] Implement `models/dataset.py`, `train.py`, `evaluate.py`, `scripts/train_models.py` once the openEO batch finishes
-  (expected rows: Jaén 2017/18–2025/26 = 9, Granada 2019/20–2025/26 = 7 → 16)
+- [x] Implement `models/dataset.py`, `train.py`, `evaluate.py`, `scripts/train_models.py` (TDD)
+  (rows: Jaén 2017/18–2025/26 = 9, Granada 2019/20–2025/26 = 7 → 16)
+- [x] Statistician review → ADR 0003 amendment: t+1 held out with t (lag leak), `ProvinceAnomalyRidge`,
+  1-SE alpha rule, like-for-like metrics, sign-flip test, conformal interval, forward check
+- [x] Code review + oliveye-auditor on the model code (no leakage found; fixes applied)
+- [x] Result figures (`models/plots.py`) + `04_model_results.ipynb`; local MLflow (`--extra tracking`)
+- [x] FastAPI read-only service over the results (Phase 4 groundwork, not deployed)
+- [x] XGBoost negative test documented (ADR 0004)
+- [ ] Final training on all 85 municipalities → `model-qa` + auditor → `docs/results/`
+- [ ] **Author:** review `docs/results/README-draft.md`, choose the README headline
+- [ ] **Author:** confirm publishing the dated 2026/27 forecast next to the aforo
 
 ## Phase 1 — Exploration
 - [x] `01_openeo_ndvi_sample_parcels.ipynb` + `oliveye.pipeline.openeo_ndvi` written and dry-run tested
@@ -80,5 +89,5 @@ Updated at the end of each phase.
 - [ ] `03_production_history.ipynb`: production and aforo per province and campaign since 2015
 - [x] Decide the aggregation unit for Phase 2: olive area per municipality (ADR 0001)
 - [x] Write ADR for the openEO strategy (`docs/decisions/0001-openeo-extraction-strategy.md`)
-- [ ] Fix ruff errors in notebook 01 (`uv run ruff check .` fails on it)
+- [x] Fix ruff errors in notebook 01; CI now lints the whole repo (notebooks included)
 - [x] Credits log working (`data/cache/openeo/credits_log.csv`); baseline 10,000 on 2026-10-22

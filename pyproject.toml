@@ -53,6 +53,7 @@ packages = ["src/oliveye"]
 line-length = 100
 target-version = "py312"
 extend-include = ["*.ipynb"]
+extend-exclude = [".claude"]  # third-party agent and skill files, kept as published
 
 [tool.ruff.lint]
 # E/F: pycodestyle + pyflakes, I: import sorting, UP: modern syntax, B: bugbear, ANN: type hints.
