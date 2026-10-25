@@ -109,3 +109,9 @@ parked in "Pending for the author" and the work moves on.
   ruff now cover the whole repo except third-party `.claude/` files. 116 tests pass.
 - 02:40 CET (after the DST change; earlier entries are CEST). Check-in 9. Batch 67/85 (Jaén 29),
   0 errors, ~9/h with both workers → full data ~04:40 CET. CI green on the repo-wide lint.
+- 03:20 CET Check-in 10. Batch 73/85 (Jaén 35), 0 errors. Interim LOCO run (Jaén 51.6 % /
+  Granada 80.6 % of olive area): Ridge 44.1 %, province mean 45.4 %, last campaign 44.0 %,
+  aforo 11.9 % (same 15 rows). The 1-SE rule picks alpha 1000 in most folds: with 16 rows the
+  features' signal is not distinguishable from noise (signs: lag −, May heat −, NDMI +, NDVI +,
+  all tiny). Pre-registered procedure kept as is; ask model-qa for a labelled sensitivity check
+  (minimum-error alpha) rather than changing the method after seeing results.
