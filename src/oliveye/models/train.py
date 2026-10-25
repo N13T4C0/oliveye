@@ -212,6 +212,7 @@ def _cross_validate(
                     "campaign": row["campaign"],
                     "province": row["province"],
                     "oil_final_t": row["oil_final_t"],
+                    "target_method": row.get("target_method", "unknown"),
                     "pred_log": float(value),
                     "pred_t": float(np.exp(value)),
                     "alpha": alpha,

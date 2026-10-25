@@ -101,8 +101,12 @@ def province_table(
     table = pd.DataFrame(rows)
 
     production = target[["province", "campaign", "oil_final_t"]].copy()
-    lag = production.assign(campaign=production["campaign"].map(next_campaign)).rename(
-        columns={"oil_final_t": "lag_t"}
+    # How each target value was obtained (e.g. derived from aforo variations vs reported).
+    production["target_method"] = target["method"].to_numpy() if "method" in target else "unknown"
+    lag = (
+        production.drop(columns="target_method")
+        .assign(campaign=production["campaign"].map(next_campaign))
+        .rename(columns={"oil_final_t": "lag_t"})
     )
     table = table.merge(production, on=["province", "campaign"], how="inner")
     table = table.merge(lag, on=["province", "campaign"], how="left")
@@ -122,6 +126,7 @@ def province_table(
         *FEATURES,
         "log_production",
         "oil_final_t",
+        "target_method",
         "oil_aforo_t",
         "mean5_t",
     ]

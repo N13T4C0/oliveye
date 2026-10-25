@@ -264,3 +264,35 @@ def test_splits_never_score_a_province_without_training_rows() -> None:
             assert len(test_idx) > 0
             assert set(table.loc[test_idx, "province"]) <= set(table.loc[train_idx, "province"])
     assert len(cross_validate_ridge(table)) > 0  # runs end to end instead of raising
+
+
+def test_table_says_how_each_target_value_was_obtained() -> None:
+    """Derived (from aforo variations) vs reported targets must stay visible downstream."""
+    from oliveye.models.dataset import province_table
+
+    campaigns = [f"{y}/{(y + 1) % 100:02d}" for y in range(2016, 2022)]
+    municipal = pd.DataFrame(
+        {
+            "province_code": "23",
+            "municipality_code": "60",
+            "campaign": campaigns,
+            "ndvi_spring": 0.4,
+            "ndmi_summer": -0.06,
+        }
+    )
+    climate = municipal[["province_code", "municipality_code", "campaign"]].assign(hot_days_may=2.0)
+    weights = pd.DataFrame(
+        {"province_code": ["23"], "municipality_code": ["60"], "olive_hectares": [1.0]}
+    )
+    target = pd.DataFrame(
+        {
+            "province": "Jaén",
+            "campaign": campaigns,
+            "oil_final_t": 4e5,
+            "method": ["reported_aica", *["derived_from_aforo"] * 5],
+        }
+    )
+    aforo = target[["province", "campaign"]].assign(oil_aforo_t=4e5)
+    table = province_table(municipal, climate, weights, target, aforo)
+    assert set(table["target_method"]) == {"derived_from_aforo"}  # 2016/17 dropped: no lag
+    assert "target_method" in cross_validate_ridge(table, alphas=(10.0,)).columns

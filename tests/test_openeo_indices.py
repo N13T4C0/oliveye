@@ -191,3 +191,30 @@ def test_budget_drops_small_fragments_until_it_fits() -> None:
 def test_budget_never_trades_away_the_olive_grove() -> None:
     with pytest.raises(ValueError, match="without losing more than"):
         olive_area_within_budget(_mixed_parcels(), max_bytes=100)
+
+
+def test_causal_hampel_never_looks_at_later_months() -> None:
+    """Changing months after t must not change the flag at t (features stop at August)."""
+    base = pd.Series([0.45, 0.46, 0.44, 0.45, 0.08, 0.45, 0.43, 0.44])
+    flags = hampel_outliers(base, causal=True)
+    assert flags.iloc[4]  # the cloudy spike is still caught from its past alone
+    for t in range(len(base)):
+        future_changed = base.copy()
+        future_changed.iloc[t + 1 :] = 0.9
+        assert hampel_outliers(future_changed, causal=True).iloc[t] == flags.iloc[t]
+
+
+def test_clean_monthly_indices_can_run_causally() -> None:
+    months = pd.period_range("2022-01", periods=8, freq="M")
+    tidy = pd.DataFrame(
+        {
+            "month": months,
+            "province_code": "23",
+            "municipality_code": "60",
+            "ndvi": [0.45, 0.46, 0.44, 0.45, 0.08, 0.45, 0.43, 0.44],
+            "ndmi": [0.0] * 8,
+        }
+    )
+    clean = clean_monthly_indices(tidy, causal=True)
+    assert np.isnan(clean.loc[4, "ndvi_clean"])
+    assert not clean["ndmi_outlier"].any()

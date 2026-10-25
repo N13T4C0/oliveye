@@ -299,6 +299,7 @@ def hampel_outliers(
     window: int = 5,
     n_sigmas: float = 3.0,
     min_deviation: float = 0.05,
+    causal: bool = False,
 ) -> pd.Series:
     """Flag spikes in a time series with a Hampel filter (rolling median +/- k * MAD).
 
@@ -308,11 +309,15 @@ def hampel_outliers(
 
     Example: monthly NDVI ... 0.45, 0.46, 0.08, 0.44 ... -> the 0.08 (a cloudy month) is flagged.
 
-    The first and last valid values are never flagged: a spike needs neighbours on both sides,
-    and the start of a series is often a genuine seasonal transition (e.g. October, before the
-    autumn rains green up the ground cover).
+    Centred (default, for exploring a finished series): the first and last valid values are never
+    flagged, because a spike needs neighbours on both sides and the start of a series is often a
+    genuine seasonal transition (e.g. October, before the autumn rains green up the ground cover).
+
+    `causal=True` (for model features): each month is judged against itself and the previous
+    months only, so later images can never change an earlier value. Needed because features stop
+    in August and must not be cleaned with September or October images.
     """
-    rolling = series.rolling(window, center=True, min_periods=3)
+    rolling = series.rolling(window, center=not causal, min_periods=3)
     median = rolling.median()
     # nanmedian: months where every pixel was masked are NaN and must not blind the filter.
     mad = rolling.apply(lambda w: float(np.nanmedian(np.abs(w - np.nanmedian(w)))), raw=True)
@@ -320,21 +325,24 @@ def hampel_outliers(
     threshold = np.maximum(n_sigmas * 1.4826 * mad, min_deviation)
     flags = (deviation > threshold).fillna(False).astype(bool)
     valid = np.flatnonzero(series.notna().to_numpy())
-    if valid.size:
+    if valid.size and not causal:
         flags.iloc[[valid[0], valid[-1]]] = False
     return flags
 
 
 def clean_monthly_indices(
-    tidy: pd.DataFrame, id_columns: list[str] = AREA_ID_COLUMNS
+    tidy: pd.DataFrame, id_columns: list[str] = AREA_ID_COLUMNS, *, causal: bool = False
 ) -> pd.DataFrame:
     """Add `<index>_outlier` flags per geometry and `<index>_clean` with outliers set to NaN.
 
     Outliers are kept in the raw columns (never silently deleted) so they can be inspected.
+    `causal=True` uses a trailing window (see `hampel_outliers`); model features need it.
     """
     result = tidy.sort_values([*id_columns, "month"]).copy()
     for name in ("ndvi", "ndmi"):
-        flags = result.groupby(id_columns, group_keys=False)[name].apply(hampel_outliers)
+        flags = result.groupby(id_columns, group_keys=False)[name].apply(
+            lambda series: hampel_outliers(series, causal=causal)
+        )
         result[f"{name}_outlier"] = flags.reindex(result.index).astype(bool)
         result[f"{name}_clean"] = result[name].mask(result[f"{name}_outlier"])
     return result.reset_index(drop=True)

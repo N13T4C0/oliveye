@@ -17,6 +17,7 @@ import pandas as pd
 
 from oliveye.models.dataset import climate_features, province_table
 from oliveye.models.features import campaign_features
+from oliveye.pipeline.openeo_indices import clean_monthly_indices
 from oliveye.pipeline.production import final_production_series, target_series
 
 PROVINCES = ("23", "18")
@@ -38,12 +39,18 @@ def _latest(paths: list[Path]) -> Path:
 
 
 def load_monthly(results_dir: Path) -> pd.DataFrame:
-    """Cleaned monthly indices of every municipality processed so far."""
+    """Monthly indices of every municipality processed so far, re-cleaned causally.
+
+    The job outputs carry flags from a centred Hampel window (fine for exploring a series), which
+    would let September/October images clean July/August values. Features stop in August, so the
+    flags are recomputed here from the raw columns with a trailing window (no openEO request).
+    """
     frames = []
     for path in sorted(results_dir.glob("*-openeo-real-*-2016-2026/indices_monthly_*.csv")):
         frame = pd.read_csv(path, dtype={"province_code": str, "municipality_code": str})
         frame["month"] = pd.PeriodIndex(frame["month"], freq="M")
-        frames.append(frame)
+        raw = frame.drop(columns=[c for c in frame.columns if c.endswith(("_outlier", "_clean"))])
+        frames.append(clean_monthly_indices(raw, causal=True))
     if not frames:
         raise FileNotFoundError("No municipal index series found")
     return pd.concat(frames, ignore_index=True)

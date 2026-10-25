@@ -126,3 +126,9 @@ parked in "Pending for the author" and the work moves on.
   44.0 %, last campaign 44.0 %, province mean 45.4 %, aforo 11.9 %; forward Ridge 54.6 % vs aforo
   12.4 %. XGBoost 49.4 % (ADR 0004 refreshed). model-qa + oliveye-auditor running before anything
   goes to docs/results/.
+- 05:35 CET model-qa: PUBLISHABLE WITH CAVEATS (replicated byte-identical; wording fixes, aforo
+  timing is October with field counts, 2020/21 source verified in the Junta PDF). Auditor: no
+  leakage in the splits; credits 1,492 / 3,100, no paid job duplicated; blocking: label derived
+  targets; minor: centred Hampel window let Sep/Oct images clean Jul/Aug. Both fixed with tests
+  first (target_method column; causal Hampel recomputed at load time, no openEO request). Rerun:
+  Ridge 44.1 %, forward 53.9 %; conclusions unchanged. 119 tests pass.
