@@ -115,3 +115,6 @@ parked in "Pending for the author" and the work moves on.
   features' signal is not distinguishable from noise (signs: lag −, May heat −, NDMI +, NDVI +,
   all tiny). Pre-registered procedure kept as is; ask model-qa for a labelled sensitivity check
   (minimum-error alpha) rather than changing the method after seeing results.
+- 04:00 CET Check-in 11. Batch 76/85 (Jaén 38), 0 errors. Slower (larger Jaén municipalities,
+  ~5/h); generation 1 stops taking jobs ~04:40 and `continue` starts generation 2. Full data now
+  expected ~05:30–06:00 CET, leaving time for the final run + model-qa before the 07:25 wrap-up.
