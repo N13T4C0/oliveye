@@ -18,6 +18,9 @@ The author is out. Anything needing a decision is parked under "Pending for the 
 
 ## Pending for the author
 
+- Delete the remote branch `phase2-spark` on GitHub (already merged into `main`; the sandbox proxy
+  blocks branch deletion).
+
 ## Log
 - 16:40 Plan written; check-ins scheduled at 17:20, 18:00 and 18:40. Spark parity tests already GREEN
   (synthetic data, incl. fully masked months).
@@ -28,6 +31,8 @@ The author is out. Anything needing a decision is parked under "Pending for the 
   bearing, aforo error per campaign), both from committed `api/data/`, outputs cleared. Finding:
   cell-level sampling is 79 % (Jaén) / 59 % (Granada) of the hectares inside the 86 municipalities,
   ~64 % / 48 % of each province — wording added to docs/results caveats.
-- 16:55 oliveye-auditor: PASS. Applied its fixes with a test first: a literal NaN is now treated as
+- ~16:50 oliveye-auditor: PASS. Applied its fixes with a test first: a literal NaN is now treated as
   missing in Spark (as in pandas); notebook 02 take-away separates the two coverages; notebook 03 says
   "derived final". Full-data parity rerun unchanged (3e-15, 0 unmatched). Merged into main.
+- 16:51 TODO.md updated (repo + project doc): phase 2 Spark ETL and notebooks 02/03 checked; PostGIS
+  loader left open. Remote branch `phase2-spark` could not be deleted (proxy) — parked for the author.
