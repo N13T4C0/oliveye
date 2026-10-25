@@ -45,6 +45,6 @@ conclusive: p = 0.055).
 
 ### Next test
 
-A dated 2026/27 model forecast, published next to the aforo (575 kt Jaén, 106.7 kt Granada — the
-aforo's figures), would be scored when the Junta's final figure is known. The model's own
-forecast is not computed yet. *(Pending the author's confirmation.)*
+A dated 2026/27 forecast was published on 2026-10-25 (Jaén 392 kt, Granada 96 kt, vs aforo
+575 / 106.7 kt; [details](forecast-2026-27.md)) and will be scored when the Junta's final figure
+is known.
