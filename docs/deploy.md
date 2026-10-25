@@ -1,5 +1,8 @@
 # Deploying OlivEye on Vercel (ADR 0005)
 
+**Live since 2026-10-25:** web https://oliveye.vercel.app · API https://oliveye-api.vercel.app
+(Vercel projects `oliveye` and `oliveye-api`, Hobby plan, account of the author).
+
 Two Vercel projects from the same GitHub repo. Done once by the author (needs a Vercel account);
 after that every push to `main` redeploys automatically.
 

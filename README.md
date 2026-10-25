@@ -2,6 +2,8 @@
 
 **Estimating olive oil production in Andalusia from space.**
 
+**Live:** [oliveye.vercel.app](https://oliveye.vercel.app) · API: [oliveye-api.vercel.app/docs](https://oliveye-api.vercel.app/docs)
+
 OlivEye estimates the olive oil production of each campaign for the provinces of **Jaén** and
 **Granada** using Sentinel-2 satellite imagery over the olive groves registered in SIGPAC, climate
 data and historical production, and compares the estimate against the official harvest forecast
@@ -37,8 +39,8 @@ Historical production (Junta de Andalucía, AICA) ──────────
 | **1. Exploration** | Understand the data | Notebooks: openEO NDVI time series for sample parcels, SIGPAC olive parcels, first look at production data | ✅ Done |
 | **2. Data pipeline** | Reproducible ETL | SIGPAC → PostGIS, NDVI/NDMI per parcel/province via openEO batch jobs (cached), climate and production ingestion, PySpark aggregation | 🔄 Extraction done (86 municipalities); PostGIS + PySpark pending |
 | **3. Models** | Honest prediction | Feature table per province & campaign; baseline, Ridge, XGBoost; leave-one-campaign-out; MLflow tracking; comparison with *aforo* | ✅ First version |
-| **4. API** | Serve results | FastAPI endpoints (parcels, time series, predictions), tests, Docker image | 🔄 Read-only API with tests; not deployed |
-| **5. Web & deploy** | Public product | Next.js + MapLibre map, NDVI/NDMI charts, prediction vs aforo; CI/CD with GitHub Actions; deployment | ⬜ |
+| **4. API** | Serve results | FastAPI endpoints (parcels, time series, predictions), tests, Docker image | ✅ Deployed on Vercel |
+| **5. Web & deploy** | Public product | Next.js + MapLibre map, NDVI/NDMI charts, prediction vs aforo; CI/CD with GitHub Actions; deployment | ✅ Live at oliveye.vercel.app |
 
 ## Results
 
@@ -88,7 +90,7 @@ province mean; [details and caveats](docs/results/forecast-2026-27.md).
 
 ## Current status
 
-**October 2026: models done, web next.** 16 province-campaigns, features from 86 municipalities
+**October 2026: models done, web and API live.** 16 province-campaigns, features from 86 municipalities
 (~80 % of each province's olive area) extracted on the server with openEO for 1,492 credits.
 Decisions are recorded in [`docs/decisions/`](docs/decisions/) and next steps in
 [`TODO.md`](TODO.md).

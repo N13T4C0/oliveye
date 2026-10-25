@@ -103,7 +103,7 @@ Updated at the end of each phase.
 ## Phase 4 — API (2026-10-25)
 - [x] Deployable FastAPI in `api/` (Vercel root), pre-built JSON in `api/data/`, cache headers, CORS (ADR 0005)
 - [x] Endpoints: municipalities, monthly indices, production, model summary, dated forecast, olive-area GeoJSON
-- [ ] **Author:** deploy on Vercel following `docs/deploy.md` (project with Root Directory `api`)
+- [x] Deployed on Vercel: https://oliveye-api.vercel.app (project `oliveye-api`, Root Directory `api`), 2026-10-25
 
 ## Phase 5 — Web (2026-10-25)
 - [x] `PRODUCT.md` + surface brief; structure: verdict band + workbench (author: "lo que tú recomiendes")
@@ -111,7 +111,9 @@ Updated at the end of each phase.
   NDVI/NDMI and campaign, monthly series per municipality, province chart with the 2026/27 forecast,
   method, sources; ES/EN; mobile; CI (lint, types, format, tests)
 - [x] Finish review (2 rounds): 7 of 8 fixes resolved; open: verdict band ~245 px vs ~190 px in the contract
-- [ ] **Author:** deploy the web on Vercel (Root Directory `web`, `NEXT_PUBLIC_API_URL`) and check the basemap
-  (OpenFreeMap tiles are blocked in the assistant's sandbox, so it was only verified with the fallback ground)
-- [ ] Put the public link at the top of the README and in the CV/LinkedIn
+- [x] Deployed on Vercel: https://oliveye.vercel.app (project `oliveye`, Root Directory `web`); basemap, map,
+  list and API calls verified in the author's browser, 2026-10-25
+- [x] Public link at the top of the README
+- [ ] **Author:** add the link to the CV and LinkedIn
+- [ ] Optional: Vercel *Ignored Build Step* per project (only rebuild when its folder changes)
 - [ ] Later: dark theme (planned in DESIGN.md), per-campaign error view (diverging palette), PostGIS loader
