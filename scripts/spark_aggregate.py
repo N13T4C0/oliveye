@@ -22,6 +22,7 @@ import geopandas as gpd
 import numpy as np
 import pandas as pd
 
+from oliveye.models.sources import index_series_paths
 from oliveye.pipeline.olive_grid import aggregate_cells
 from oliveye.spark.cells import (
     KEYS,
@@ -35,6 +36,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
 def cell_metadata(results_dir: Path) -> pd.DataFrame:
+    """Cell weights from the main extraction (every period uses the same SIGPAC grid)."""
     frames = [
         pd.DataFrame(gpd.read_file(path).drop(columns="geometry"))
         for path in sorted(results_dir.glob("*-openeo-real-*-2016-2026/cells.geojson"))
@@ -48,7 +50,7 @@ def pandas_baseline(results_dir: Path, meta: pd.DataFrame) -> tuple[pd.DataFrame
     start = time.perf_counter()
     frames = []
     cells = gpd.GeoDataFrame(meta)
-    for path in sorted(results_dir.glob("*-openeo-real-*-2016-2026/indices_cells_*.csv")):
+    for path in index_series_paths(results_dir, "indices_cells_*.csv"):
         frames.append(aggregate_cells(pd.read_csv(path), cells))
     return pd.concat(frames, ignore_index=True), time.perf_counter() - start
 
@@ -85,9 +87,7 @@ def main() -> None:
     expected = pd.concat(
         [
             pd.read_csv(path, dtype={"province_code": str, "municipality_code": str})
-            for path in sorted(
-                args.results_dir.glob("*-openeo-real-*-2016-2026/indices_monthly_*.csv")
-            )
+            for path in index_series_paths(args.results_dir, "indices_monthly_*.csv")
         ],
         ignore_index=True,
     )[["month", *KEYS, "ndvi", "ndmi", "valid_cells"]]

@@ -24,6 +24,8 @@ from pyspark.sql import Column, DataFrame, SparkSession
 from pyspark.sql import functions as F  # noqa: N812 - the conventional alias
 from pyspark.sql.types import DoubleType, StringType, StructField, StructType
 
+from oliveye.models.sources import INDEX_PERIODS
+
 CELL_SCHEMA = StructType(
     [
         StructField("month", StringType(), nullable=False),
@@ -47,12 +49,17 @@ def spark_session(app: str = "oliveye", master: str = "local[*]") -> SparkSessio
 
 
 def read_cell_series(spark: SparkSession, results_dir: Path) -> DataFrame:
-    """Every `indices_cells_*.csv` of the processed municipalities, with an explicit schema.
+    """Every `indices_cells_*.csv` of every extraction period, with an explicit schema.
 
     An explicit schema avoids a full extra pass over 559 MB that schema inference would need.
+    Periods cover disjoint months (see `oliveye.models.sources.INDEX_PERIODS`).
     """
-    pattern = str(results_dir / "*-openeo-real-*-2016-2026" / "indices_cells_*.csv")
-    return spark.read.csv(pattern, header=True, schema=CELL_SCHEMA)
+    patterns = [
+        str(results_dir / f"*-openeo-real-*-{period}" / "indices_cells_*.csv")
+        for period in INDEX_PERIODS
+        if any(results_dir.glob(f"*-openeo-real-*-{period}/indices_cells_*.csv"))
+    ]
+    return spark.read.csv(patterns, header=True, schema=CELL_SCHEMA)
 
 
 def aggregate_municipal(cells: DataFrame, metadata: DataFrame) -> DataFrame:

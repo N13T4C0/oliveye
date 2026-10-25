@@ -2,7 +2,8 @@
 
 Layout expected under `results_dir` (all produced by the job queue):
 
-* `*-openeo-real-<prov>-<mun>-2016-2026/indices_monthly_*.csv` — monthly indices per municipality
+* `*-openeo-real-<prov>-<mun>-<period>/indices_monthly_*.csv` — monthly indices per municipality,
+  one folder per extraction period in `INDEX_PERIODS`
 * `*-open-meteo-daily-*/open_meteo_daily_*.csv` and `point_cells.csv` — ERA5 daily weather
 * `*-sigpac-rank-<prov>/olive_ranking_<prov>.csv` — SIGPAC olive hectares per municipality
 * `*-aforo-table-*/aforo_by_province.csv` — parsed aforo PDFs (2021/22 onwards)
@@ -38,22 +39,45 @@ def _latest(paths: list[Path]) -> Path:
     return sorted(paths)[-1]
 
 
+# Extraction periods, oldest first. 2016-2026 is the main run (120 months, the cap per job);
+# 2015-2016 extends Sentinel-2 back to October 2015 (Sentinel-2A only) for campaign 2016/17.
+INDEX_PERIODS: tuple[str, ...] = ("2015-2016", "2016-2026")
+KEYS = ["province_code", "municipality_code", "month"]
+
+
+def index_series_paths(results_dir: Path, filename_glob: str) -> list[Path]:
+    """Files named `filename_glob` in the job folders of every period in `INDEX_PERIODS`.
+
+    One-off test extractions (e.g. a single month) have other suffixes and are never read.
+    """
+    paths: list[Path] = []
+    for period in INDEX_PERIODS:
+        paths += sorted(results_dir.glob(f"*-openeo-real-*-{period}/{filename_glob}"))
+    return paths
+
+
 def load_monthly(results_dir: Path) -> pd.DataFrame:
     """Monthly indices of every municipality processed so far, re-cleaned causally.
+
+    Periods are joined into one series per municipality before cleaning, so the outlier filter
+    sees a continuous series across the join. If two periods share a month, the later period in
+    `INDEX_PERIODS` (the main extraction) wins.
 
     The job outputs carry flags from a centred Hampel window (fine for exploring a series), which
     would let September/October images clean July/August values. Features stop in August, so the
     flags are recomputed here from the raw columns with a trailing window (no openEO request).
     """
     frames = []
-    for path in sorted(results_dir.glob("*-openeo-real-*-2016-2026/indices_monthly_*.csv")):
+    for path in index_series_paths(results_dir, "indices_monthly_*.csv"):
         frame = pd.read_csv(path, dtype={"province_code": str, "municipality_code": str})
         frame["month"] = pd.PeriodIndex(frame["month"], freq="M")
-        raw = frame.drop(columns=[c for c in frame.columns if c.endswith(("_outlier", "_clean"))])
-        frames.append(clean_monthly_indices(raw, causal=True))
+        frames.append(
+            frame.drop(columns=[c for c in frame.columns if c.endswith(("_outlier", "_clean"))])
+        )
     if not frames:
         raise FileNotFoundError("No municipal index series found")
-    return pd.concat(frames, ignore_index=True)
+    raw = pd.concat(frames, ignore_index=True).drop_duplicates(KEYS, keep="last")
+    return clean_monthly_indices(raw.sort_values(KEYS).reset_index(drop=True), causal=True)
 
 
 def load_weights(results_dir: Path) -> pd.DataFrame:

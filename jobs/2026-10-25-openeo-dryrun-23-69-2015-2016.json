@@ -1,0 +1,10 @@
+{
+  "type": "openeo_monthly_indices",
+  "params": {
+    "province": "23",
+    "municipality": "69",
+    "start": "2015-10-01",
+    "end": "2016-10-01",
+    "dry_run": true
+  }
+}

@@ -146,6 +146,7 @@ def main() -> None:
         pd.concat(
             [
                 gpd.read_file(path)
+                # Footprints from the main extraction: every period uses the same SIGPAC grid.
                 for path in sorted(args.results_dir.glob("*-openeo-real-*-2016-2026/cells.geojson"))
             ],
             ignore_index=True,

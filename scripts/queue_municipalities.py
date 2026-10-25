@@ -8,6 +8,11 @@ are never overwritten.
     git show origin/results:2026-10-24-sigpac-rank-23/olive_ranking_23.csv > /tmp/rank_23.csv
     uv run python scripts/queue_municipalities.py --ranking /tmp/rank_23.csv --province 23 \
         --coverage 0.8 --start 2016-10-01 --end 2026-10-01 --tag 2016-2026
+
+To extend the same municipalities to another period, take them from an earlier real run:
+
+    uv run python scripts/queue_municipalities.py --like 2016-2026 --province 23 \
+        --start 2015-10-01 --end 2016-10-01 --tag 2015-2016
 """
 
 from __future__ import annotations
@@ -30,11 +35,22 @@ def select_municipalities(ranking: pd.DataFrame, coverage: float) -> list[str]:
     return [str(code) for code in ordered["municipality_code"].head(n)]
 
 
+def municipalities_like(jobs_dir: Path, province: str, tag: str) -> list[str]:
+    """Municipality codes of the real openEO jobs already queued with `tag` in `province`."""
+    codes = []
+    for path in sorted(jobs_dir.glob(f"*-openeo-real-{province}-*-{tag}.json")):
+        params = json.loads(path.read_text(encoding="utf-8"))["params"]
+        codes.append(str(params["municipality"]))
+    return codes
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawTextHelpFormatter
     )
-    parser.add_argument("--ranking", type=Path, required=True)
+    source = parser.add_mutually_exclusive_group(required=True)
+    source.add_argument("--ranking", type=Path, help="SIGPAC ranking CSV (sigpac_rank job)")
+    source.add_argument("--like", help="reuse the municipalities of the real jobs with this tag")
     parser.add_argument("--province", required=True)
     parser.add_argument("--coverage", type=float, default=0.8)
     parser.add_argument("--start", required=True)
@@ -45,7 +61,10 @@ def main() -> None:
     parser.add_argument("--jobs-dir", type=Path, default=REPO_ROOT / "jobs")
     args = parser.parse_args()
 
-    codes = select_municipalities(pd.read_csv(args.ranking), args.coverage)
+    if args.like:
+        codes = municipalities_like(args.jobs_dir, args.province, args.like)
+    else:
+        codes = select_municipalities(pd.read_csv(args.ranking), args.coverage)
     kind = "real" if args.real else "dryrun"
     written = 0
     for code in codes:
@@ -67,7 +86,8 @@ def main() -> None:
         }
         path.write_text(json.dumps(spec, indent=2) + "\n", encoding="utf-8")
         written += 1
-    print(f"{len(codes)} municipalities cover {args.coverage:.0%}; wrote {written} {kind} job(s)")
+    origin = f"like {args.like}" if args.like else f"cover {args.coverage:.0%}"
+    print(f"{len(codes)} municipalities ({origin}); wrote {written} {kind} job(s)")
 
 
 if __name__ == "__main__":
