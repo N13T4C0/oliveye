@@ -67,6 +67,26 @@ def _weighted(group: pd.DataFrame, column: str, weight: str) -> float:
     return float((valid[column] * valid[weight]).sum() / total) if total else float("nan")
 
 
+def _province_features(
+    municipal: pd.DataFrame, climate: pd.DataFrame, weights: pd.DataFrame, weight_column: str
+) -> pd.DataFrame:
+    """Satellite and climate features per province and campaign (olive-hectare weighted)."""
+    features = municipal[[*_KEYS, "campaign", "ndvi_spring", "ndmi_summer"]].merge(
+        climate, on=[*_KEYS, "campaign"], how="outer"
+    )
+    features = features.merge(weights[[*_KEYS, weight_column]], on=_KEYS, how="inner")
+    rows = []
+    for (province_code, campaign), group in features.groupby(["province_code", "campaign"]):
+        rows.append(
+            {
+                "province": _CODE_TO_PROVINCE.get(str(province_code), str(province_code)),
+                "campaign": campaign,
+                **{c: _weighted(group, c, weight_column) for c in FEATURES[1:]},
+            }
+        )
+    return pd.DataFrame(rows)
+
+
 def province_table(
     municipal: pd.DataFrame,
     climate: pd.DataFrame,
@@ -85,20 +105,7 @@ def province_table(
         target: `target_series` output (`province`, `campaign`, `oil_final_t`).
         aforo: official forecast (`province`, `campaign`, `oil_aforo_t`).
     """
-    features = municipal[[*_KEYS, "campaign", "ndvi_spring", "ndmi_summer"]].merge(
-        climate, on=[*_KEYS, "campaign"], how="outer"
-    )
-    features = features.merge(weights[[*_KEYS, weight_column]], on=_KEYS, how="inner")
-    rows = []
-    for (province_code, campaign), group in features.groupby(["province_code", "campaign"]):
-        rows.append(
-            {
-                "province": _CODE_TO_PROVINCE.get(str(province_code), str(province_code)),
-                "campaign": campaign,
-                **{c: _weighted(group, c, weight_column) for c in FEATURES[1:]},
-            }
-        )
-    table = pd.DataFrame(rows)
+    table = _province_features(municipal, climate, weights, weight_column)
 
     production = target[["province", "campaign", "oil_final_t"]].copy()
     # How each target value was obtained (e.g. derived from aforo variations vs reported).
@@ -137,3 +144,36 @@ def next_campaign(campaign: str) -> str:
     """'2021/22' -> '2022/23': the campaign for which this production is the lag."""
     start = int(campaign[:4]) + 1
     return f"{start}/{(start + 1) % 100:02d}"
+
+
+def forecast_rows(
+    municipal: pd.DataFrame,
+    climate: pd.DataFrame,
+    weights: pd.DataFrame,
+    target: pd.DataFrame,
+    aforo: pd.DataFrame,
+    *,
+    campaign: str,
+    weight_column: str = "olive_hectares",
+) -> pd.DataFrame:
+    """Feature rows for a campaign whose production is not known yet (a genuine forecast).
+
+    The lag is the last known final production (campaign t-1); provinces missing a feature or
+    the lag are dropped. Same columns as `province_table` except the target ones.
+    """
+    table = _province_features(municipal, climate, weights, weight_column)
+    table = table[table["campaign"] == campaign].copy()
+    previous = target.assign(campaign=target["campaign"].map(next_campaign))
+    table = table.merge(
+        previous[["province", "campaign", "oil_final_t"]].rename(columns={"oil_final_t": "lag_t"}),
+        on=["province", "campaign"],
+        how="left",
+    )
+    table = table.merge(
+        aforo[["province", "campaign", "oil_aforo_t"]], on=["province", "campaign"], how="left"
+    )
+    table["lag_log_production"] = np.log(table["lag_t"])
+    table["is_granada"] = (table["province"] == "Granada").astype(int)
+    table = table.dropna(subset=FEATURES)
+    columns = ["province", "campaign", "is_granada", *FEATURES, "lag_t", "oil_aforo_t"]
+    return table[columns].sort_values("province").reset_index(drop=True)

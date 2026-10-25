@@ -296,3 +296,60 @@ def test_table_says_how_each_target_value_was_obtained() -> None:
     table = province_table(municipal, climate, weights, target, aforo)
     assert set(table["target_method"]) == {"derived_from_aforo"}  # 2016/17 dropped: no lag
     assert "target_method" in cross_validate_ridge(table, alphas=(10.0,)).columns
+
+
+# --- Dated forecast for a campaign whose production is not known yet --------------------------
+
+
+def _future_inputs() -> tuple[pd.DataFrame, ...]:
+    campaigns = [f"{y}/{(y + 1) % 100:02d}" for y in range(2016, 2024)]  # 2016/17..2023/24
+    known = campaigns[:-1]  # 2023/24 has satellite/climate data but no production yet
+    municipal = pd.DataFrame(
+        {
+            "province_code": "23",
+            "municipality_code": "60",
+            "campaign": campaigns,
+            "ndvi_spring": np.linspace(0.35, 0.42, len(campaigns)),
+            "ndmi_summer": np.linspace(-0.08, -0.04, len(campaigns)),
+        }
+    )
+    climate = municipal[["province_code", "municipality_code", "campaign"]].assign(hot_days_may=3.0)
+    weights = pd.DataFrame(
+        {"province_code": ["23"], "municipality_code": ["60"], "olive_hectares": [1.0]}
+    )
+    target = pd.DataFrame(
+        {
+            "province": "Jaén",
+            "campaign": known,
+            "oil_final_t": np.linspace(3e5, 6e5, len(known)),
+            "method": "derived_from_aforo",
+        }
+    )
+    aforo = pd.DataFrame({"province": ["Jaén"], "campaign": ["2023/24"], "oil_aforo_t": [5e5]})
+    return municipal, climate, weights, target, aforo
+
+
+def test_forecast_rows_use_last_known_production_as_lag() -> None:
+    from oliveye.models.dataset import forecast_rows
+
+    municipal, climate, weights, target, aforo = _future_inputs()
+    rows = forecast_rows(municipal, climate, weights, target, aforo, campaign="2023/24")
+
+    assert rows["campaign"].tolist() == ["2023/24"]
+    assert rows.loc[0, "lag_log_production"] == pytest.approx(np.log(6e5))  # 2022/23 final
+    assert rows.loc[0, "oil_aforo_t"] == pytest.approx(5e5)
+    assert rows.loc[0, "is_granada"] == 0
+
+
+def test_forecast_with_full_shrinkage_is_the_province_mean() -> None:
+    from oliveye.models.train import forecast
+
+    table = synthetic_table(noise=0.1)
+    future = table[table["campaign"] == "2024/25"].assign(campaign="2025/26")
+    result = forecast(table, future, interval_factor=2.0, alphas=(1e12,))
+
+    means = np.exp(table.groupby("province")["log_production"].mean())
+    for _, row in result.iterrows():
+        assert row["pred_t"] == pytest.approx(means[row["province"]])
+        assert row["low_t"] == pytest.approx(row["pred_t"] / 2.0)
+        assert row["high_t"] == pytest.approx(row["pred_t"] * 2.0)

@@ -82,6 +82,10 @@ conclusive: p = 0.055).
 
 Full numbers, caveats and raw outputs: [`docs/results/`](docs/results/README.md).
 
+**Dated forecast 2026/27** (published 2026-10-25, to be scored when the final figure is out):
+Jaén 392 kt (196–785), Granada 96 kt (48–193), vs aforo 575 / 106.7 kt — essentially the
+province mean; [details and caveats](docs/results/forecast-2026-27.md).
+
 ## Current status
 
 **October 2026: models done, web next.** 16 province-campaigns, features from 86 municipalities

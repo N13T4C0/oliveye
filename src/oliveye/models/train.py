@@ -283,3 +283,30 @@ def fit_final(
     """Main model fitted on every campaign (alpha by the same nested rule), for forecasts."""
     alpha = choose_alpha(table, MODEL_COLUMNS, alphas)
     return make_pipeline(alpha).fit(table[MODEL_COLUMNS], table["log_production"]), alpha
+
+
+def forecast(
+    table: pd.DataFrame,
+    rows: pd.DataFrame,
+    *,
+    interval_factor: float,
+    alphas: Sequence[float] = ALPHAS,
+) -> pd.DataFrame:
+    """Forecast campaigns not in `table` with the main model fitted on every known campaign.
+
+    `interval_factor` is the multiplicative half-width from the out-of-sample residuals
+    (`conformal_half_width`, exponentiated): the interval is [forecast / f, forecast · f].
+    """
+    model, alpha = fit_final(table, alphas=alphas)
+    pred_t = np.exp(model.predict(rows[MODEL_COLUMNS]))
+    return pd.DataFrame(
+        {
+            "province": rows["province"].to_numpy(),
+            "campaign": rows["campaign"].to_numpy(),
+            "pred_t": pred_t,
+            "low_t": pred_t / interval_factor,
+            "high_t": pred_t * interval_factor,
+            "oil_aforo_t": rows["oil_aforo_t"].to_numpy() if "oil_aforo_t" in rows else np.nan,
+            "alpha": alpha,
+        }
+    )

@@ -69,8 +69,8 @@ Updated at the end of each phase.
 - [ ] Ideas to make the model useful (next session, decide with the author): more campaigns via
   Landsat (pre-2015), municipal or comarca-level targets if a source exists, or reframe as
   "early signal in August" vs the October aforo
-- [ ] **Author:** review `docs/results/README-draft.md`, choose the README headline
-- [ ] **Author:** confirm publishing the dated 2026/27 forecast next to the aforo
+- [x] README headline approved by the author and published (2026-10-25)
+- [x] Dated 2026/27 forecast published (`docs/results/forecast-2026-27.md`); score it in autumn 2027
 
 ## Phase 1 — Exploration
 - [x] `01_openeo_ndvi_sample_parcels.ipynb` + `oliveye.pipeline.openeo_ndvi` written and dry-run tested
