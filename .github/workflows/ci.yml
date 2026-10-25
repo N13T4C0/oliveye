@@ -53,3 +53,26 @@ jobs:
       - run: uv sync --frozen --extra bigdata
       - name: Spark parity tests
         run: uv run pytest -q tests/test_spark.py
+
+  postgis:
+    # PostGIS loader against the same image as docker-compose.yml.
+    runs-on: ubuntu-latest
+    services:
+      db:
+        image: postgis/postgis:17-3.5
+        env:
+          POSTGRES_DB: oliveye
+          POSTGRES_USER: oliveye
+          POSTGRES_PASSWORD: ci-only
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U oliveye -d oliveye"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      OLIVEYE_TEST_DATABASE_URL: postgresql+psycopg://oliveye:ci-only@localhost:5432/oliveye
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync --frozen --extra db
+      - name: PostGIS loader tests
+        run: uv run pytest -q tests/test_db.py

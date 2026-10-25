@@ -37,7 +37,7 @@ Historical production (Junta de Andalucía, AICA) ──────────
 |---|---|---|---|
 | **0. Setup** | Project ready to work | Repo structure, `CLAUDE.md`, Docker + PostGIS, `pyproject.toml` | ✅ Done |
 | **1. Exploration** | Understand the data | Notebooks: openEO NDVI time series for sample parcels, SIGPAC olive parcels, first look at production data | ✅ Done |
-| **2. Data pipeline** | Reproducible ETL | SIGPAC → PostGIS, NDVI/NDMI per parcel/province via openEO batch jobs (cached), climate and production ingestion, PySpark aggregation | 🔄 Extraction done (86 municipalities); PostGIS + PySpark pending |
+| **2. Data pipeline** | Reproducible ETL | SIGPAC → PostGIS, NDVI/NDMI per parcel/province via openEO batch jobs (cached), climate and production ingestion, PySpark aggregation | ✅ Extraction (86 municipalities), PySpark ETL, PostGIS loader |
 | **3. Models** | Honest prediction | Feature table per province & campaign; baseline, Ridge, XGBoost; leave-one-campaign-out; MLflow tracking; comparison with *aforo* | ✅ First version |
 | **4. API** | Serve results | FastAPI endpoints (parcels, time series, predictions), tests, Docker image | ✅ Deployed on Vercel |
 | **5. Web & deploy** | Public product | Next.js + MapLibre map, NDVI/NDMI charts, prediction vs aforo; CI/CD with GitHub Actions; deployment | ✅ Live at oliveye.vercel.app |
@@ -105,8 +105,13 @@ git clone <repo-url> oliveye && cd oliveye
 uv sync                       # Python environment
 cp .env.example .env          # set POSTGRES_PASSWORD
 docker compose up -d          # PostgreSQL + PostGIS
+uv run --extra db python scripts/load_postgis.py   # load the published data into PostGIS
 uv run jupyter lab
 ```
+
+The database holds the 269 municipalities, the measured olive area (EPSG:4326, GiST index), 10,320
+monthly NDVI/NDMI rows and the production series, plus two views: `v_olive_area_check` (areas
+recomputed in EPSG:25830) and `v_campaign_error` (OlivEye vs aforo per campaign).
 
 ## Data sources
 

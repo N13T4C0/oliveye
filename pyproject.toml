@@ -35,6 +35,11 @@ tracking = [
 bigdata = [
     "pyspark>=4.0",
 ]
+db = [
+    "geoalchemy2>=0.15",
+    "psycopg[binary]>=3.2",
+    "sqlalchemy>=2.0",
+]
 
 [dependency-groups]
 dev = [
@@ -74,7 +79,8 @@ files = ["src", "api"]
 
 [[tool.mypy.overrides]]
 # These libraries ship without complete type information.
-module = ["geopandas.*", "rasterio.*", "openeo.*", "shapely.*", "sklearn.*", "pyspark.*"]
+module = ["geopandas.*", "rasterio.*", "openeo.*", "shapely.*", "sklearn.*", "pyspark.*",
+          "sqlalchemy.*", "geoalchemy2.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
