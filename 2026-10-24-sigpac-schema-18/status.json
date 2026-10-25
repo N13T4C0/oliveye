@@ -1,0 +1,14 @@
+{
+ "job_id": "2026-10-24-sigpac-schema-18",
+ "type": "sigpac_schema",
+ "params": {
+  "province": "18"
+ },
+ "started_at": "2026-10-25T03:55:16Z",
+ "status": "ok",
+ "outputs": [
+  "schema.csv",
+  "admin_values_18.csv"
+ ],
+ "finished_at": "2026-10-25T03:55:26Z"
+}
