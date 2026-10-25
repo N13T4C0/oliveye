@@ -25,7 +25,14 @@ def price_payload(csv_path: Path) -> dict[str, Any]:
     unknown = set(table["category"]) - set(CATEGORIES)
     if unknown:
         raise ValueError(f"Unknown oil categories: {sorted(unknown)}")
+    if table.empty:
+        raise ValueError(f"No prices in {csv_path}")
     latest = table[table["week_end"] == table["week_end"].max()]
+    if sorted(latest["category"]) != sorted(CATEGORIES):
+        raise ValueError(
+            f"Week ending {latest['week_end'].iloc[0]} must list each of {CATEGORIES} once, "
+            f"got {sorted(latest['category'])}"
+        )
     prices = {row.category: float(row.eur_per_kg) for row in latest.itertuples()}
     first = latest.iloc[0]
     return {

@@ -13,6 +13,7 @@ def test_latest_week_and_range(tmp_path: Path) -> None:
         "week_start,week_end,category,eur_per_kg,source,source_url,note\n"
         "2026-10-06,2026-10-12,virgen_extra,3.40,Poolred,https://x,\n"
         "2026-10-13,2026-10-19,virgen_extra,3.16,Poolred,https://x,\n"
+        "2026-10-13,2026-10-19,virgen,2.99,Poolred,https://x,\n"
         "2026-10-13,2026-10-19,lampante,2.88,Poolred,https://x,\n",
         encoding="utf-8",
     )
@@ -20,6 +21,19 @@ def test_latest_week_and_range(tmp_path: Path) -> None:
     assert payload["week_end"] == "2026-10-19"
     assert payload["low_eur_per_kg"] == 2.88
     assert payload["high_eur_per_kg"] == 3.16
+
+
+def test_latest_week_must_have_every_category_once(tmp_path: Path) -> None:
+    csv = tmp_path / "prices.csv"
+    csv.write_text(
+        "week_start,week_end,category,eur_per_kg,source,source_url,note\n"
+        "2026-10-13,2026-10-19,virgen_extra,3.16,Poolred,https://x,\n"
+        "2026-10-13,2026-10-19,virgen_extra,3.20,Poolred,https://x,\n"
+        "2026-10-13,2026-10-19,lampante,2.88,Poolred,https://x,\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="once"):
+        price_payload(csv)
 
 
 def test_unknown_category_is_rejected(tmp_path: Path) -> None:

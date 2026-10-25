@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { MAP_URL } from "@/lib/api";
 import { INDEX_CAMPAIGNS, indexProperty } from "@/lib/campaigns";
-import { ANOMALY_RAMPS, anomalyOf } from "@/lib/farm";
+import { ANOMALY_NO_DATA, anomalyOf, anomalyRamp } from "@/lib/farm";
 import { t } from "@/lib/i18n";
 import type { Mode } from "@/lib/mode";
 import { formatIndex, formatSignedPercent, rampOf, type Lang } from "@/lib/scale";
@@ -68,12 +68,12 @@ function fillColour(
   mode: Mode,
 ): ExpressionSpecification {
   if (mode === "simple") {
-    const ramp = ANOMALY_RAMPS[index];
+    const ramp = anomalyRamp(index, theme === "dark");
     return [
       "match",
       ["get", anomalyProperty(index, campaign)],
       ...ramp.flatMap((colour, cls) => [cls, colour]),
-      PALETTES[theme].noData,
+      ANOMALY_NO_DATA[theme],
     ] as unknown as ExpressionSpecification;
   }
   const key = indexProperty(index, campaign);

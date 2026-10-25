@@ -50,7 +50,7 @@ export function Verdict({ lang, summary, forecast }: Props) {
     <section className={styles.band} aria-labelledby="verdict-question">
       <div className={styles.inner}>
         <div className={styles.answer}>
-          <h1 id="verdict-question" className={styles.question}>
+          <h1 id="verdict-question" className={styles.question} tabIndex={-1}>
             {t(lang, "question")} <span className={styles.no}>{t(lang, "answer")}</span>
           </h1>
           <p className={styles.detail}>{t(lang, "answerDetail")}</p>

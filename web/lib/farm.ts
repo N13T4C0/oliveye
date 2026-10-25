@@ -45,13 +45,19 @@ export function formatEuroRange([low, high]: [number, number], lang: Lang): stri
     : `€${f.format(round(low))}–${f.format(round(high))} million`;
 }
 
-export function formatKgPerHa(value: number | null, lang: Lang): string {
+/** "980" (rounded to 10 kg): the number alone, for layouts that set the unit apart. */
+export function formatKgNumber(value: number | null, lang: Lang): string {
   if (value === null || !Number.isFinite(value)) return "—";
   const f = new Intl.NumberFormat(LOCALES[lang], {
     maximumFractionDigits: 0,
     useGrouping: "always",
   });
-  return `${f.format(Math.round(value / 10) * 10)} kg/ha`;
+  return f.format(Math.round(value / 10) * 10);
+}
+
+export function formatKgPerHa(value: number | null, lang: Lang): string {
+  const number = formatKgNumber(value, lang);
+  return number === "—" ? number : `${number} kg/ha`;
 }
 
 // --------------------------------------------------------------------------------------------
@@ -60,10 +66,11 @@ export function formatKgPerHa(value: number | null, lang: Lang): string {
 
 /**
  * Five classes from "much below usual" to "much above usual", by how many standard deviations a
- * campaign is from the same municipality's other campaigns (a z-score). ±0.5 and ±1.5 put about
- * a third of the campaigns in "usual" and only clear exceptions in the outer classes.
+ * campaign is from the same municipality's other campaigns (a z-score). Breaks at ±1 and ±2 keep
+ * about two thirds of ordinary years in "usual": with only ~9 other campaigns the standard
+ * deviation is itself uncertain, so only clear departures are called out.
  */
-export const ANOMALY_BREAKS = [-1.5, -0.5, 0.5, 1.5] as const;
+export const ANOMALY_BREAKS = [-2, -1, 1, 2] as const;
 export type AnomalyClass = 0 | 1 | 2 | 3 | 4;
 
 /** Fewer other campaigns than this and "usual" is not known well enough to compare with. */
@@ -72,7 +79,10 @@ const MIN_OTHER_CAMPAIGNS = 4;
 export interface Anomaly {
   /** Standard deviations from the municipality's other campaigns. */
   z: number;
-  /** Difference from the mean of the other campaigns, in % of that mean. */
+  /**
+   * Difference from the mean of the other campaigns, in % of that mean. Meaningful for NDVI
+   * (always well above zero); NOT for NDMI, which hovers around zero, so the page never shows it.
+   */
   pct: number;
   cls: AnomalyClass;
 }
@@ -108,6 +118,22 @@ export const ANOMALY_RAMPS: Record<IndexKey, readonly string[]> = {
   ndvi_spring: ["#8c510a", "#d8b365", "#ece6d8", "#5ab4ac", "#01665e"],
   ndmi_summer: ["#b2182b", "#ef8a62", "#ece6d8", "#67a9cf", "#2166ac"],
 };
+
+/** Dark theme: same hues, the outer classes lightened so they stand out on a near-black map. */
+export const ANOMALY_RAMPS_DARK: Record<IndexKey, readonly string[]> = {
+  ndvi_spring: ["#bf812d", "#dfc27d", "#d9d4c7", "#80cdc1", "#35978f"],
+  ndmi_summer: ["#d6604d", "#f4a582", "#d9d4c7", "#92c5de", "#4393c3"],
+};
+
+/**
+ * "No data / not enough history" in the simple view: a mid grey, clearly apart from the cream
+ * "usual" class (the light theme's general no-data grey is too close to it).
+ */
+export const ANOMALY_NO_DATA = { light: "#9a9d96", dark: "#4a5045" } as const;
+
+export function anomalyRamp(index: IndexKey, dark: boolean): readonly string[] {
+  return (dark ? ANOMALY_RAMPS_DARK : ANOMALY_RAMPS)[index];
+}
 
 /**
  * Below this many 250 m cells (about 300 ha of pure olive grove) a municipality's figure rests on

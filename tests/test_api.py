@@ -207,9 +207,8 @@ def test_campaign_errors_sign_and_closer(client: TestClient) -> None:
 def test_reference_price_from_published_data() -> None:
     data = Path(__file__).resolve().parents[1] / "api" / "data"
     price = TestClient(create_app(data)).get("/prices/reference").json()
-    assert (
-        price["low_eur_per_kg"] <= price["eur_per_kg"]["virgen_extra"] == price["high_eur_per_kg"]
-    )
+    assert price["low_eur_per_kg"] == min(price["eur_per_kg"].values())
+    assert price["high_eur_per_kg"] == max(price["eur_per_kg"].values())
     assert price["source_url"].startswith("https://")
 
 

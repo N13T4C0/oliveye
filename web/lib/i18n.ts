@@ -16,9 +16,9 @@ const es = {
   thirstName: "Sed del olivar en verano",
   comparedWithUsual: "comparado con lo normal en cada municipio",
   greennessHelp:
-    "Cuánto verdean los olivos de marzo a mayo, visto desde el satélite. Cada municipio se compara con sus otras campañas desde 2017.",
+    "Lo verde que se ve el olivar (los árboles y la hierba entre ellos) de marzo a mayo desde el satélite. «Normal» es lo habitual en ese municipio en sus otras campañas desde 2017.",
   thirstHelp:
-    "Cuánta agua tienen las hojas de junio a agosto: más sed significa árboles con estrés por falta de agua. Cada municipio se compara con sus otras campañas desde 2017.",
+    "El agua que el satélite ve en la vegetación del olivar de junio a agosto; más sed suele indicar estrés por falta de agua. «Normal» es lo habitual en ese municipio en sus otras campañas desde 2017.",
   g0: "Mucho menos verde que lo normal",
   g1: "Menos verde que lo normal",
   g2: "Normal",
@@ -36,9 +36,9 @@ const es = {
   tShort4: "Mucha menos sed",
   notEnoughHistory: "Sin historial suficiente",
   greennessSentence:
-    "En la primavera de la campaña {campaign}, el olivar de {name} ha estado un {pct} {dir} verde que en sus otras campañas.",
-  more: "más",
-  less: "menos",
+    "En la primavera de la campaña {campaign}, el índice de verdor del olivar de {name} fue un {pct} {dir} que la media de sus otras campañas.",
+  more: "más alto",
+  less: "más bajo",
   thirstSentence: "En el verano de la campaña {campaign}, el olivar de {name} ha tenido {label}.",
   thirstUsual: "una sed normal, como en sus otras campañas",
   monthlyGreenness: "Verdor mes a mes",
@@ -49,13 +49,18 @@ const es = {
   harvestAforo: "Aforo oficial · Junta de Andalucía",
   harvestSatellite: "Estimación del satélite · experimental",
   harvestSatelliteNote:
-    "En las campañas pasadas, el aforo acertó unas {ratio} veces más que el satélite: tómalo solo como orientación.",
+    "En las campañas pasadas (cada una estimada sin conocerla), el satélite se equivocó de media un {model} y el aforo un {aforo}. De momento no acierta más que repetir la cosecha del año anterior ({last}): tómalo solo como orientación.",
+  satelliteRange: "margen: {low}–{high}",
+  noDataOrHistory: "Sin dato o sin historial suficiente",
+  province: "Provincia",
+  priceSource: "Fuente del precio",
   harvestValue: "Valor aproximado",
   litresColumn: "Aceite",
-  kgPerHaColumn: "Por hectárea",
+  kgPerHaColumn: "Aceite por ha (media provincial)",
   harvestCaption:
-    "Precio en origen (Poolred) del {start} al {end}: {low} €/kg (lampante) a {high} €/kg (virgen extra). 1 tonelada de aceite son unos 1.092 litros. Hectáreas de olivar: SIGPAC.",
-  harvestCaptionNoPrice: "1 tonelada de aceite son unos 1.092 litros. Hectáreas de olivar: SIGPAC.",
+    "Valor = aceite × precio en origen (Poolred, del {start} al {end}), de la categoría más barata a la más cara (media de todas las variedades): virgen extra {extra} €/kg, virgen {virgin} €/kg, lampante {lampante} €/kg. 1 tonelada de aceite son unos 1.092 litros. Kilos de aceite por hectárea: aforo entre toda la superficie de olivar declarada en SIGPAC, incluidos árboles jóvenes y parcelas sin cosechar, así que es una media provincial, no el rendimiento de una finca.",
+  harvestCaptionNoPrice:
+    "1 tonelada de aceite son unos 1.092 litros. Kilos por hectárea sobre la superficie de olivar declarada en SIGPAC.",
   provincesTitleSimple: "Aceite producido en cada campaña",
   provincesLeadSimple:
     "Millones de litros de aceite: lo que se produjo de verdad, lo que dijo el aforo en octubre y lo que estimó el satélite sin conocer esa campaña.",
@@ -63,7 +68,7 @@ const es = {
   method1Simple:
     "El verdor y la sed se miden con el satélite europeo Sentinel-2, que fotografía cada olivar cada pocos días. «Normal» es lo habitual en ese municipio desde 2017.",
   method2Simple:
-    "La producción y el aforo son de la Junta de Andalucía. La estimación del satélite es un experimento: con solo 9 campañas aún no mejora al aforo, que cuenta aceituna en el campo.",
+    "La producción y el aforo son de la Junta de Andalucía. La estimación del satélite es un experimento: con solo {campaigns} campañas aún no mejora al aforo, que cuenta aceituna en el campo.",
   showTechnical: "Ver los datos técnicos",
   satelliteShort: "Satélite (experimental)",
   satelliteForecast: "Previsión del satélite 2026/27 y su margen",
@@ -169,9 +174,9 @@ const en: Record<MessageKey, string> = {
   thirstName: "Olive grove thirst in summer",
   comparedWithUsual: "compared with what is usual in each municipality",
   greennessHelp:
-    "How green the olive trees are from March to May, seen from the satellite. Each municipality is compared with its other campaigns since 2017.",
+    "How green the olive groves (trees and the grass between them) look from the satellite from March to May. 'Usual' is what is normal for that municipality in its other campaigns since 2017.",
   thirstHelp:
-    "How much water the leaves hold from June to August: more thirst means trees stressed by lack of water. Each municipality is compared with its other campaigns since 2017.",
+    "The water the satellite sees in the olive groves' vegetation from June to August; more thirst usually means stress from lack of water. 'Usual' is what is normal for that municipality in its other campaigns since 2017.",
   g0: "Much less green than usual",
   g1: "Less green than usual",
   g2: "Usual",
@@ -189,9 +194,9 @@ const en: Record<MessageKey, string> = {
   tShort4: "Much less thirsty",
   notEnoughHistory: "Not enough history",
   greennessSentence:
-    "In the spring of campaign {campaign}, {name}'s olive groves were {pct} {dir} green than in their other campaigns.",
-  more: "more",
-  less: "less",
+    "In the spring of campaign {campaign}, the greenness index of {name}'s olive groves was {pct} {dir} than the average of their other campaigns.",
+  more: "higher",
+  less: "lower",
   thirstSentence: "In the summer of campaign {campaign}, {name}'s olive groves were {label}.",
   thirstUsual: "as thirsty as in their other campaigns",
   monthlyGreenness: "Greenness month by month",
@@ -202,13 +207,18 @@ const en: Record<MessageKey, string> = {
   harvestAforo: "Official forecast · Junta de Andalucía",
   harvestSatellite: "Satellite estimate · experimental",
   harvestSatelliteNote:
-    "In past campaigns the official forecast was about {ratio} times more accurate than the satellite: take it as a rough guide only.",
+    "In past campaigns (each estimated without knowing it), the satellite was off by {model} on average and the official forecast by {aforo}. For now it does no better than repeating last year's harvest ({last}): take it as a rough guide only.",
+  satelliteRange: "margin: {low}–{high}",
+  noDataOrHistory: "No data or not enough history",
+  province: "Province",
+  priceSource: "Price source",
   harvestValue: "Approximate value",
   litresColumn: "Oil",
-  kgPerHaColumn: "Per hectare",
+  kgPerHaColumn: "Oil per ha (province average)",
   harvestCaption:
-    "Origin price (Poolred) {start} to {end}: €{low}/kg (lampante) to €{high}/kg (extra virgin). 1 tonne of oil is about 1,092 litres. Olive hectares: SIGPAC.",
-  harvestCaptionNoPrice: "1 tonne of oil is about 1,092 litres. Olive hectares: SIGPAC.",
+    "Value = oil × origin price (Poolred, {start} to {end}), from the cheapest to the dearest grade (average of all varieties): extra virgin €{extra}/kg, virgin €{virgin}/kg, lampante €{lampante}/kg. 1 tonne of oil is about 1,092 litres. Kilos of oil per hectare: the forecast over all olive area declared in SIGPAC, young trees and unharvested plots included, so it is a province average, not a farm's yield.",
+  harvestCaptionNoPrice:
+    "1 tonne of oil is about 1,092 litres. Kilos per hectare over the olive area declared in SIGPAC.",
   provincesTitleSimple: "Olive oil produced each campaign",
   provincesLeadSimple:
     "Million litres of oil: what was actually produced, what the official forecast said in October, and what the satellite estimated without knowing that campaign.",
@@ -216,7 +226,7 @@ const en: Record<MessageKey, string> = {
   method1Simple:
     "Greenness and thirst are measured by the European Sentinel-2 satellite, which photographs every olive grove every few days. 'Usual' is what is normal for that municipality since 2017.",
   method2Simple:
-    "Production and the official forecast come from the Junta de Andalucía. The satellite estimate is an experiment: with only 9 campaigns it does not beat the official forecast yet, which counts olives in the field.",
+    "Production and the official forecast come from the Junta de Andalucía. The satellite estimate is an experiment: with only {campaigns} campaigns it does not beat the official forecast yet, which counts olives in the field.",
   showTechnical: "See the technical data",
   satelliteShort: "Satellite (experimental)",
   satelliteForecast: "Satellite forecast 2026/27 and its margin",

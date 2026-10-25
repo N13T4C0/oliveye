@@ -31,16 +31,16 @@ async function getJson<T>(path: string, init?: RequestInit): Promise<T> {
 /** Everything the page renders on the server. */
 export async function getPageData(): Promise<PageData> {
   const cached = { next: { revalidate: REVALIDATE_SECONDS } };
-  const [municipalities, jaen, granada, summary, forecast] = await Promise.all([
+  const [municipalities, jaen, granada, summary, forecast, price] = await Promise.all([
     getJson<Municipality[]>("/municipalities", cached),
     getJson<ProductionPoint[]>(`/provinces/${encodeURIComponent("Jaén")}/production`, cached),
     getJson<ProductionPoint[]>("/provinces/Granada/production", cached),
     getJson<ModelScore[]>("/models/summary", cached),
     getJson<Forecast>("/forecast", cached),
+    // Optional: without a published price the page shows litres and kg/ha only.
+    getJson<ReferencePrice>("/prices/reference", cached).catch(() => null),
   ]);
   const production: Record<ProvinceName, ProductionPoint[]> = { Jaén: jaen, Granada: granada };
-  // Optional: without a published price the page shows litres and kg/ha only.
-  const price = await getJson<ReferencePrice>("/prices/reference", cached).catch(() => null);
   return { municipalities, production, summary, forecast, price };
 }
 

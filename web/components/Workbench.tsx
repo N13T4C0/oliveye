@@ -3,7 +3,7 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 
 import { listRows, matchesSearch, sortRows, type Campaign, type SortMode } from "@/lib/campaigns";
-import { ANOMALY_RAMPS, anomalyOf, type Anomaly } from "@/lib/farm";
+import { ANOMALY_NO_DATA, anomalyOf, anomalyRamp, type Anomaly } from "@/lib/farm";
 import { t } from "@/lib/i18n";
 import type { Mode } from "@/lib/mode";
 import {
@@ -81,12 +81,12 @@ export function Workbench({
   const rows = useMemo(() => {
     let all = listRows(features, index, campaign).filter((r) => matchesSearch(r.name, query));
     if (simple) {
-      // Greenness: by the % shown in the list, greenest first. Thirst: by how unusual it is,
-      // thirstiest first (a low NDMI means more thirst).
+      // Sorted by how unusual the campaign is (the z-score the colours come from): greenest
+      // first for greenness, thirstiest first for thirst (a low NDMI means more thirst).
+      const sign = index === "ndvi_spring" ? 1 : -1;
       all = all.map((r) => {
         const anomaly = anomalies.get(r.id);
-        const value = !anomaly ? null : index === "ndvi_spring" ? anomaly.pct : -anomaly.z;
-        return { ...r, value };
+        return { ...r, value: anomaly ? sign * anomaly.z : null };
       });
     }
     return sortRows(all, sort, lang);
@@ -95,7 +95,7 @@ export function Workbench({
   const swatch = (id: string, value: number | null): string => {
     if (!simple) return colourOf(value, breaks, ramp, noData);
     const anomaly = anomalies.get(id);
-    return anomaly ? ANOMALY_RAMPS[index][anomaly.cls] : noData;
+    return anomaly ? anomalyRamp(index, theme === "dark")[anomaly.cls] : ANOMALY_NO_DATA[theme];
   };
   const display = (id: string, value: number | null): string => {
     if (!simple) return formatIndex(value, lang);

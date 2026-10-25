@@ -1,6 +1,6 @@
 "use client";
 
-import { ANOMALY_RAMPS } from "@/lib/farm";
+import { ANOMALY_NO_DATA, anomalyRamp } from "@/lib/farm";
 import { t } from "@/lib/i18n";
 import type { Mode } from "@/lib/mode";
 import { formatIndex, rampOf, type Lang } from "@/lib/scale";
@@ -95,26 +95,28 @@ function SimpleLegend({
   const [theme] = useTheme();
   const isNdvi = index === "ndvi_spring";
   const prefix = isNdvi ? "g" : "t";
+  const ramp = anomalyRamp(index, theme === "dark");
+  const titleId = `legend-title-${index}`;
   // Listed from "more of it" to "less": greener first, thirstier first.
   const classes = isNdvi ? ([4, 3, 2, 1, 0] as const) : ([0, 1, 2, 3, 4] as const);
   return (
     <div className={styles.legend}>
-      <p className={styles.title}>
+      <p id={titleId} className={styles.title}>
         {t(lang, isNdvi ? "greennessName" : "thirstName")} <span className="num">{campaign}</span>
       </p>
       {!compact && (
         <p className={styles.help}>{t(lang, isNdvi ? "greennessHelp" : "thirstHelp")}</p>
       )}
-      <ul className={styles.classes}>
+      <ul className={styles.classes} aria-labelledby={titleId}>
         {classes.map((cls) => (
           <li key={cls}>
-            <span style={{ background: ANOMALY_RAMPS[index][cls] }} aria-hidden="true" />
+            <span style={{ background: ramp[cls] }} aria-hidden="true" />
             {t(lang, `${prefix}${cls}` as const)}
           </li>
         ))}
         <li>
-          <span style={{ background: PALETTES[theme].noData }} aria-hidden="true" />
-          {t(lang, "noData")}
+          <span style={{ background: ANOMALY_NO_DATA[theme] }} aria-hidden="true" />
+          {t(lang, "noDataOrHistory")}
         </li>
       </ul>
     </div>

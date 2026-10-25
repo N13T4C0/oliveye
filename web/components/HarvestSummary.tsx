@@ -1,12 +1,13 @@
 import {
   formatEuroRange,
-  formatKgPerHa,
+  formatKgNumber,
+  formatMillionLitres,
   harvestValue,
   kgPerHectare,
   tonnesToLitres,
 } from "@/lib/farm";
 import { t } from "@/lib/i18n";
-import type { Lang } from "@/lib/scale";
+import { formatPercent, type Lang } from "@/lib/scale";
 import type { Forecast, ModelScore, Municipality, ReferencePrice } from "@/lib/types";
 
 import styles from "./Verdict.module.css";
@@ -21,10 +22,6 @@ interface Props {
   price: ReferencePrice | null;
 }
 
-/**
- * The simple view's opening band: the official forecast in litres, kilos per hectare and euros,
- * with the satellite estimate beside it, clearly labelled as experimental.
- */
 /** "628" in large type and "millones de litros" small beneath it, so the figure reads first. */
 function Litres({ tonnes, density, lang }: { tonnes: number; density?: number; lang: Lang }) {
   const millions = tonnesToLitres(tonnes, density) / 1e6;
@@ -39,6 +36,10 @@ function Litres({ tonnes, density, lang }: { tonnes: number; density?: number; l
   );
 }
 
+/**
+ * The simple view's opening band: the official forecast in litres, kilos per hectare and euros,
+ * with the satellite estimate beside it, clearly labelled as experimental, with its margin.
+ */
 export function HarvestSummary({ lang, forecast, summary, municipalities, price }: Props) {
   const density = price?.oil_density_kg_per_l;
   const hectares = (code: string) =>
@@ -50,7 +51,11 @@ export function HarvestSummary({ lang, forecast, summary, municipalities, price 
   );
   const ridge = summary.find((s) => s.model === "ridge")?.mape_pct;
   const aforo = summary.find((s) => s.model === "aforo")?.mape_pct;
-  const ratio = ridge && aforo ? Math.round(ridge / aforo) : null;
+  const last = summary.find((s) => s.model === "last_campaign")?.mape_pct;
+  const millions = (tonnes: number) =>
+    new Intl.NumberFormat(lang === "es" ? "es-ES" : "en-GB", { maximumFractionDigits: 0 }).format(
+      tonnesToLitres(tonnes, density) / 1e6,
+    );
   const decimal = (v: number) =>
     new Intl.NumberFormat(lang === "es" ? "es-ES" : "en-GB", {
       minimumFractionDigits: 2,
@@ -79,7 +84,7 @@ export function HarvestSummary({ lang, forecast, summary, municipalities, price 
               <thead>
                 <tr>
                   <th scope="col" className="visually-hidden">
-                    {lang === "es" ? "Provincia" : "Province"}
+                    {t(lang, "province")}
                   </th>
                   <th scope="col">{t(lang, "litresColumn")}</th>
                   <th scope="col">{t(lang, "kgPerHaColumn")}</th>
@@ -112,10 +117,10 @@ export function HarvestSummary({ lang, forecast, summary, municipalities, price 
                             "—"
                           ) : (
                             <>
-                              {formatKgPerHa(
+                              {formatKgNumber(
                                 kgPerHectare(tonnes, hectares(PROVINCE_CODES[row.province])),
                                 lang,
-                              ).replace(" kg/ha", "")}
+                              )}
                               <span className={styles.unit}>kg/ha</span>
                             </>
                           )}
@@ -139,13 +144,25 @@ export function HarvestSummary({ lang, forecast, summary, municipalities, price 
                       <span className={`${styles.value} ${styles.small} num`}>
                         <Litres tonnes={row.pred_t} density={density} lang={lang} />
                       </span>
+                      <span className={`${styles.range} num`}>
+                        {t(lang, "satelliteRange", {
+                          low: millions(row.low_t),
+                          high: formatMillionLitres(tonnesToLitres(row.high_t, density), lang),
+                        })}
+                      </span>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-            {ratio !== null && (
-              <p className={styles.tileNote}>{t(lang, "harvestSatelliteNote", { ratio })}</p>
+            {ridge !== undefined && aforo !== undefined && (
+              <p className={styles.tileNote}>
+                {t(lang, "harvestSatelliteNote", {
+                  model: formatPercent(ridge, lang),
+                  aforo: formatPercent(aforo, lang),
+                  last: formatPercent(last ?? null, lang),
+                })}
+              </p>
             )}
           </figure>
         </div>
@@ -154,13 +171,14 @@ export function HarvestSummary({ lang, forecast, summary, municipalities, price 
             ? t(lang, "harvestCaption", {
                 start: date(price.week_start),
                 end: date(price.week_end),
-                low: decimal(price.low_eur_per_kg),
-                high: decimal(price.high_eur_per_kg),
+                extra: decimal(price.eur_per_kg.virgen_extra),
+                virgin: decimal(price.eur_per_kg.virgen),
+                lampante: decimal(price.eur_per_kg.lampante),
               })
             : t(lang, "harvestCaptionNoPrice")}{" "}
           {price && (
             <a href={price.source_url} className={styles.captionLink}>
-              {lang === "es" ? "Fuente del precio" : "Price source"}
+              {t(lang, "priceSource")}
             </a>
           )}
         </p>

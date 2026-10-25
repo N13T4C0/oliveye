@@ -30,6 +30,17 @@ export function Dashboard({ data }: { data: PageData }) {
   const [mode, setMode] = useMode();
   const simple = mode === "simple";
 
+  // The button sits at the bottom and disappears once the view changes: move focus (and the
+  // reader) to the top of the technical view so keyboard and screen-reader users follow along.
+  const showTechnical = () => {
+    setMode("technical");
+    requestAnimationFrame(() => {
+      const heading = document.getElementById("verdict-question");
+      heading?.scrollIntoView({ block: "center" });
+      heading?.focus({ preventScroll: true });
+    });
+  };
+
   useEffect(() => {
     document.documentElement.lang = lang;
   }, [lang]);
@@ -94,7 +105,7 @@ export function Dashboard({ data }: { data: PageData }) {
             scores={data.summary}
           />
         )}
-        <Method lang={lang} mode={mode} onShowTechnical={() => setMode("technical")} />
+        <Method lang={lang} mode={mode} onShowTechnical={showTechnical} />
       </main>
     </>
   );

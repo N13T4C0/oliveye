@@ -310,7 +310,7 @@ function ProductionTable({
               {t(lang, "aforo")} {units.header}
             </th>
             <th scope="col">
-              {t(lang, "oliveye")} {units.header}
+              {t(lang, units.technical ? "oliveye" : "satelliteShort")} {units.header}
             </th>
           </tr>
         </thead>
