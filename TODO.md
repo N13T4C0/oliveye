@@ -93,8 +93,8 @@ Updated at the end of each phase.
   - 25 fragmented municipalities (mostly Granada) have < 60 % coverage at 80 % purity (≥ 22 cells each)
 - [x] Check the batch finished; nothing to re-queue (0 errors)
 - [ ] Extrapolate cost to a full campaign and to all municipalities of Jaén + Granada
-- [ ] `02_sigpac_olive_parcels.ipynb`: load SIGPAC, filter olive uses, areas per municipality/province, map
-- [ ] `03_production_history.ipynb`: production and aforo per province and campaign since 2015
+- [x] `02_sigpac_olive_parcels.ipynb`: olive-area concentration, cell coverage (79 % / 59 % of hectares), map (2026-10-25)
+- [x] `03_production_history.ipynb`: alternate bearing (−64 % … +172 %) and aforo error per campaign (2026-10-25)
 - [x] Decide the aggregation unit for Phase 2: olive area per municipality (ADR 0001)
 - [x] Write ADR for the openEO strategy (`docs/decisions/0001-openeo-extraction-strategy.md`)
 - [x] Fix ruff errors in notebook 01; CI now lints the whole repo (notebooks included)
@@ -117,3 +117,10 @@ Updated at the end of each phase.
 - [ ] **Author:** add the link to the CV and LinkedIn
 - [ ] Optional: Vercel *Ignored Build Step* per project (only rebuild when its folder changes)
 - [ ] Later: dark theme (planned in DESIGN.md), per-campaign error view (diverging palette), PostGIS loader
+
+## Phase 2 — Big Data ETL (2026-10-25)
+- [x] PySpark ETL `oliveye.spark` (extra `bigdata`): 9,481,800 cell-month rows → partitioned Parquet →
+  olive-weighted municipal means; parity with pandas to 1e-15 (unit test + full data); ADR 0006; CI job `spark`
+- [x] Honest benchmark: at this size Spark is not faster than pandas (21 s vs 13 s on 2 cores) — stated in ADR 0006
+- [ ] PostGIS loader (needs Docker on the author's PC): load `api/data/map.geojson` and municipal Parquet into PostGIS
+- [ ] **Author:** delete the leftover remote branch `phase2-spark` on GitHub (already merged; the sandbox cannot delete it)
