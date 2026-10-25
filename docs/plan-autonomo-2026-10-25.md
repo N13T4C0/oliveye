@@ -23,7 +23,7 @@ parked in "Pending for the author" and the work moves on.
 - [x] G. Phase 4 groundwork: FastAPI read-only service over the results (municipalities, monthly
       series, province predictions) with tests; no deployment.
 - [x] H. README results section as a **draft** (`docs/results/README-draft.md`) for the author.
-- [ ] E. Wrap-up (~07:25): TODO (repo + project), sync the author's folder, morning summary.
+- [x] E. Wrap-up (~07:25): TODO (repo + project), sync the author's folder, morning summary.
 
 ## If the assistant stops (usage limits, errors)
 
@@ -141,3 +141,5 @@ parked in "Pending for the author" and the work moves on.
   /provinces/{p}/production). Only block E (wrap-up, 07:25) remains.
 - 06:42 CET Check-in 15 (wrap-up prep). Repo TODO updated with the final numbers; project TODO
   synced. The author's PC is not connected: the local folder needs a `git pull` (parked).
+- 07:26 CET Wrap-up. All blocks closed. TODO (repo + project doc) up to date. The author's PC is
+  still not connected: local folder sync parked (`git pull` in the folder). Morning summary sent.
