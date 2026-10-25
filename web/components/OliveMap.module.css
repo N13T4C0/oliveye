@@ -6,7 +6,7 @@
 .map {
   position: absolute;
   inset: 0;
-  background: #f2f3ef;
+  background: var(--map-ground);
 }
 
 .status {
@@ -29,8 +29,8 @@
   gap: 2px;
   padding: 8px 12px;
   border-radius: var(--radius-card);
-  background: var(--ink-strong);
-  color: var(--paper);
+  background: var(--tooltip);
+  color: var(--on-ink-strong);
   font-size: 13px;
   line-height: 1.4;
   pointer-events: none;

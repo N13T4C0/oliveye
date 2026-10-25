@@ -4,6 +4,8 @@ import "@fontsource-variable/inter";
 import "maplibre-gl/dist/maplibre-gl.css";
 import "./globals.css";
 
+import { THEME_BOOT_SCRIPT } from "@/lib/theme-boot";
+
 export const metadata: Metadata = {
   title: "OlivEye · El olivar de Jaén y Granada visto desde el satélite",
   description:
@@ -16,7 +18,11 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="es">
+    // The boot script sets data-theme before React hydrates, hence suppressHydrationWarning.
+    <html lang="es" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
+      </head>
       <body>{children}</body>
     </html>
   );

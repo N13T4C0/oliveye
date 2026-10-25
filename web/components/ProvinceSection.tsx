@@ -16,8 +16,10 @@ import {
 import { provinceChartRows, type ProvinceChartRow } from "@/lib/campaigns";
 import { t } from "@/lib/i18n";
 import { formatTonnes, type Lang } from "@/lib/scale";
+import { chartColours, useTheme } from "@/lib/theme";
 import type { Forecast, ProductionPoint, ProvinceName } from "@/lib/types";
 
+import layout from "./ChartSection.module.css";
 import styles from "./ProvinceSection.module.css";
 
 const PROVINCES: ProvinceName[] = ["Jaén", "Granada"];
@@ -34,39 +36,39 @@ export function ProvinceSection({ lang, campaign, production, forecast }: Props)
   const [showTable, setShowTable] = useState(false);
 
   return (
-    <section className={styles.section} aria-labelledby="provinces-title">
-      <div className={styles.inner}>
-        <header className={styles.head}>
-          <h2 id="provinces-title" className={styles.title}>
+    <section className={layout.section} aria-labelledby="provinces-title">
+      <div className={layout.inner}>
+        <header className={layout.head}>
+          <h2 id="provinces-title" className={layout.title}>
             {t(lang, "provincesTitle")}
           </h2>
-          <p className={styles.lead}>{t(lang, "provincesLead")}</p>
+          <p className={layout.lead}>{t(lang, "provincesLead")}</p>
         </header>
 
-        <ul className={styles.key} aria-label={lang === "es" ? "Leyenda" : "Legend"}>
+        <ul className={layout.key} aria-label={lang === "es" ? "Leyenda" : "Legend"}>
           <li>
-            <span className={`${styles.mark} ${styles.markReal}`} aria-hidden="true" />
+            <span className={`${layout.mark} ${styles.markReal}`} aria-hidden="true" />
             {t(lang, "real")}
           </li>
           <li>
-            <span className={`${styles.mark} ${styles.markAforo}`} aria-hidden="true" />
+            <span className={`${layout.mark} ${styles.markAforo}`} aria-hidden="true" />
             {t(lang, "aforo")}
           </li>
           <li>
-            <span className={`${styles.mark} ${styles.markModel}`} aria-hidden="true" />
+            <span className={`${layout.mark} ${styles.markModel}`} aria-hidden="true" />
             {t(lang, "oliveye")}
           </li>
           <li>
-            <span className={`${styles.mark} ${styles.markForecast}`} aria-hidden="true" />
+            <span className={`${layout.mark} ${styles.markForecast}`} aria-hidden="true" />
             {t(lang, "forecast")} · {t(lang, "interval")}
           </li>
           <li>
-            <span className={`${styles.mark} ${styles.markSelected}`} aria-hidden="true" />
+            <span className={`${layout.mark} ${styles.markSelected}`} aria-hidden="true" />
             {t(lang, "selectedCampaign")} ({campaign})
           </li>
         </ul>
 
-        <div className={styles.panels}>
+        <div className={layout.panels}>
           {PROVINCES.map((province) => {
             const row = forecast.rows.find((r) => r.province === province);
             const rows = provinceChartRows(
@@ -85,14 +87,14 @@ export function ProvinceSection({ lang, campaign, production, forecast }: Props)
           })}
         </div>
 
-        <p className={styles.note}>
+        <p className={layout.note}>
           {t(lang, "derivedNote")} {lang === "es" ? "Fuente:" : "Source:"} Junta de Andalucía
           (aforos), AICA.
         </p>
 
         <button
           type="button"
-          className={styles.tableToggle}
+          className={layout.tableToggle}
           aria-expanded={showTable}
           onClick={() => setShowTable((v) => !v)}
         >
@@ -122,22 +124,24 @@ function ProvincePanel({
       r.band && r.forecast !== null ? [r.forecast - r.band[0], r.band[1] - r.forecast] : undefined,
   }));
   const inRange = rows.some((r) => r.campaign === campaign);
+  const [theme] = useTheme();
+  const c = chartColours(theme);
 
   return (
-    <figure className={styles.panel}>
-      <figcaption className={styles.panelTitle}>{province}</figcaption>
-      <div className={styles.chart}>
+    <figure className={layout.panel}>
+      <figcaption className={layout.panelTitle}>{province}</figcaption>
+      <div className={layout.chart}>
         <ComposedChart
           responsive
           data={data}
           style={{ width: "100%", height: "100%" }}
           margin={{ top: 8, right: 12, bottom: 0, left: 4 }}
         >
-          <CartesianGrid vertical={false} stroke="#e8ebe6" />
+          <CartesianGrid vertical={false} stroke={c.grid} />
           {inRange && (
             <ReferenceLine
               x={campaign}
-              stroke="#9fe870"
+              stroke={c.highlight}
               strokeOpacity={0.3}
               strokeWidth={22}
               ifOverflow="hidden"
@@ -146,20 +150,20 @@ function ProvincePanel({
           <XAxis
             dataKey="campaign"
             tickLine={false}
-            axisLine={{ stroke: "#d6dad3" }}
-            tick={{ fontSize: 11, fill: "#6a6c6a" }}
+            axisLine={{ stroke: c.axis }}
+            tick={{ fontSize: 11, fill: c.tick }}
             interval="preserveStartEnd"
           />
           <YAxis
             tickLine={false}
             axisLine={false}
             width={56}
-            tick={{ fontSize: 11, fill: "#6a6c6a" }}
+            tick={{ fontSize: 11, fill: c.tick }}
             tickFormatter={(v: number) => formatTonnes(v, lang, true)}
             domain={[0, "auto"]}
           />
           <Tooltip
-            contentStyle={{ borderRadius: 10, border: "1px solid #d6dad3", fontSize: 13 }}
+            contentStyle={c.tooltip}
             formatter={(value, name) => [
               typeof value === "number" ? formatTonnes(value, lang) : "—",
               String(name),
@@ -168,40 +172,40 @@ function ProvincePanel({
           <Line
             name={t(lang, "aforo")}
             dataKey="aforo"
-            stroke="#0b4c72"
+            stroke={c.aforo}
             strokeWidth={2}
             strokeDasharray="6 4"
-            dot={{ r: 3, fill: "#0b4c72", strokeWidth: 0 }}
+            dot={{ r: 3, fill: c.aforo, strokeWidth: 0 }}
             connectNulls
             isAnimationActive={false}
           />
           <Line
             name={t(lang, "oliveye")}
             dataKey="oliveye"
-            stroke="#054d28"
+            stroke={c.oliveye}
             strokeWidth={2.5}
-            dot={{ r: 3, fill: "#054d28", strokeWidth: 0 }}
+            dot={{ r: 3, fill: c.oliveye, strokeWidth: 0 }}
             isAnimationActive={false}
           />
           <Line
             name={t(lang, "real")}
             dataKey="real"
-            stroke="#0e0f0c"
+            stroke={c.real}
             strokeWidth={1}
-            dot={{ r: 4.5, fill: "#0e0f0c", stroke: "#ffffff", strokeWidth: 1.5 }}
+            dot={{ r: 4.5, fill: c.real, stroke: c.halo, strokeWidth: 1.5 }}
             isAnimationActive={false}
           />
           <Scatter
             name={t(lang, "forecast")}
             dataKey="forecast"
-            fill="#054d28"
+            fill={c.oliveye}
             shape="diamond"
             isAnimationActive={false}
           >
             <ErrorBar
               dataKey="bandError"
               width={10}
-              stroke="#054d28"
+              stroke={c.oliveye}
               strokeWidth={1.5}
               direction="y"
             />
@@ -222,8 +226,8 @@ function ProductionTable({
   forecast: Forecast;
 }) {
   return (
-    <div className={styles.tableWrap}>
-      <table className={styles.table}>
+    <div className={layout.tableWrap}>
+      <table className={layout.table}>
         <caption className="visually-hidden">{t(lang, "provincesTitle")}</caption>
         <thead>
           <tr>

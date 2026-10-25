@@ -5,6 +5,7 @@ import {
   classOf,
   colourOf,
   formatIndex,
+  formatSignedPercent,
   formatTonnes,
   NO_DATA,
   quantileBreaks,
@@ -57,5 +58,14 @@ describe("formatting", () => {
 describe("campaignWindow", () => {
   it("covers October of the previous year to August (the data cut)", () => {
     expect(campaignWindow("2025/26")).toEqual({ start: "2024-10", end: "2025-08" });
+  });
+});
+
+describe("formatSignedPercent", () => {
+  it("signs over- and under-estimates with a real minus sign", () => {
+    expect(formatSignedPercent(154.8, "es")).toBe("+155 %");
+    expect(formatSignedPercent(-45.6, "en")).toBe("\u221246 %");
+    expect(formatSignedPercent(0.3, "es")).toBe("0 %");
+    expect(formatSignedPercent(null, "es")).toBe("—");
   });
 });

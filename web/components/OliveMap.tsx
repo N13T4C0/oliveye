@@ -6,18 +6,21 @@ import { useEffect, useRef, useState } from "react";
 import { MAP_URL } from "@/lib/api";
 import { INDEX_CAMPAIGNS, indexProperty } from "@/lib/campaigns";
 import { t } from "@/lib/i18n";
-import { formatIndex, NO_DATA, RAMPS, type Lang } from "@/lib/scale";
+import { formatIndex, rampOf, type Lang } from "@/lib/scale";
+import { PALETTES, useTheme, type Theme } from "@/lib/theme";
 import type { IndexKey, MunicipalityProperties } from "@/lib/types";
 
 import styles from "./OliveMap.module.css";
 
-const BASEMAP = "https://tiles.openfreemap.org/styles/positron";
 /** Plain ground used when the basemap cannot be reached: the olive area still draws. */
-const FALLBACK_STYLE: StyleSpecification = {
-  version: 8,
-  sources: {},
-  layers: [{ id: "ground", type: "background", paint: { "background-color": "#f2f3ef" } }],
-};
+function fallbackStyle(theme: Theme): StyleSpecification {
+  const ground = PALETTES[theme].tokens["--map-ground"];
+  return {
+    version: 8,
+    sources: {},
+    layers: [{ id: "ground", type: "background", paint: { "background-color": ground } }],
+  };
+}
 const SOURCE = "olive";
 const INDEX_KEYS: IndexKey[] = ["ndvi_spring", "ndmi_summer"];
 
@@ -46,16 +49,22 @@ interface Feature {
 }
 
 /** Paint expression: the class colour of the chosen index and campaign, grey when missing. */
-function fillColour(index: IndexKey, campaign: string, breaks: number[]): ExpressionSpecification {
+function fillColour(
+  index: IndexKey,
+  campaign: string,
+  breaks: number[],
+  theme: Theme,
+): ExpressionSpecification {
   const key = indexProperty(index, campaign);
-  const ramp = RAMPS[index];
-  if (breaks.length === 0) return ["literal", NO_DATA] as unknown as ExpressionSpecification;
+  const ramp = rampOf(index, theme === "dark");
+  const noData = PALETTES[theme].noData;
+  if (breaks.length === 0) return ["literal", noData] as unknown as ExpressionSpecification;
   const stops = breaks.flatMap((b, i) => [b, ramp[i + 1]]);
   return [
     "case",
     ["==", ["typeof", ["get", key]], "number"],
     ["step", ["get", key], ramp[0], ...stops],
-    NO_DATA,
+    noData,
   ] as ExpressionSpecification;
 }
 
@@ -90,10 +99,16 @@ export function OliveMap({
   const [ready, setReady] = useState(false);
   const [error, setError] = useState(false);
   const [hover, setHover] = useState<Hover | null>(null);
+  const [theme] = useTheme();
+  // Latest view settings, read when a (new) basemap style finishes loading.
+  const view = useRef({ index, campaign, breaks, selectedId, theme });
+  const styleTheme = useRef<Theme>(theme);
+  const fellBack = useRef(false);
 
   useEffect(() => {
     onSelectRef.current = onSelect;
-  }, [onSelect]);
+    view.current = { index, campaign, breaks, selectedId, theme };
+  });
 
   // Create the map once, load the measured olive area, flatten its indices for paint expressions.
   useEffect(() => {
@@ -129,9 +144,11 @@ export function OliveMap({
         ];
 
         setWorkerUrl("/maplibre-gl-worker.mjs");
+        // Read the theme from the page itself: the first render always sees the server's "light".
+        styleTheme.current = document.documentElement.dataset.theme === "dark" ? "dark" : "light";
         map = new Map({
           container: container.current,
-          style: BASEMAP,
+          style: PALETTES[styleTheme.current].basemap,
           bounds: extent,
           fitBoundsOptions: {
             // Keep the measured olive area clear of the floating legend card.
@@ -147,16 +164,19 @@ export function OliveMap({
         map.addControl(new NavigationControl({ showCompass: false }), "top-right");
         mapRef.current = map;
 
-        let fellBack = false;
         map.on("error", () => {
-          if (map && !fellBack && !map.isStyleLoaded()) {
-            fellBack = true;
-            map.setStyle(FALLBACK_STYLE);
+          if (map && !fellBack.current && !map.isStyleLoaded()) {
+            fellBack.current = true;
+            map.setStyle(fallbackStyle(styleTheme.current));
           }
         });
 
+        let listening = false;
+        // Runs for the first basemap and again after every theme switch (setStyle drops layers).
         map.on("style.load", () => {
           if (!map || map.getSource(SOURCE)) return;
+          const palette = PALETTES[styleTheme.current];
+          const current = view.current;
           map.addSource(SOURCE, {
             type: "geojson",
             data: collection as unknown as GeoJSON.FeatureCollection,
@@ -167,7 +187,12 @@ export function OliveMap({
             type: "fill",
             source: SOURCE,
             paint: {
-              "fill-color": NO_DATA,
+              "fill-color": fillColour(
+                current.index,
+                current.campaign,
+                current.breaks,
+                styleTheme.current,
+              ),
               "fill-opacity": ["case", ["boolean", ["feature-state", "hover"], false], 1, 0.88],
             },
           });
@@ -175,15 +200,18 @@ export function OliveMap({
             id: "olive-line",
             type: "line",
             source: SOURCE,
-            paint: { "line-color": "#163300", "line-opacity": 0.35, "line-width": 0.4 },
+            paint: { "line-color": palette.outline, "line-opacity": 0.35, "line-width": 0.4 },
           });
           map.addLayer({
             id: "olive-selected",
             type: "line",
             source: SOURCE,
-            filter: ["==", ["get", "id"], ""],
-            paint: { "line-color": "#0e0f0c", "line-width": 2.2 },
+            filter: ["==", ["get", "id"], current.selectedId ?? ""],
+            paint: { "line-color": palette.selected, "line-width": 2.2 },
           });
+          setReady(true);
+          if (listening) return;
+          listening = true;
 
           let hovered: string | null = null;
           map.on("mousemove", "olive-fill", (event) => {
@@ -209,7 +237,6 @@ export function OliveMap({
             const id = event.features?.[0]?.properties?.id;
             if (id) onSelectRef.current(String(id));
           });
-          setReady(true);
         });
       } catch {
         if (!cancelled) setError(true);
@@ -229,8 +256,16 @@ export function OliveMap({
   useEffect(() => {
     const map = mapRef.current;
     if (!ready || !map || !map.getLayer("olive-fill")) return;
-    map.setPaintProperty("olive-fill", "fill-color", fillColour(index, campaign, breaks));
-  }, [ready, index, campaign, breaks]);
+    map.setPaintProperty("olive-fill", "fill-color", fillColour(index, campaign, breaks, theme));
+  }, [ready, index, campaign, breaks, theme]);
+
+  // Theme switch: swap the basemap; "style.load" adds the olive layers back in the new colours.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!ready || !map || styleTheme.current === theme) return;
+    styleTheme.current = theme;
+    map.setStyle(fellBack.current ? fallbackStyle(theme) : PALETTES[theme].basemap);
+  }, [ready, theme]);
 
   // Outline the selected municipality and bring it into view.
   useEffect(() => {

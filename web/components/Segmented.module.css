@@ -47,8 +47,8 @@
   background: rgba(226, 246, 213, 0.12);
 }
 .ink .input:checked + .face {
-  background: var(--paper);
-  color: var(--ink);
+  background: var(--on-ink-strong);
+  color: var(--brand);
 }
 
 /* On white or fog. */

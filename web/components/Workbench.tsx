@@ -4,7 +4,8 @@ import { useCallback, useMemo, useRef, useState } from "react";
 
 import { listRows, matchesSearch, sortRows, type Campaign, type SortMode } from "@/lib/campaigns";
 import { t } from "@/lib/i18n";
-import { colourOf, formatIndex, quantileBreaks, RAMPS, type Lang } from "@/lib/scale";
+import { colourOf, formatIndex, quantileBreaks, rampOf, type Lang } from "@/lib/scale";
+import { PALETTES, useTheme } from "@/lib/theme";
 import type { IndexKey, MunicipalityProperties } from "@/lib/types";
 
 import { Legend } from "./Legend";
@@ -36,6 +37,8 @@ export function Workbench({
 }: Props) {
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<SortMode>("value");
+  const [theme] = useTheme();
+  const noData = PALETTES[theme].noData;
 
   // Breaks over every campaign: the same colour means the same value in every year.
   const breaks = useMemo(
@@ -69,7 +72,7 @@ export function Workbench({
     [onSelect],
   );
 
-  const ramp = RAMPS[index];
+  const ramp = rampOf(index, theme === "dark");
   const selectedId = selected ? `${selected.province_code}-${selected.municipality_code}` : null;
 
   return (
@@ -130,7 +133,7 @@ export function Workbench({
                 >
                   <span
                     className={styles.swatch}
-                    style={{ background: colourOf(row.value, breaks, ramp) }}
+                    style={{ background: colourOf(row.value, breaks, ramp, noData) }}
                     aria-hidden="true"
                   />
                   <span className={styles.name}>

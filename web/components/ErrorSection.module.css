@@ -1,0 +1,43 @@
+/* Error-per-campaign specifics; layout in ChartSection.module.css. */
+.summary {
+  margin-top: 20px;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--ink-strong);
+  max-width: 72ch;
+}
+
+.markAforo {
+  background-image: linear-gradient(var(--signal), var(--signal));
+  background-size: 12px 12px;
+  border-radius: 2px;
+}
+
+.markModel {
+  background-image: linear-gradient(var(--spruce), var(--spruce));
+  background-size: 12px 12px;
+  border-radius: 2px;
+}
+
+.tooltip {
+  display: grid;
+  gap: 2px;
+  padding: 8px 12px;
+  border-radius: var(--radius-card);
+  background: var(--tooltip);
+  color: var(--on-ink);
+  font-size: 13px;
+  line-height: 1.45;
+  box-shadow: var(--shadow-float);
+}
+
+.tooltip strong {
+  color: var(--on-ink-strong);
+  font-weight: 600;
+}
+
+.closer {
+  margin-top: 2px;
+  color: var(--lime);
+  font-weight: 600;
+}

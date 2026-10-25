@@ -1,5 +1,6 @@
 import { t } from "@/lib/i18n";
-import { formatIndex, NO_DATA, RAMPS, type Lang } from "@/lib/scale";
+import { formatIndex, rampOf, type Lang } from "@/lib/scale";
+import { PALETTES, useTheme } from "@/lib/theme";
 import type { IndexKey } from "@/lib/types";
 
 import styles from "./Legend.module.css";
@@ -15,7 +16,8 @@ interface Props {
 
 /** Floating map legend: what the colour means, with the exact palette and class limits. */
 export function Legend({ lang, campaign, index, breaks, compact = false }: Props) {
-  const ramp = RAMPS[index];
+  const [theme] = useTheme();
+  const ramp = rampOf(index, theme === "dark");
   const isNdvi = index === "ndvi_spring";
   return (
     <div className={styles.legend}>
@@ -62,7 +64,8 @@ export function Legend({ lang, campaign, index, breaks, compact = false }: Props
         </div>
       )}
       <p className={styles.noData}>
-        <span style={{ background: NO_DATA }} aria-hidden="true" /> {t(lang, "noData")}
+        <span style={{ background: PALETTES[theme].noData }} aria-hidden="true" />{" "}
+        {t(lang, "noData")}
       </p>
       {!compact && <p className={styles.note}>{t(lang, "mapNote")}</p>}
     </div>

@@ -6,6 +6,7 @@ import { CartesianGrid, Line, LineChart, ReferenceArea, Tooltip, XAxis, YAxis } 
 import { getMunicipalitySeries } from "@/lib/api";
 import { t } from "@/lib/i18n";
 import { campaignWindow, formatIndex, type Lang } from "@/lib/scale";
+import { chartColours, useTheme } from "@/lib/theme";
 import type { IndexKey, MonthlyIndex, MunicipalityProperties } from "@/lib/types";
 
 import styles from "./SeriesPanel.module.css";
@@ -24,6 +25,8 @@ type Result = MonthlyIndex[] | "error";
 export function SeriesPanel({ lang, campaign, index, municipality, onClose }: Props) {
   // Results per municipality: fetched once, then reused when the visitor comes back to it.
   const [results, setResults] = useState<Record<string, Result>>({});
+  const [theme] = useTheme();
+  const c = chartColours(theme);
   const id = municipality
     ? `${municipality.province_code}-${municipality.municipality_code}`
     : null;
@@ -57,7 +60,7 @@ export function SeriesPanel({ lang, campaign, index, municipality, onClose }: Pr
   }
 
   const key = index === "ndvi_spring" ? "ndvi" : "ndmi";
-  const colour = index === "ndvi_spring" ? "#054d28" : "#0b4c72";
+  const colour = index === "ndvi_spring" ? c.oliveye : c.aforo;
   const window = campaignWindow(campaign);
   const data =
     state.status === "ready" ? state.series.map((p) => ({ month: p.month, value: p[key] })) : [];
@@ -113,12 +116,12 @@ export function SeriesPanel({ lang, campaign, index, municipality, onClose }: Pr
             style={{ width: "100%", height: "100%" }}
             margin={{ top: 8, right: 8, bottom: 0, left: -12 }}
           >
-            <CartesianGrid vertical={false} stroke="#e8ebe6" />
+            <CartesianGrid vertical={false} stroke={c.grid} />
             {hasWindow && (
               <ReferenceArea
                 x1={window.start}
                 x2={window.end}
-                fill="#9fe870"
+                fill={c.highlight}
                 fillOpacity={0.3}
                 stroke="none"
                 ifOverflow="hidden"
@@ -127,8 +130,8 @@ export function SeriesPanel({ lang, campaign, index, municipality, onClose }: Pr
             <XAxis
               dataKey="month"
               tickLine={false}
-              axisLine={{ stroke: "#d6dad3" }}
-              tick={{ fontSize: 11, fill: "#6a6c6a" }}
+              axisLine={{ stroke: c.axis }}
+              tick={{ fontSize: 11, fill: c.tick }}
               ticks={data.filter((d) => d.month.endsWith("-01")).map((d) => d.month)}
               tickFormatter={(m: string) => m.slice(0, 4)}
             />
@@ -136,13 +139,13 @@ export function SeriesPanel({ lang, campaign, index, municipality, onClose }: Pr
               tickLine={false}
               axisLine={false}
               width={44}
-              tick={{ fontSize: 11, fill: "#6a6c6a" }}
+              tick={{ fontSize: 11, fill: c.tick }}
               tickFormatter={(v: number) => formatIndex(v, lang)}
               domain={["auto", "auto"]}
             />
             <Tooltip
-              cursor={{ stroke: "#868685", strokeDasharray: "3 3" }}
-              contentStyle={{ borderRadius: 10, border: "1px solid #d6dad3", fontSize: 13 }}
+              cursor={{ stroke: c.cursor, strokeDasharray: "3 3" }}
+              contentStyle={c.tooltip}
               labelFormatter={(label) => String(label)}
               formatter={(value) => [
                 formatIndex(typeof value === "number" ? value : null, lang),

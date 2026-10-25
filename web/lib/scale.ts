@@ -12,6 +12,21 @@ export const RAMPS: Record<IndexKey, readonly string[]> = {
   ndmi_summer: ["#eef5f9", "#c6dceb", "#9cc3da", "#6aa2c6", "#3d82ad", "#0b4c72"],
 };
 
+/** Missing-data grey of the light theme (lib/theme.ts has the dark one). */
+/**
+ * Dark-theme ramps: on a near-black map the light ramps' darkest classes vanish into the ground,
+ * so here more vigour (or more water) is brighter. The legend always shows the active ramp.
+ */
+export const RAMPS_DARK: Record<IndexKey, readonly string[]> = {
+  ndvi_spring: ["#1f3a14", "#2f5a1f", "#4f9a2f", "#7cc95a", "#9fe870", "#d4f7b8"],
+  ndmi_summer: ["#13314a", "#1d4f73", "#2c6e96", "#4a8fba", "#6cb2dd", "#a9d6f0"],
+};
+
+/** The ramp of an index in the light or dark theme. */
+export function rampOf(index: IndexKey, dark = false): readonly string[] {
+  return (dark ? RAMPS_DARK : RAMPS)[index];
+}
+
 export const NO_DATA = "#e8ebe6";
 
 /**
@@ -47,9 +62,10 @@ export function colourOf(
   value: number | null | undefined,
   breaks: readonly number[],
   ramp: readonly string[],
+  noData: string = NO_DATA,
 ): string {
   const index = classOf(value, breaks);
-  return index === null ? NO_DATA : ramp[index];
+  return index === null ? noData : ramp[index];
 }
 
 export type Lang = "es" | "en";
@@ -79,6 +95,17 @@ export function formatIndex(value: number | null | undefined, lang: Lang): strin
 export function formatPercent(value: number | null, lang: Lang): string {
   if (value === null || !Number.isFinite(value)) return "—";
   return `${new Intl.NumberFormat(LOCALES[lang], { maximumFractionDigits: 0 }).format(value)} %`;
+}
+
+/** Signed percentage with a real minus sign: "+20 %", "−45 %", "0 %". */
+export function formatSignedPercent(value: number | null, lang: Lang): string {
+  if (value === null || !Number.isFinite(value)) return "—";
+  const rounded = Math.round(value);
+  const digits = new Intl.NumberFormat(LOCALES[lang], { maximumFractionDigits: 0 }).format(
+    Math.abs(rounded),
+  );
+  const sign = rounded > 0 ? "+" : rounded < 0 ? "\u2212" : "";
+  return `${sign}${digits} %`;
 }
 
 /** Months (YYYY-MM) whose images feed campaign "Y/Y+1": October Y-1 to August Y. */

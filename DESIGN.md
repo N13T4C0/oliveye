@@ -376,6 +376,12 @@ flow is flat. No gradients, no glassmorphism, no glows.
 
 ## Themes
 
-- **Light:** shipped (`color-scheme: light`).
-- **Dark: planned, not shipped.** Canvas `#0e0f0c`, surfaces `#163300`, text `#e2f6d5`, lime
-  unchanged. Do not reference dark tokens in components until it is implemented.
+- **Light:** default when the system asks for it (`color-scheme: light`).
+- **Dark:** shipped 2026-10-25. Follows the system until the visitor uses the toggle in the top
+  bar (remembered in `localStorage`). Canvas `#0e0f0c`, surfaces `#1c2318` / `#16240f`, text
+  `#c9d2c4`, headings `#f1f8ec`, lime unchanged; the top bar and footer keep the forest ink
+  (`--brand`). Spruce (OlivEye) becomes `#7ccf8a` and signal (aforo) `#6cb2dd` to keep 4.5:1.
+- Components use tokens only. Charts and the map cannot read CSS variables, so they take the same
+  values from `web/lib/theme.ts`; a test keeps both in sync.
+- Map ramps: on the dark basemap brighter means more (`RAMPS_DARK` in `web/lib/scale.ts`), because
+  the light ramps' darkest classes vanish into a near-black ground. The legend shows the active ramp.

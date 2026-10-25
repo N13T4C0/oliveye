@@ -7,6 +7,8 @@ const es = {
   campaign: "Campaña",
   index: "Índice",
   language: "Idioma",
+  themeToDark: "Cambiar a tema oscuro",
+  themeToLight: "Cambiar a tema claro",
   question: "¿Puede el satélite anticipar la cosecha de aceite antes que el aforo oficial?",
   answer: "Todavía no.",
   answerDetail:
@@ -61,6 +63,17 @@ const es = {
   tonnes: "toneladas",
   derivedNote:
     "15 de las 16 producciones finales se calculan a partir de las variaciones que publica la Junta; la de 2025/26 es provisional.",
+  errorsTitle: "Error en cada campaña",
+  errorsLead:
+    "Cuánto se alejó cada estimación de la producción final. Por encima de cero, la estimación se pasó; por debajo, se quedó corta. Las de OlivEye se hicieron sin ver esa campaña ni la siguiente.",
+  errorsSummary:
+    "OlivEye estuvo más cerca que el aforo en {n} de {total} provincias-campaña. Error medio: {model} OlivEye, {aforo} el aforo.",
+  errorsNote:
+    "Solo cuentan las provincias-campaña con las dos estimaciones; las que no tienen aforo en nuestras fuentes se muestran, pero quedan fuera de la comparación. Fuente: Junta de Andalucía (aforos), AICA.",
+  noAforo: "sin aforo",
+  closer: "Más cerca: {who}",
+  closerTie: "Empate",
+  closerColumn: "Más cerca",
   methodTitle: "Cómo se ha validado",
   method1:
     "Cada campaña se predice con un modelo que no la vio, ni tampoco la siguiente, porque su «producción del año anterior» la delataría. Todos los modelos se comparan sobre las mismas filas.",
@@ -83,6 +96,8 @@ const en: Record<MessageKey, string> = {
   campaign: "Campaign",
   index: "Index",
   language: "Language",
+  themeToDark: "Switch to dark theme",
+  themeToLight: "Switch to light theme",
   question: "Can satellites forecast the olive oil harvest before the official forecast?",
   answer: "Not yet.",
   answerDetail:
@@ -136,6 +151,17 @@ const en: Record<MessageKey, string> = {
   tonnes: "tonnes",
   derivedNote:
     "15 of the 16 final figures are back-calculated from the variations the Junta publishes; 2025/26 is provisional.",
+  errorsTitle: "Error in each campaign",
+  errorsLead:
+    "How far each estimate was from the final production. Above zero the estimate was too high; below zero, too low. OlivEye's estimates were made without seeing that campaign or the next one.",
+  errorsSummary:
+    "OlivEye was closer than the aforo in {n} of {total} province-campaigns. Mean error: {model} OlivEye, {aforo} the aforo.",
+  errorsNote:
+    "Only province-campaigns with both estimates count; those without an aforo in our sources are shown but left out of the comparison. Source: Junta de Andalucía (aforos), AICA.",
+  noAforo: "no aforo",
+  closer: "Closer: {who}",
+  closerTie: "Tie",
+  closerColumn: "Closer",
   methodTitle: "How it was validated",
   method1:
     "Each campaign is predicted by a model that never saw it, nor the next one, whose 'last year's production' would give it away. Every model is scored on the same rows.",

@@ -4,8 +4,10 @@ import { useEffect, useMemo, useState } from "react";
 
 import { DEFAULT_CAMPAIGN, type Campaign } from "@/lib/campaigns";
 import type { Lang } from "@/lib/scale";
+import { useTheme } from "@/lib/theme";
 import type { IndexKey, MunicipalityProperties, PageData } from "@/lib/types";
 
+import { ErrorSection } from "./ErrorSection";
 import { Method } from "./Method";
 import { ProvinceSection } from "./ProvinceSection";
 import { TopBar } from "./TopBar";
@@ -22,6 +24,7 @@ export function Dashboard({ data }: { data: PageData }) {
   const [index, setIndex] = useState<IndexKey>("ndvi_spring");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [features, setFeatures] = useState<MunicipalityProperties[]>([]);
+  const [theme, setTheme] = useTheme();
 
   useEffect(() => {
     document.documentElement.lang = lang;
@@ -41,7 +44,9 @@ export function Dashboard({ data }: { data: PageData }) {
         lang={lang}
         campaign={campaign}
         index={index}
+        theme={theme}
         onLang={setLang}
+        onTheme={setTheme}
         onCampaign={setCampaign}
         onIndex={setIndex}
       />
@@ -62,6 +67,7 @@ export function Dashboard({ data }: { data: PageData }) {
           production={data.production}
           forecast={data.forecast}
         />
+        <ErrorSection lang={lang} campaign={campaign} production={data.production} />
         <Method lang={lang} />
       </main>
     </>

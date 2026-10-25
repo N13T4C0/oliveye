@@ -2,7 +2,7 @@
   position: sticky;
   top: 0;
   z-index: 20;
-  background: var(--ink);
+  background: var(--brand);
   color: var(--on-ink);
 }
 
@@ -20,7 +20,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  color: var(--paper);
+  color: var(--on-ink-strong);
   font-weight: 800;
   font-size: 20px;
   letter-spacing: -0.03em;
@@ -58,7 +58,7 @@
   background: var(--lime)
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23163300' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
     no-repeat right 14px center;
-  color: var(--ink);
+  color: var(--brand);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   padding: 6px 36px 6px 16px;
@@ -66,7 +66,35 @@
 }
 
 .select:focus-visible {
-  outline: 2px solid var(--paper);
+  outline: 2px solid var(--on-ink-strong);
+  outline-offset: 2px;
+}
+
+.theme {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 36px;
+  block-size: 36px;
+  padding: 0;
+  border: 1px solid rgba(226, 246, 213, 0.35);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--on-ink);
+  cursor: pointer;
+  transition: background-color 0.2s var(--ease-out);
+}
+
+.theme:hover {
+  background: rgba(226, 246, 213, 0.12);
+}
+
+.theme svg {
+  inline-size: 18px;
+  block-size: 18px;
+}
+
+.theme:focus-visible {
+  outline: 2px solid var(--on-ink-strong);
   outline-offset: 2px;
 }
 
