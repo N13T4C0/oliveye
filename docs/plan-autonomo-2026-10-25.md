@@ -107,3 +107,5 @@ parked in "Pending for the author" and the work moves on.
   58/85 (Jaén 20), 0 errors; full data expected ~04:50 (after the DST change). Wrap-up prep:
   repo TODO updated; notebook 01 ruff errors fixed (a markdown cell stored as code); CI and
   ruff now cover the whole repo except third-party `.claude/` files. 116 tests pass.
+- 02:40 CET (after the DST change; earlier entries are CEST). Check-in 9. Batch 67/85 (Jaén 29),
+  0 errors, ~9/h with both workers → full data ~04:40 CET. CI green on the repo-wide lint.
