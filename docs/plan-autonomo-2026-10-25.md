@@ -100,3 +100,6 @@ parked in "Pending for the author" and the work moves on.
   logs (budget 3,100). Correction to check-in 5: worker 1 was not stuck — it published its last
   job at 23:52 and ended cleanly at its 3-h start deadline. Worker 0 stops taking jobs around
   02:18; then `continue` re-dispatches generation 1 with both workers.
+- 02:18 Check-in 7. Batch 55/85 (Jaén 17), 0 errors. Worker 0 reaches its 3-h start deadline
+  now; after its current job the run ends and `continue` should start generation 1 (to verify
+  at check-in 8).
