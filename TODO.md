@@ -132,7 +132,7 @@ Updated at the end of each phase.
 ## More campaigns — Sentinel-2 back to 2015 (ADR 0007, 2026-10-25)
 - [x] Landsat checked and discarded: on CDSE only Level-1 and only from 2015; Sentinel-2 L2A exists from July 2015
 - [x] `INDEX_PERIODS` + `load_monthly` joins periods before the causal filter; Spark/export updated; 86 dry runs queued
-- [ ] Review the 86 dry-run summaries (results branch, `*-openeo-dryrun-*-2015-2016`)
+- [x] 86 dry runs OK (2026-10-25): same municipalities and identical cell counts as 2016-2026, max payload 814 KB
 - [ ] **Author approval needed:** real probe Martos 2015-10..2016-09 (~6 credits), check months and `valid_cells`
 - [ ] Then the other 85 real jobs (~350–550 credits), re-export API data, add 2016/17 to the web,
   retrain (expected +1 row: Jaén 2016/17) → model-qa + statistician before publishing new metrics
