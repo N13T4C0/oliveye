@@ -116,11 +116,24 @@ Updated at the end of each phase.
 - [x] Public link at the top of the README
 - [ ] **Author:** add the link to the CV and LinkedIn
 - [ ] Optional: Vercel *Ignored Build Step* per project (only rebuild when its folder changes)
-- [ ] Later: dark theme (planned in DESIGN.md), per-campaign error view (diverging palette), PostGIS loader
+- [x] Dark theme (system preference + remembered toggle, dark basemap and ramps) and per-campaign
+  error view (signed bars + table, derived figures marked †, MAPE with last-campaign baseline);
+  API `GET /models/errors` (2026-10-25)
 
 ## Phase 2 — Big Data ETL (2026-10-25)
 - [x] PySpark ETL `oliveye.spark` (extra `bigdata`): 9,481,800 cell-month rows → partitioned Parquet →
   olive-weighted municipal means; parity with pandas to 1e-15 (unit test + full data); ADR 0006; CI job `spark`
 - [x] Honest benchmark: at this size Spark is not faster than pandas (21 s vs 13 s on 2 cores) — stated in ADR 0006
-- [ ] PostGIS loader (needs Docker on the author's PC): load `api/data/map.geojson` and municipal Parquet into PostGIS
+- [x] PostGIS loader: `db/init/01_schema.sql` (4 tables, 2 views), `oliveye.db.load` (one transaction,
+  ST_IsValid check, rollback test), `scripts/load_postgis.py`, CI job against postgis/postgis:17-3.5 (2026-10-25)
+- [ ] **Author:** `docker compose up -d` + `uv run --extra db python scripts/load_postgis.py` on your PC
 - [ ] **Author:** delete the leftover remote branch `phase2-spark` on GitHub (already merged; the sandbox cannot delete it)
+
+## More campaigns — Sentinel-2 back to 2015 (ADR 0007, 2026-10-25)
+- [x] Landsat checked and discarded: on CDSE only Level-1 and only from 2015; Sentinel-2 L2A exists from July 2015
+- [x] `INDEX_PERIODS` + `load_monthly` joins periods before the causal filter; Spark/export updated; 86 dry runs queued
+- [ ] Review the 86 dry-run summaries (results branch, `*-openeo-dryrun-*-2015-2016`)
+- [ ] **Author approval needed:** real probe Martos 2015-10..2016-09 (~6 credits), check months and `valid_cells`
+- [ ] Then the other 85 real jobs (~350–550 credits), re-export API data, add 2016/17 to the web,
+  retrain (expected +1 row: Jaén 2016/17) → model-qa + statistician before publishing new metrics
+
