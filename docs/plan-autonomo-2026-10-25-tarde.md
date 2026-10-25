@@ -14,7 +14,7 @@ The author is out. Anything needing a decision is parked under "Pending for the 
       (~9.5 M rows), parity vs the job outputs, timings vs pandas, ADR 0006, CI job, auditor, commit.
 - [x] B. Phase 1 leftovers: `02_sigpac_olive_parcels.ipynb` and `03_production_history.ipynb` from data
       already on the results branch (no new downloads).
-- [ ] C. Wrap-up (18:40): TODO (repo + project), sync the author's folder, summary.
+- [x] C. Wrap-up (18:40): TODO (repo + project), sync the author's folder, summary.
 
 ## Pending for the author
 
@@ -40,3 +40,5 @@ The author is out. Anything needing a decision is parked under "Pending for the 
   133 tests pass (incl. Spark); GitHub CI green on `be820c2` (jobs quality, web, spark). Only C left.
 - 18:01 Check-in 2: nothing open besides C. Wrap-up prepared; the author's PC is not reachable right
   now (bridge offline), so the folder sync waits for 18:40 or for the author's return.
+- 18:41 Wrap-up: TODO already current (repo + project doc). Author's PC still offline, so the local
+  folder sync is left for when the author is back (`git pull` on main). Summary sent. Block closed.
