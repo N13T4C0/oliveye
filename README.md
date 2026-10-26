@@ -1,129 +1,162 @@
-# OlivEye 🫒🛰️
+<div align="center">
 
-**Estimating olive oil production in Andalusia from space.**
+# OlivEye
 
-**Live:** [oliveye.vercel.app](https://oliveye.vercel.app) · API: [oliveye-api.vercel.app/docs](https://oliveye-api.vercel.app/docs)
+**Can a satellite forecast the olive oil harvest before the official forecast?**<br>
+Sentinel-2 imagery over the olive groves of Jaén and Granada, an honestly validated model,<br>
+and a web map built for the people who grow the olives.
 
-OlivEye estimates the olive oil production of each campaign for the provinces of **Jaén** and
-**Granada** using Sentinel-2 satellite imagery over the olive groves registered in SIGPAC, climate
-data and historical production, and compares the estimate against the official harvest forecast
-(*aforo*) published by the Junta de Andalucía.
+[![Live web](https://img.shields.io/badge/live-oliveye.vercel.app-054d28?style=flat-square)](https://oliveye.vercel.app)
+[![API docs](https://img.shields.io/badge/API-docs-0b4c72?style=flat-square)](https://oliveye-api.vercel.app/docs)
+[![CI](https://github.com/N13T4C0/oliveye/actions/workflows/ci.yml/badge.svg)](https://github.com/N13T4C0/oliveye/actions/workflows/ci.yml)
+![Python 3.12](https://img.shields.io/badge/python-3.12-3776ab?style=flat-square)
+![Next.js](https://img.shields.io/badge/Next.js-16-000000?style=flat-square)
+[![License: MIT](https://img.shields.io/badge/license-MIT-lightgrey?style=flat-square)](LICENSE)
 
-> Portfolio project. The goal is not to beat the official forecast, but to build an honest,
-> reproducible, end-to-end data product: from raw satellite data to a deployed interactive map.
+<a href="https://oliveye.vercel.app">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/media/hero-dark.png">
+    <img src="docs/media/hero-light.png" alt="OlivEye: the 2026/27 harvest in litres, kilos per hectare and euros, and a map of each municipality's olive groves compared with their usual greenness" width="100%">
+  </picture>
+</a>
 
-## Why it's interesting
+</div>
 
-- Jaén alone produces a large share of the world's olive oil, and the harvest varies a lot from
-  year to year (alternate bearing, drought). Early estimates matter for prices and planning.
-- Olive groves are evergreen: their vegetation signal is subtle, which makes the remote-sensing
-  side of the problem genuinely non-trivial.
-- Only ~10 campaigns exist since Sentinel-2 started (2015), so the project focuses on **honest
-  validation** (leave-one-campaign-out) and simple, explainable models.
+## The short answer: not yet
 
-## Architecture
+| | Mean error per campaign |
+|---|---|
+| **Official forecast** (*aforo*, Junta de Andalucía, October, field samples) | **12 %** |
+| **OlivEye** (satellite + climate up to August) | **44 %** |
+| Simply repeating last year's harvest | 44 % |
 
+With 9 campaigns of data the model shrinks to each province's average: it does not beat
+repeating last year, and the aforo, which samples olives in the field, is about 3–4 times more
+accurate. Every number was computed leave-one-campaign-out, and the project says so on the page
+instead of hiding it. [Full results and limitations](docs/results/README.md).
+
+## What you can do on the web
+
+<table>
+<tr>
+<td width="50%"><img src="docs/media/map-greenness.png" alt="Map of olive-grove greenness per municipality with the monthly series of Martos"></td>
+<td width="50%"><img src="docs/media/error-per-campaign.png" alt="Signed error of OlivEye and the aforo in each campaign, Jaén and Granada"></td>
+</tr>
+<tr>
+<td><b>Your municipality, compared with its own history.</b> Is this year's olive grove greener or
+thirstier than usual? 86 municipalities, monthly since 2016, with a plain sentence for each.</td>
+<td><b>Every campaign's error, in the open.</b> How far OlivEye and the aforo were from the final
+harvest, campaign by campaign, with back-calculated figures marked.</td>
+</tr>
+</table>
+
+- **Two views.** *Simple* (default) speaks in litres, kilos per hectare and euros for growers;
+  *Technical* shows NDVI, NDMI, MAPE and the per-campaign errors.
+- **Light and dark themes**, Spanish and English, desktop and mobile.
+- **Public read-only API** ([docs](https://oliveye-api.vercel.app/docs)): municipalities, monthly
+  indices, production, model scores, per-campaign errors, the dated forecast and the map.
+
+## How it works
+
+```mermaid
+flowchart LR
+    A[SIGPAC olive parcels] --> B[250 m cells, at least 80 % olive]
+    B --> C[openEO on Copernicus<br/>Sentinel-2 L2A, cloud mask,<br/>monthly NDVI and NDMI]
+    C --> D[PySpark ETL<br/>9.5 M cell-months to Parquet]
+    E[ERA5 climate<br/>Open-Meteo] --> F[Features per province<br/>and campaign]
+    D --> F
+    G[Aforos and production<br/>Junta de Andalucía, AICA] --> F
+    F --> H[Ridge + baselines<br/>leave-one-campaign-out]
+    H --> I[FastAPI on Vercel]
+    D --> J[(PostGIS)]
+    I --> K[Next.js + MapLibre web]
 ```
-SIGPAC olive parcels ──► Sentinel-2 NDVI/NDMI via openEO (aggregated in the cloud) ──┐
-Climate (ERA5 via Open-Meteo) ───────────────────────────────────────────────────────┼─► PostGIS
-Historical production (Junta de Andalucía, AICA) ────────────────────────────────────┘
-      ──► features per province & campaign ──► Baseline / Ridge / XGBoost (MLflow)
-      ──► FastAPI ──► Next.js + MapLibre (map, time series, prediction vs aforo)
-```
 
-## Roadmap
+Key decisions, each with its reasoning and alternatives (ADRs):
 
-| Phase | Goal | Main deliverables | Status |
-|---|---|---|---|
-| **0. Setup** | Project ready to work | Repo structure, `CLAUDE.md`, Docker + PostGIS, `pyproject.toml` | ✅ Done |
-| **1. Exploration** | Understand the data | Notebooks: openEO NDVI time series for sample parcels, SIGPAC olive parcels, first look at production data | ✅ Done |
-| **2. Data pipeline** | Reproducible ETL | SIGPAC → PostGIS, NDVI/NDMI per parcel/province via openEO batch jobs (cached), climate and production ingestion, PySpark aggregation | ✅ Extraction (86 municipalities), PySpark ETL, PostGIS loader |
-| **3. Models** | Honest prediction | Feature table per province & campaign; baseline, Ridge, XGBoost; leave-one-campaign-out; MLflow tracking; comparison with *aforo* | ✅ First version |
-| **4. API** | Serve results | FastAPI endpoints (parcels, time series, predictions), tests, Docker image | ✅ Deployed on Vercel |
-| **5. Web & deploy** | Public product | Next.js + MapLibre map, NDVI/NDMI charts, prediction vs aforo; CI/CD with GitHub Actions; deployment | ✅ Live at oliveye.vercel.app |
+| | Decision |
+|---|---|
+| [0001](docs/decisions/0001-openeo-extraction-strategy.md) | Aggregate on the server with openEO and a 250 m olive grid, never download rasters (free Copernicus quota) |
+| [0002](docs/decisions/0002-target-variable.md) | Target: final production per province, back-calculated from the Junta's published variations |
+| [0003](docs/decisions/0003-model-design.md) | Ridge with 4 features fixed in advance, campaign *and* the next one held out, conformal interval |
+| [0004](docs/decisions/0004-no-xgboost.md) | XGBoost tested and dropped: worse with 15 rows |
+| [0005](docs/decisions/0005-web-and-api-on-vercel.md) | Web and API on Vercel, the API serving small pre-computed JSON |
+| [0006](docs/decisions/0006-pyspark-etl.md) | PySpark ETL proven identical to pandas (1e-15), and honestly not faster at this size |
+| [0007](docs/decisions/0007-more-campaigns-sentinel2-2015.md) | More campaigns from Sentinel-2 back to 2015 rather than Landsat (Level-1 only on CDSE) |
 
-## Results
+## Built with Claude
 
-**Question:** with satellite (Sentinel-2) and climate data up to August, can a simple model
-forecast a province's olive oil harvest as well as the official forecast (*aforo*) published by
-the Junta de Andalucía in October (which also uses field fruit counts)?
+The author worked as project lead with Claude (Opus) as the development team: he decided what to
+build, reviewed every step and approved anything that spent credits or was published.
 
-**Short answer:** not yet. With 9 campaigns the model reduces to the province average (44 %
-MAPE, the same as repeating last year's harvest), while the aforo, which also counts fruit in the
-field in October, has 12 %: about 3–4× lower and closer in 6 of 9 campaigns (suggestive, not
-conclusive: p = 0.055).
+- **Specialised review agents** ([`.claude/agents/`](.claude/agents/)) gated the work: a project
+  auditor (Copernicus credit rules, data leakage across campaigns, no secrets in git), a code
+  reviewer, and a statistician plus a model-QA agent before any metric was published.
+- **Skills** ([`.claude/skills/`](.claude/skills/)): test-driven development, a "grilling" session
+  that produced the model design (ADR 0003), architecture decision records, and a design guide
+  for the web ([`DESIGN.md`](DESIGN.md)).
+- **Scheduled tasks and a job queue** let work continue unattended: openEO jobs run on GitHub
+  Actions from files in [`jobs/`](jobs/), always as a dry run first ([automation](docs/automation.md)).
 
-| Model (same 15 rows, 9 campaigns) | MAPE | Median APE | Campaigns closer than the aforo |
-|---|---|---|---|
-| Aforo (Junta, October, field counts) | 11.9 % | 11.2 % | – |
-| **OlivEye — Ridge, data to August** | 44.1 % | 30.7 % | 3 / 9 (p = 0.055) |
-| Repeat last campaign | 44.0 % | 28.6 % | 1 / 9 |
-| Province mean | 45.4 % | 30.6 % | 3 / 9 |
+## Tech stack
 
-![Real production, aforo and OlivEye per campaign](docs/results/figures/production_vs_aforo.png)
+| Layer | Tools |
+|---|---|
+| Earth observation | openEO, Copernicus Data Space Ecosystem, Sentinel-2 L2A |
+| Geodata | GeoPandas, Shapely, PostGIS (EPSG:4326 storage, EPSG:25830 areas) |
+| Big data | PySpark, Parquet |
+| Models | scikit-learn, MLflow |
+| API | FastAPI, Pydantic |
+| Web | Next.js, React, TypeScript, MapLibre GL, Recharts |
+| Quality | pytest, Vitest, ruff, mypy `--strict`, ESLint, Prettier, GitHub Actions |
+| Deploy | Vercel (web and API), Docker (PostGIS) |
 
-### How it was validated
+## Run it locally
 
-- **Leave-one-campaign-out:** each campaign (both provinces) is predicted by a model that never
-  saw it, nor the following campaign, whose "last year's production" feature would reveal it.
-- **Forward check:** training only on earlier campaigns gives 53.9 % MAPE vs 12.4 % for the
-  aforo (5 campaigns, too few for inference).
-- Ridge regression on 4 features fixed in advance (last year's production, May heat days,
-  summer NDMI, spring NDVI), with the province level unpenalised (ADR 0003). The selected
-  shrinkage removes the features: the model is, in practice, the province mean.
-- 80 % interval: forecast ÷/× 2.0, from the 16 out-of-sample errors (coverage not validated).
-
-### Limitations (read before quoting a number)
-
-- Only 9 campaigns since Sentinel-2 (2015): every metric is noisy.
-- 15 of 16 "real" production values are derived from the Junta's aforo variations (ADR 0002).
-- Olive trees alternate heavy and light years; the aforo uses field fruit counts in October that
-  a satellite cannot see in August.
-- Granada lacks reliable figures for 2016/17 and 2017/18 (rows dropped, not imputed).
-- Features cover 80.1 % of Jaén's and 80.6 % of Granada's SIGPAC olive area.
-
-Full numbers, caveats and raw outputs: [`docs/results/`](docs/results/README.md).
-
-**Dated forecast 2026/27** (published 2026-10-25, to be scored when the final figure is out):
-Jaén 392 kt (196–785), Granada 96 kt (48–193), vs aforo 575 / 106.7 kt — essentially the
-province mean; [details and caveats](docs/results/forecast-2026-27.md).
-
-## Current status
-
-**October 2026: models done, web and API live.** 16 province-campaigns, features from 86 municipalities
-(~80 % of each province's olive area) extracted on the server with openEO for 1,492 credits.
-Decisions are recorded in [`docs/decisions/`](docs/decisions/) and next steps in
-[`TODO.md`](TODO.md).
-
-## Quickstart
-
-Requirements: [uv](https://docs.astral.sh/uv/), Docker, a free
-[Copernicus Data Space Ecosystem](https://dataspace.copernicus.eu/) account.
+Requirements: [uv](https://docs.astral.sh/uv/), Node.js 22, Docker. A free
+[Copernicus](https://dataspace.copernicus.eu/) account is only needed to extract new imagery.
 
 ```bash
-git clone <repo-url> oliveye && cd oliveye
-uv sync                       # Python environment
-cp .env.example .env          # set POSTGRES_PASSWORD
-docker compose up -d          # PostgreSQL + PostGIS
-uv run --extra db python scripts/load_postgis.py   # load the published data into PostGIS
-uv run jupyter lab
+git clone https://github.com/N13T4C0/oliveye.git && cd oliveye
+uv sync                                                   # Python environment
+
+# API with the published data
+uv run uvicorn app:app --app-dir api --reload             # http://127.0.0.1:8000/docs
+
+# Web
+cd web && npm ci && NEXT_PUBLIC_API_URL=http://127.0.0.1:8000 npm run dev
+
+# Optional: PostGIS with the same data
+cp .env.example .env && docker compose up -d
+uv run --extra db python scripts/load_postgis.py
 ```
 
-The database holds the 269 municipalities, the measured olive area (EPSG:4326, GiST index), 10,320
-monthly NDVI/NDMI rows and the production series, plus two views: `v_olive_area_check` (areas
-recomputed in EPSG:25830) and `v_campaign_error` (OlivEye vs aforo per campaign).
+Notebooks in [`notebooks/`](notebooks/) walk through the data: SIGPAC olive parcels, production
+history and alternate bearing, and the model results.
+
+## Limitations
+
+- Only 9 campaigns since Sentinel-2: every metric is noisy (the gap to the aforo is suggestive,
+  p = 0.055, not conclusive).
+- 15 of 16 final production figures are back-calculated from the Junta's published variations.
+- The satellite sees the grove in spring and summer; the aforo counts fruit in October.
+- Features cover about 80 % of each province's declared olive area; inside the measured
+  municipalities, cells sample 79 % (Jaén) and 59 % (Granada) of the hectares.
+
+**Dated forecast 2026/27** (published 2026-10-25, to be scored when the final figure is out):
+Jaén 392 kt (196–785), Granada 96 kt (48–193), against an aforo of 575 / 106.7 kt.
+[Details](docs/results/forecast-2026-27.md).
 
 ## Data sources
 
-- **Sentinel-2 L2A** — Copernicus Data Space Ecosystem, via openEO.
-- **SIGPAC** — agricultural parcel registry (FEGA / Junta de Andalucía).
-- **Climate** — ERA5 daily reanalysis via [Open-Meteo](https://open-meteo.com/) (RIA stations planned).
-- **Production & aforo** — Junta de Andalucía, AICA.
-
-## Repository structure
-
-See [`CLAUDE.md`](CLAUDE.md#repository-layout).
+- **Sentinel-2 L2A**: Copernicus Data Space Ecosystem, via openEO.
+- **SIGPAC**: agricultural parcel registry (FEGA, Junta de Andalucía).
+- **Climate**: ERA5 daily reanalysis via [Open-Meteo](https://open-meteo.com/).
+- **Production and aforo**: Junta de Andalucía, AICA. **Prices**: Poolred (dated, in
+  [`docs/sources/`](docs/sources/)).
 
 ## License
 
-MIT for the code. Data remain under the licenses of their providers.
+MIT for the code ([LICENSE](LICENSE)). Data remain under the licenses of their providers.
+
+<div align="center"><sub>A portfolio project by José Antonio Nieto · Granada, 2026</sub></div>
