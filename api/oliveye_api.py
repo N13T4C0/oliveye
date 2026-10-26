@@ -161,7 +161,7 @@ def create_app(data_dir: Path) -> FastAPI:
             "Granada, and olive oil production: official aforo, final figures and the OlivEye "
             "model (leave-one-campaign-out). Read-only."
         ),
-        version="1.0.0",
+        version="1.1.0",
     )
     app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["GET"])
 

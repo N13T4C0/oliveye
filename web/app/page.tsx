@@ -1,5 +1,5 @@
 import { Dashboard } from "@/components/Dashboard";
-import { getPageData } from "@/lib/api";
+import { getPageData } from "@/lib/page-data";
 
 /** Server component: fetches the small JSON once a day and hands it to the interactive page. */
 export default async function Home() {
