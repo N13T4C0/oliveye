@@ -1,6 +1,6 @@
 <div align="center">
 
-# OlivEye
+<img src="docs/media/banner.svg" alt="OlivEye: olive groves seen from space, set against the official harvest forecast" width="100%">
 
 **Can a satellite forecast the olive oil harvest before the official forecast?**<br>
 Sentinel-2 imagery over the olive groves of Jaén and Granada, an honestly validated model,<br>
@@ -20,6 +20,18 @@ and a web map built for the people who grow the olives.
   </picture>
 </a>
 
+<br>
+
+<table>
+<tr>
+<td align="center"><h3>86</h3>municipalities</td>
+<td align="center"><h3>10 years</h3>of monthly imagery</td>
+<td align="center"><h3>9.5 M</h3>cell-months processed</td>
+<td align="center"><h3>200</h3>automated tests</td>
+<td align="center"><h3>7</h3>decision records</td>
+</tr>
+</table>
+
 </div>
 
 ## The short answer: not yet
@@ -35,7 +47,16 @@ repeating last year, and the aforo, which samples olives in the field, is about 
 accurate. Every number was computed leave-one-campaign-out, and the project says so on the page
 instead of hiding it. [Full results and limitations](docs/results/README.md).
 
+<p align="center">
+  <img src="docs/results/figures/production_vs_aforo.png" alt="Final production, official aforo and OlivEye estimate per campaign in Jaén and Granada" width="90%">
+</p>
+
 ## What you can do on the web
+
+<p align="center">
+  <img src="docs/media/demo.gif" alt="Demo: searching Martos, switching from greenness to thirst, changing the campaign and turning on the dark theme" width="100%">
+  <br><sub>Search a municipality, switch between greenness and thirst, go back in time, dark theme.</sub>
+</p>
 
 <table>
 <tr>
@@ -59,6 +80,7 @@ harvest, campaign by campaign, with back-calculated figures marked.</td>
 ## How it works
 
 ```mermaid
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#e2f6d5", "primaryBorderColor": "#054d28", "primaryTextColor": "#0e0f0c", "lineColor": "#4f9a2f", "fontFamily": "Inter, Segoe UI, sans-serif"}}}%%
 flowchart LR
     A[SIGPAC olive parcels] --> B[250 m cells, at least 80 % olive]
     B --> C[openEO on Copernicus<br/>Sentinel-2 L2A, cloud mask,<br/>monthly NDVI and NDMI]
@@ -70,6 +92,12 @@ flowchart LR
     H --> I[FastAPI on Vercel]
     D --> J[(PostGIS)]
     I --> K[Next.js + MapLibre web]
+    classDef sat fill:#054d28,stroke:#054d28,color:#ffffff
+    classDef official fill:#0b4c72,stroke:#0b4c72,color:#ffffff
+    classDef product fill:#9fe870,stroke:#163300,color:#163300
+    class C sat
+    class G official
+    class K product
 ```
 
 Key decisions, each with its reasoning and alternatives (ADRs):
